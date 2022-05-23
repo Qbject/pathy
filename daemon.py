@@ -1,7 +1,7 @@
 import time, traceback, sys
 from pathlib import Path
 from multiprocessing.connection import Listener
-import util
+from . import util
 
 class PathyDaemon():
 	def __init__(self):

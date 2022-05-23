@@ -1,7 +1,7 @@
 import time, traceback, sys, subprocess
 from pathlib import Path
 from multiprocessing.connection import Client
-import util
+from . import util
 
 def entry_request(request):
 	pass
