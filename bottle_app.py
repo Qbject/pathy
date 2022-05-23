@@ -1,9 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from bottle import default_app, route, request, response, post, static_file
-from pathlib import Path
-import pathy, json, traceback
-from . import ctl
+import pathy, ctl, json, traceback
 
 @route('/upd_c3z82k4f')
 def handle_cron():

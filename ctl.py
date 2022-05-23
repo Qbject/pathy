@@ -1,17 +1,14 @@
-import time, traceback, sys, subprocess
+import time, traceback, sys, subprocess, util
 from pathlib import Path
 from multiprocessing.connection import Client
-from . import util
 
 def entry_request(request):
-	pass
+	action, args, body_raw = request
 
 def entry_command(command):
 	if command == "start":
 		subprocess.Popen(["python3", __file__, "start"])
-		
-	elif request:
-		action, args, body_raw = request
+	
 
 def send_to_daemon(msg):
 	address = ("localhost", 6914)
@@ -26,4 +23,4 @@ def send_to_daemon(msg):
 
 if __name__ == "__main__":
 	if len(sys.argv) == 2 and sys.argv[1] == "start":
-		entry(command="start")
+		entry_command(command="start")
