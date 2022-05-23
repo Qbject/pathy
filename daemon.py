@@ -8,7 +8,7 @@ class PathyDaemon():
 		self.listener_authkey = b"***REMOVED***"
 	
 	def start(self):
-		listener = Listener(self.listener_address, self.listener_authkey)
+		listener = Listener(self.listener_address, authkey=self.listener_authkey)
 		
 		running = True
 		while running:
