@@ -929,12 +929,12 @@ class PathyRobot():
 					msg = update["message"]["text"][4:]
 					conn.send(msg)
 					resp = conn.recv()
-					reply(resp)
+					reply(resp, use_html=False)
 					conn.close()
 				except ConnectionRefusedError:
-					reply("Connection refused", False)
+					reply("Connection refused", use_html=False)
 				except Exception:
-					reply(f"Unknown error:\n{traceback.format_exc()}", False)
+					reply(f"Unknown error:\n{traceback.format_exc()}", use_html=False)
 				return
 
 			msg_json = html_sanitize(json.dumps(update["message"], indent="\t"))
