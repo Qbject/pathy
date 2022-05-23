@@ -1,0 +1,71 @@
+{
+	"players": {
+		"1000325970220": {
+			"is_online": 0,
+			"online_since": null,
+			"stats_when_entered": {},
+			"name": "Cpt. BAYRAKTAR",
+			"offline_since": 1653234853,
+			"session_matches": [],
+			"is_banned": false,
+			"last_gr": "\u0430\u0432\u0442\u043e\u0431\u0456\u043e\u0433\u0440\u0430\u0444\u0456\u0447\u043d\u0438\u0439 \u0433\u0440\u0438\u0446\u0438\u043a"
+		},
+		"1007161381428": {
+			"is_online": 0,
+			"online_since": null,
+			"stats_when_entered": {},
+			"name": "Rush-Die-Quit-Repeat",
+			"offline_since": 1653255072,
+			"session_matches": [],
+			"is_banned": false,
+			"last_gr": "\u0440\u0435\u043e\u0440\u0433\u0430\u043d\u0456\u0437\u043e\u0432\u0430\u043d\u0438\u0439 \u0433\u0440\u043e\u0448\u043e\u043b\u044e\u0431"
+		},
+		"1003107128393": {
+			"name": "Alptraumsong",
+			"is_online": 0,
+			"online_since": null,
+			"offline_since": 1645744690,
+			"stats_when_entered": {},
+			"session_matches": [],
+			"is_banned": false,
+			"last_gr": "\u0430\u043a\u0443\u0441\u0442\u0438\u0447\u043d\u0438\u0439 \u0433\u0440\u044e\u043a-\u0433\u0440\u0430\u043d\u0443\u043b\u044f\u0442\u043e\u0440"
+		}
+	},
+	"news": {
+		"last_query": 1629190092,
+		"last_link": "https://www.ea.com/ru-ru/games/apex-legends/news/prime-gaming-offer-check-me-out-seer"
+	},
+	"yt_news": {
+		"last_link": "https://www.youtube.com/watch?v=5ISMishWUlE"
+	},
+	"last_upd": "Mon May 23 12:36:13 2022",
+	"shush_mode": false,
+	"cache": {
+		"https://legion.apexlegendsstatus.com/cache/c9af53824291f31028daf2aee9c48086.png": "qVeicZQHpvPyhXkV",
+		"https://legion.apexlegendsstatus.com/cache/9077cde8ba350979f58f7ca247120aea.png": "rHxlsoFZhtqKZBDr",
+		"https://legion.apexlegendsstatus.com/cache/7f2c35c46e631e8cace898d6156bce7c.png": "kzwZEFLiDUsrOMjl",
+		"https://legion.apexlegendsstatus.com/cache/c38f057ffa6d155a9567cbb364bd8cb0.png": "ucIWLvMQhyGqzpvE",
+		"https://legion.apexlegendsstatus.com/cache/ce05357e5a9b668e193ea4ac82a20f0c.png": "LvsxSkfqQeYsPLzK",
+		"https://legion.apexlegendsstatus.com/cache/848c326b90ce71d00512587c61a3ad17.png": "ekXJRcUoHRPpBwCB",
+		"https://legion.apexlegendsstatus.com/cache/6393dbfc14648228a27a2f567e263b04.png": "rrEUzTBHhtMFktgg",
+		"https://legion.apexlegendsstatus.com/cache/159fb9d12e6112f416a4aa6a5b5c80fd.png": "zylKflduumeqFLwA",
+		"https://legion.apexlegendsstatus.com/cache/e50d6e0f6373649f15e95deb6e157816.png": "aDJhHzekWVOSRDAw",
+		"https://legion.apexlegendsstatus.com/cache/efd911e9eed31e66c274ef51c8c895b7.png": "OgDhftQisbUjFrJZ",
+		"https://legion.apexlegendsstatus.com/cache/441bb33e588a1f33664cb81cd761bed7.png": "PXwKzEcESAKyIzfk",
+		"https://legion.apexlegendsstatus.com/cache/ec15cc58d68b1fed8d8601996f5db294.png": "jCjbVHyIbWrloOcj",
+		"https://legion.apexlegendsstatus.com/cache/5a47e172428bc5ed5f50895e85f0a031.png": "GPpMPFuvZTvMflEy",
+		"https://legion.apexlegendsstatus.com/cache/08122ea022170da97f0eb6181a36f61f.png": "xcjweGoBtbZEujpB",
+		"https://legion.apexlegendsstatus.com/cache/76502c5a95d04a014226f85f56a2d348.png": "nDsbncJHyXDlkpiW",
+		"https://legion.apexlegendsstatus.com/cache/cd9eebca17501171cfd952d4a4b59870.png": "UzZtjZYtxPOLqXbg",
+		"https://legion.apexlegendsstatus.com/cache/4504400d541e1449d9067aca9a5429fc.png": "wzxquPRHCwkxqEcM",
+		"https://legion.apexlegendsstatus.com/cache/bea5d2e481709a5c153c5f2c6c6dae34.png": "mlZQXNfETBmxHirk",
+		"https://legion.apexlegendsstatus.com/cache/cd0b95161991ff01d71542ea87659ce4.png": "ppuMglzOsyzvbphm",
+		"https://legion.apexlegendsstatus.com/cache/71e93e12f215e1f9eea5b79b9ad4d789.png": "SXrsPPyHzYJJotSt",
+		"https://legion.apexlegendsstatus.com/cache/d48a320d1cd4a63cda0c43ca5cd9a70d.png": "jZUlZSIuqlRJyRFJ",
+		"https://legion.apexlegendsstatus.com/cache/2bbe83720ababbe1808d66a1e9993898.png": "lCMzzvgQenlEFaAc",
+		"https://legion.apexlegendsstatus.com/cache/329f07e56a833cfb48d258fb6943eb3c.png": "rgbqTQVnAeHgfgho",
+		"https://legion.apexlegendsstatus.com/cache/ae56f1598b0f807eee4401a82432f24c.png": "aqZBzfkUZxmCjhTZ",
+		"https://legion.apexlegendsstatus.com/cache/e6baa37e7f7d68cbc3c9009885b854cc.png": "HPSfmoZRNGHtHVHy"
+	},
+	"delayed_msgs": []
+}
