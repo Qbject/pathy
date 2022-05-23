@@ -16,7 +16,7 @@ class PathyDaemon():
 			conn = listener.accept()
 			msg = conn.recv()
 			util.log(msg)
-			conn.send(f"echo: {msg} ({type(msg)})")
+			conn.send(f"echo: {msg}")
 			
 			if msg == "stop":
 				running = False

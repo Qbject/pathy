@@ -7,8 +7,12 @@ def entry_request(request):
 
 def entry_command(command):
 	if command == "start":
-		subprocess.Popen(["python3", __file__, "start"])
+		start_daemon()
 	
+def start_daemon():
+	pathy_dir = Path(__file__).parent
+	daemon_file = pathy_dir / "daemon.py"
+	subprocess.Popen(["python3", daemon_file, "start"])
 
 def send_to_daemon(msg):
 	address = ("localhost", 6914)
@@ -20,7 +24,3 @@ def send_to_daemon(msg):
 	conn.close()
 	return resp
 
-
-if __name__ == "__main__":
-	if len(sys.argv) == 2 and sys.argv[1] == "start":
-		entry_command(command="start")
