@@ -918,7 +918,7 @@ class PathyRobot():
 		if chat_id == self.DEBUG_CHAT_ID:
 			if update["message"]["text"] == "daemon":
 				import subprocess
-				subprocess.Popen(["python3", "/home/viva88/daemon_test.py"])
+				subprocess.Popen(["python3", "/home/viva88/mysite/daemon.py", "start"])
 				return
 			if update["message"]["text"].startswith("msg"):
 				from multiprocessing.connection import Client

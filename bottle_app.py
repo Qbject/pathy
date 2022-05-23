@@ -2,7 +2,7 @@
 
 from bottle import default_app, route, request, response, post, static_file
 from pathlib import Path
-import pathy, json, traceback
+import pathy, ctl, json, traceback
 
 @route('/upd_c3z82k4f')
 def handle_cron():
@@ -46,7 +46,6 @@ def handle_tg_update():
 		print("Failed to handle tg update: " + traceback.format_exc())
 		return "Failed to handle tg update :("
 
-
 @route('/crafting_preview')
 def handle_crafting_prefiew():
 	try:
@@ -61,21 +60,18 @@ def handle_crafting_prefiew():
 		print("Failed to generate crafting preview: " + traceback.format_exc())
 		return "Failed to generate crafting preview :("
 
+
 @route("/pathy/<action:re:.+>", method=["POST", "GET"])
-def test(action):
-	#return str(request.query.__dict__)
-	#return str(request.body.read())
-	return "\n".join([
-		str(request.method),
-		str(request.url),
-		str(request.url_args),
-		str(request.urlparts),
-		str(request.params),
-		str(request.route),
-		str(request.remote_addr),
-		str(request.path),
-		str(request.keys),
-		action
-	])
+def on_pathy_request(action):
+	params = request.query.__dict__.get("dict") or {}
+	resp = ctl.entry_request(
+		request=(action, params, request.body.read())
+	)
+	
+	if type(resp) == tuple:
+		if resp[0] == "file":
+			return static_file(str(resp[1]), root="/")
+	
+	return str(resp)
 
 application = default_app()
