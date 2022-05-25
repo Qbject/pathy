@@ -39,5 +39,5 @@ def safe_file_write(file_path, data):
 
 def syscmd(cmd):
 	process = subprocess.Popen(cmd, stdout=subprocess.PIPE)
-	output = process.communicate()[0].decode("utf-8")
-	return output
+	output, err = process.communicate()
+	return output.decode("utf-8")
