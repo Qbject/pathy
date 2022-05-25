@@ -23,5 +23,5 @@ def git_pull():
 	pathy_dir = Path(__file__).parent
 	os.chdir(pathy_dir)
 	process = subprocess.Popen(["git", "pull"], stdout=subprocess.PIPE)
-	output = process.communicate()[0]
+	output = process.communicate()[0].decode("utf-8")
 	return output
