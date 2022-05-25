@@ -24,10 +24,7 @@ def start():
 	DETACHED_PROCESS = 8
 	pathy_dir = Path(__file__).parent
 	daemon_file = pathy_dir / "daemon.py"
-	subprocess.Popen(
-		[sys.executable, daemon_file, "start"],
-		creationflags=DETACHED_PROCESS
-	)
+	subprocess.Popen([sys.executable, daemon_file, "start"])
 
 def send(msg, args={}):
 	conn = Client(DAEMON_ADDR, authkey=DAEMON_AUTHKEY)
