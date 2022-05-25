@@ -23,7 +23,7 @@ def start():
 	subprocess.Popen(["python3", daemon_file, "start"])
 
 def send(msg, args={}):
-	conn = Client(DAEMON_ADDR, DAEMON_AUTHKEY)
+	conn = Client(DAEMON_ADDR, authkey=DAEMON_AUTHKEY)
 	
 	conn.send((msg, args))
 	resp = conn.recv()

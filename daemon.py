@@ -8,7 +8,7 @@ class PathyDaemon():
 		pass
 	
 	def start(self):
-		listener = Listener(DAEMON_ADDR, DAEMON_AUTHKEY)
+		listener = Listener(DAEMON_ADDR, authkey=DAEMON_AUTHKEY)
 		
 		running = True
 		while running:
