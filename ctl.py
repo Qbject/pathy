@@ -21,11 +21,12 @@ def entry(action, args={}, body_raw=b""):
 		return "Failed to handle request"
 
 def start():
+	DETACHED_PROCESS = 8
 	pathy_dir = Path(__file__).parent
 	daemon_file = pathy_dir / "daemon.py"
 	subprocess.Popen(
 		[sys.executable, daemon_file, "start"],
-		creationflags=subprocess.DETACHED_PROCESS
+		creationflags=DETACHED_PROCESS
 	)
 
 def send(msg, args={}):
