@@ -7,3 +7,5 @@ INFO_LOG = LOGS_DIR / "info.log"
 
 DAEMON_ADDR = ("localhost", 6914)
 DAEMON_AUTHKEY = b"***REMOVED***"
+
+DAEMON_STATE = PATHY_DIR / "data/state.json"

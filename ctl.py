@@ -9,7 +9,10 @@ def entry(action, args={}, body_raw=b""):
 			return util.git_pull()
 		elif action == "j394c02mx04nc23r4/keepalive":
 			return ensure_running()
+		elif action == "938ecj234jo0xj290/processes":
+			return util.syscmd(["ps", "aux"])
 		else:
+			ensure_running()
 			return send(action)
 		
 	except Exception:
@@ -20,7 +23,10 @@ def entry(action, args={}, body_raw=b""):
 def start():
 	pathy_dir = Path(__file__).parent
 	daemon_file = pathy_dir / "daemon.py"
-	subprocess.Popen(["python3", daemon_file, "start"])
+	subprocess.Popen(
+		[sys.executable, daemon_file, "start"],
+		creationflags=subprocess.DETACHED_PROCESS
+	)
 
 def send(msg, args={}):
 	conn = Client(DAEMON_ADDR, authkey=DAEMON_AUTHKEY)
