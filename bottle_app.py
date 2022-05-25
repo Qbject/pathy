@@ -66,8 +66,7 @@ def handle_crafting_prefiew():
 def on_pathy_request(action):
 	params = request.query.__dict__.get("dict") or {}
 	resp = ctl.entry(
-		request=(action, params, request.body.read())
-	)
+		action, params, request.body.read())
 	
 	if type(resp) == tuple:
 		if resp[0] == "file":
