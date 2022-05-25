@@ -916,27 +916,11 @@ class PathyRobot():
 			return
 		chat_id = update["message"]["chat"]["id"]
 		if chat_id == self.DEBUG_CHAT_ID:
-			if update["message"]["text"].startswith("cmd"):
+			if update["message"]["text"].startswith("ctl"):
 				import ctl
 				cmd = update["message"]["text"][4:]
 				cmd_resp = ctl.entry(cmd)
 				reply(cmd_resp, use_html=False)
-				return
-			if update["message"]["text"].startswith("msg"):
-				from multiprocessing.connection import Client
-
-				try:
-					address = ('localhost', 6914)
-					conn = Client(address, authkey=b'***REMOVED***')
-					msg = update["message"]["text"][4:]
-					conn.send(msg)
-					resp = conn.recv()
-					reply(resp, use_html=False)
-					conn.close()
-				except ConnectionRefusedError:
-					reply("Connection refused", use_html=False)
-				except Exception:
-					reply(f"Unknown error:\n{traceback.format_exc()}", use_html=False)
 				return
 
 			msg_json = html_sanitize(json.dumps(update["message"], indent="\t"))
