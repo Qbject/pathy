@@ -9,7 +9,7 @@ def entry(action, args={}, body_raw=b""):
 		elif action == "j394c02mx04nc23r4/keepalive":
 			return ensure_running()
 		else:
-			send(action)
+			return send(action)
 		
 	except Exception:
 		err_msg = f"Failed to execute action {action}:\n{traceback.format_exc()}"
