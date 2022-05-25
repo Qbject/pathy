@@ -6,6 +6,8 @@ import pathy, ctl, json, traceback
 @route('/upd_c3z82k4f')
 def handle_cron():
 	try:
+		ctl.entry_command("ensure_running")
+		
 		pathy_bot = pathy.PathyRobot()
 		pathy_bot.pathy_upd()
 		return "Updated!"
