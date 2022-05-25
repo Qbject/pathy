@@ -18,6 +18,7 @@ def log(text, err=False):
 
 def git_pull():
 	pathy_dir = Path(__file__).parent
+	os.chdir(pathy_dir)
 	return syscmd(["git", "pull"])
 
 def safe_file_write(file_path, data):
