@@ -919,7 +919,8 @@ class PathyRobot():
 			if update["message"]["text"].startswith("cmd"):
 				import ctl
 				cmd = update["message"]["text"][4:]
-				ctl.entry_command(cmd)
+				cmd_resp = ctl.entry_command(cmd)
+				reply(cmd_resp, use_html=False)
 				return
 			if update["message"]["text"].startswith("msg"):
 				from multiprocessing.connection import Client
