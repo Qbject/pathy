@@ -6,6 +6,16 @@ from multiprocessing.connection import Client
 # ways there any interaction with daemon starts
 def entry_request(request):
 	action, args, body_raw = request
+	
+	try:
+		if action == "c92jx72h0xcj092jk/git_pull":
+			return util.git_pull()
+		
+		return "Unknown pathy action"
+	except Exception:
+		err_msg = f"Failed to execute command {action}:\n{traceback.format_exc()}"
+		util.log(err_msg, err=True)
+		return "Failed to handle request"
 
 def entry_command(command):
 	try:

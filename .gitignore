@@ -1,6 +1,5 @@
-/pathy_cache
-/pathy_logs
-/state.json
+/data
+/deploy.py
 
 ### General python stuff below
 # Byte-compiled / optimized / DLL files

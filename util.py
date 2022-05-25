@@ -1,11 +1,11 @@
-import time, traceback, subprocess
+import time, traceback, subprocess, os
 from pathlib import Path
 
 def log(text, err=False):
 	log_entry = "{}: {}".format(time.asctime(), text)
 	log_entry = log_entry.replace("\n", "\n\t")
 	
-	logs_dir = Path(__file__).parent / "pathy_logs"
+	logs_dir = Path(__file__).parent / "data/logs"
 	logs_dir.mkdir(exist_ok=True)
 	
 	if err:
@@ -20,6 +20,8 @@ def log(text, err=False):
 		print("Failed to write to logfile: \n{}".format(traceback.format_exc()))
 
 def git_pull():
+	pathy_dir = Path(__file__).parent
+	os.chdir(pathy_dir)
 	process = subprocess.Popen(["git", "pull"], stdout=subprocess.PIPE)
 	output = process.communicate()[0]
 	return output

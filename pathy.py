@@ -82,10 +82,10 @@ class RandGrGenerator():
 		self.PREFIXES_CACHE = None
 
 		self.TARG_DIR = Path(__file__).parent
-		self.GRS_FILE_PATH = self.TARG_DIR / "text_data/grs.txt"
-		self.GRS_PLUR_FILE_PATH = self.TARG_DIR / "text_data/grs_plur.txt"
-		self.MODIFIERS_FILE_PATH = self.TARG_DIR / "text_data/modifiers.txt"
-		self.PREFIXES_FILE_PATH = self.TARG_DIR / "text_data/prefixes.txt"
+		self.GRS_FILE_PATH = self.TARG_DIR / "dicts/grs.txt"
+		self.GRS_PLUR_FILE_PATH = self.TARG_DIR / "dicts/grs_plur.txt"
+		self.MODIFIERS_FILE_PATH = self.TARG_DIR / "dicts/modifiers.txt"
+		self.PREFIXES_FILE_PATH = self.TARG_DIR / "dicts/prefixes.txt"
 
 	def get_modifiers(self, ending=None, max_count=3):
 		self.ensure_cached_modifiers()
@@ -173,7 +173,7 @@ class RandGrGenerator():
 class PathyState():
 	def __init__(self):
 		self._state_data = None
-		self.state_path = Path(__file__).parent / "state.json"
+		self.state_path = Path(__file__).parent / "data/legacy_state.json"
 		self.is_modified = False
 
 	def read(self):
@@ -242,7 +242,7 @@ class PathyRobot():
 
 
 		self.cur_dir = Path(__file__).parent
-		self.cache_dir = self.cur_dir / "pathy_cache"
+		self.cache_dir = self.cur_dir / "data/cache"
 
 		self.cache_dir.mkdir(exist_ok=True)
 
