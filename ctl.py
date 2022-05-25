@@ -1,6 +1,7 @@
 import time, traceback, sys, subprocess, util
 from pathlib import Path
 from multiprocessing.connection import Client
+from const import *
 
 def entry(action, args={}, body_raw=b""):
 	try:
@@ -22,9 +23,7 @@ def start():
 	subprocess.Popen(["python3", daemon_file, "start"])
 
 def send(msg, args={}):
-	address = ("localhost", 6914)
-	authkey = b"***REMOVED***"
-	conn = Client(address, authkey=authkey)
+	conn = Client(DAEMON_ADDR, DAEMON_AUTHKEY)
 	
 	conn.send((msg, args))
 	resp = conn.recv()

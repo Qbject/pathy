@@ -1,18 +1,18 @@
 import time, traceback, sys, util
 from pathlib import Path
 from multiprocessing.connection import Listener
+from const import *
 
 class PathyDaemon():
 	def __init__(self):
-		self.listener_address = ("localhost", 6914)
-		self.listener_authkey = b"***REMOVED***"
+		pass
 	
 	def start(self):
-		listener = Listener(self.listener_address, authkey=self.listener_authkey)
+		listener = Listener(DAEMON_ADDR, DAEMON_AUTHKEY)
 		
 		running = True
 		while running:
-			# strictly 1 request and 1 response per 1 connection
+			# strictly 1 request and 1 response per each connection
 			conn = listener.accept()
 			msg, args = conn.recv()
 			util.log(msg)
