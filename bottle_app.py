@@ -65,7 +65,7 @@ def handle_crafting_prefiew():
 @route("/pathy/<action:re:.+>", method=["POST", "GET"])
 def on_pathy_request(action):
 	params = request.query.__dict__.get("dict") or {}
-	resp = ctl.entry_request(
+	resp = ctl.entry(
 		request=(action, params, request.body.read())
 	)
 	
