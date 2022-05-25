@@ -14,9 +14,9 @@ class PathyDaemon():
 		while running:
 			# strictly 1 request and 1 response per 1 connection
 			conn = listener.accept()
-			msg = conn.recv()
+			msg, args = conn.recv()
 			util.log(msg)
-			conn.send(f"echo: {msg}")
+			conn.send(f"{msg = }\n{args = }")
 			
 			if msg == "stop":
 				running = False
