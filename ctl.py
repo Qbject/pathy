@@ -10,7 +10,8 @@ def entry(action, args={}, body_raw=b""):
 		elif action == "j394c02mx04nc23r4/keepalive":
 			return ensure_running()
 		elif action == "938ecj234jo0xj290/processes":
-			return util.syscmd(["ps", "aux"])
+			out = subprocess.check_output(["ps", "aux"],
+				stderr=subprocess.STDOUT, text=True)
 		else:
 			ensure_running()
 			return send(action)
@@ -23,7 +24,7 @@ def entry(action, args={}, body_raw=b""):
 def start():
 	pathy_dir = Path(__file__).parent
 	daemon_file = pathy_dir / "daemon.py"
-	subprocess.Popen(["python3", daemon_file, "start"])
+	subprocess.Popen(["python3", daemon_file, "start"], shell=True)
 
 def send(msg, args={}):
 	conn = Client(DAEMON_ADDR, authkey=DAEMON_AUTHKEY)
@@ -45,8 +46,8 @@ def ensure_running():
 			f"{traceback.format_exc()}", err=True)
 		raise e
 	
-	for _ in range(3):
-		time.sleep(1)
+	for _ in range(10):
+		time.sleep(0.5)
 		if is_alive():
 			util.log("Daemon restarted successfully")
 			return True

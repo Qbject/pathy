@@ -18,8 +18,12 @@ def log(text, err=False):
 
 def git_pull():
 	pathy_dir = Path(__file__).parent
-	os.chdir(pathy_dir)
-	return syscmd(["git", "pull"])
+	out = subprocess.check_output(["git", "pull"],
+		stderr=subprocess.STDOUT,
+		cwd=pathy_dir,
+		text=True
+	)
+	return out
 
 def safe_file_write(file_path, data):
 	attempts = 6
@@ -36,8 +40,3 @@ def safe_file_write(file_path, data):
 		except Exception:
 			log(f"Failed to write file {file_path} (attempt {i})", True)
 			time.sleep(interval)
-
-def syscmd(cmd):
-	process = subprocess.Popen(cmd, stdout=subprocess.PIPE)
-	output, err = process.communicate()
-	return output.decode("utf-8")
