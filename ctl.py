@@ -38,21 +38,27 @@ def ensure_running():
 	if is_alive():
 		return True
 	
-	util.log("Daemon down detected")
 	try:
 		start()
-	except Exception as e:
-		util.log(f"Failed to restart daemon:\n"\
-			f"{traceback.format_exc()}", err=True)
-		raise e
+	except Exception:
+		util.log(
+			f"Daemon starting error:\n{traceback.format_exc()}",
+			err=True)
 	
 	for _ in range(10):
 		time.sleep(0.5)
 		if is_alive():
-			util.log("Daemon restarted successfully")
+			util.log(
+				f"Detected daemon down for {downtime}, " \
+				f"restarted successfully",
+				send_tg=True)
 			return True
 	
-	util.log("Daemon not responding after restart")
+	util.log(
+		f"Detected daemon down for {downtime}, " \
+		f"failed to restart (not responding)",
+		send_tg=True)
+	
 	raise PathyDownError()
 
 def is_alive():

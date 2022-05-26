@@ -9,3 +9,7 @@ DAEMON_ADDR = ("localhost", 6914)
 DAEMON_AUTHKEY = b"***REMOVED***"
 
 DAEMON_STATE = PATHY_DIR / "data/state.json"
+
+DEBUG_CHAT_ID = ***REMOVED***
+
+BOT_TOKEN = "***REMOVED***"
