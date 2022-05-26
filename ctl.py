@@ -24,7 +24,7 @@ def entry(action, args={}, body_raw=b""):
 def start():
 	pathy_dir = Path(__file__).parent
 	daemon_file = pathy_dir / "daemon.py"
-	subprocess.Popen(["python3", daemon_file, "start"], shell=True)
+	subprocess.Popen(f"python3 {str(daemon_file)} start", shell=True)
 
 def send(msg, args={}):
 	conn = Client(DAEMON_ADDR, authkey=DAEMON_AUTHKEY)
