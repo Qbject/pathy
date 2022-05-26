@@ -25,7 +25,7 @@ class PathyDaemon():
 	def sync_state(self):
 		"""
 		universal method for reading and writing state
-		to|from disk depending on different conditions
+		to/from disk depending on different conditions
 		"""
 		
 		if (not self.state) and (not DAEMON_STATE.exists()):

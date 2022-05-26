@@ -919,7 +919,7 @@ class PathyRobot():
 			if update["message"]["text"].startswith("ctl"):
 				import ctl
 				cmd = update["message"]["text"][4:]
-				cmd_resp = ctl.entry(cmd)
+				cmd_resp = ctl.entry(cmd) or "<empty>"
 				reply(cmd_resp, use_html=False)
 				return
 

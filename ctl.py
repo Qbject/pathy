@@ -10,7 +10,7 @@ def entry(action, args={}, body_raw=b""):
 		elif action == "j394c02mx04nc23r4/keepalive":
 			return ensure_running()
 		elif action == "938ecj234jo0xj290/processes":
-			out = subprocess.check_output(["ps", "aux"],
+			return subprocess.check_output(["ps", "aux"],
 				stderr=subprocess.STDOUT, text=True)
 		else:
 			ensure_running()
