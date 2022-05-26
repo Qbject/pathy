@@ -38,7 +38,7 @@ def ensure_running():
 	if is_alive():
 		return True
 	
-	downtime = get_downtime()
+	downtime = get_downtime() # TODO: format_time (+ms)
 	
 	try:
 		start()
@@ -82,4 +82,4 @@ def get_last_sync():
 	return state.get("last_sync") or None
 
 def get_downtime():
-	return time.time() - (get_last_sync or 0.0)
+	return time.time() - (get_last_sync() or 0.0)
