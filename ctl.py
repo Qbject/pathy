@@ -1,4 +1,4 @@
-import time, traceback, sys, subprocess, util
+import time, traceback, sys, subprocess, util, json
 from pathlib import Path
 from multiprocessing.connection import Client
 from const import *
@@ -38,6 +38,8 @@ def ensure_running():
 	if is_alive():
 		return True
 	
+	downtime = get_downtime()
+	
 	try:
 		start()
 	except Exception:
@@ -70,3 +72,14 @@ def is_alive():
 
 class PathyDownError(OSError):
 	pass
+
+def get_last_sync():
+	if not DAEMON_STATE.exists():
+		return None
+	
+	state_raw = DAEMON_STATE.read_text(encoding="utf-8")
+	state = json.loads(state_raw)
+	return state.get("last_sync") or None
+
+def get_downtime():
+	return time.time() - (get_last_sync or 0.0)

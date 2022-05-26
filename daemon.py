@@ -28,14 +28,18 @@ class PathyDaemon():
 		to/from disk depending on different conditions
 		"""
 		
-		if (not self.state) and (not DAEMON_STATE.exists()):
+		if (not DAEMON_STATE.exists()) and (not self.state):
 			self.state = {}
-		elif not self.state:
-			state_raw = DAEMON_STATE.read_text(encoding="utf-8")
-			self.state = json.loads(state_raw)
-		else:
+		
+		if self.state:
+			self.state.last_sync = time.time()
+			
 			state_raw = json.dumps(self.state, indent="\t")
 			util.safe_file_write(DAEMON_STATE, state_raw)
+		else:
+			state_raw = DAEMON_STATE.read_text(encoding="utf-8")
+			self.state = json.loads(state_raw)
+		
 
 
 if __name__ == "__main__":
