@@ -51,13 +51,13 @@ def ensure_running():
 		time.sleep(0.5)
 		if is_alive():
 			util.log(
-				f"Detected daemon down for {downtime}s, " \
+				f"Detected daemon down for {downtime:.2f}s, " \
 				f"restarted successfully",
 				send_tg=True)
 			return True
 	
 	util.log(
-		f"Detected daemon down for {downtime}s, " \
+		f"Detected daemon down for {downtime:.2f}s, " \
 		f"failed to restart (not responding)",
 		send_tg=True)
 	
