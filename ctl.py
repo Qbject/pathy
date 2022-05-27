@@ -38,7 +38,7 @@ def ensure_running():
 	if is_alive():
 		return True
 	
-	downtime = get_downtime() # TODO: format_time (+ms)
+	downtime = get_downtime()
 	
 	try:
 		start()
@@ -51,13 +51,13 @@ def ensure_running():
 		time.sleep(0.5)
 		if is_alive():
 			util.log(
-				f"Detected daemon down for {downtime}, " \
+				f"Detected daemon down for {downtime}s, " \
 				f"restarted successfully",
 				send_tg=True)
 			return True
 	
 	util.log(
-		f"Detected daemon down for {downtime}, " \
+		f"Detected daemon down for {downtime}s, " \
 		f"failed to restart (not responding)",
 		send_tg=True)
 	
