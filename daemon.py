@@ -12,17 +12,27 @@ class PathyDaemon():
 		
 		running = True
 		while running:
-			# strictly 1 request and 1 response per each connection
-			conn = listener.accept()
-			msg, args = conn.recv()
-			util.log(msg)
-			conn.send(f"ECHO\n{msg = }\n{args = }")
-			
-			if msg == "stop":
-				running = False
-			conn.close()
+			try:
+				# strictly 1 request and 1 response per each connection
+				conn = listener.accept()
+				
+				if not conn.poll(5):
+					conn.send("timeout, closing")
+					raise TimeoutError(
+						"Daemon: accepted connection but got no msg")
+				
+				msg, args = conn.recv()
+				util.log(msg)
+				conn.send(f"ECHO\n{msg = }\n{args = }")
+				
+				if msg == "stop":
+					running = False
+				conn.close()
+			except Exception:
+				util.log(f"Failed to handle daemon command:" \
+					f"\n{traceback.format_exc()}", err=True, send_tg=True)
 	
-	def sync_state(self):
+	def sync_state(self): # TODO: mechanism of preventing a few daemons running on same state simultneously (some field that increments every sync)
 		"""
 		universal method for reading and writing state
 		to/from disk depending on different conditions

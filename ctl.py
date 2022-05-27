@@ -28,8 +28,8 @@ def start():
 
 def send(msg, args={}):
 	conn = Client(DAEMON_ADDR, authkey=DAEMON_AUTHKEY)
-	
 	conn.send((msg, args))
+	
 	resp = conn.recv()
 	conn.close()
 	return resp
