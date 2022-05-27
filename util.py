@@ -22,7 +22,7 @@ def log(text, err=False, send_tg=False):
 		try:
 			call_tg_api("sendMessage", {
 				"chat_id": DEBUG_CHAT_ID,
-				"text": msg_text,
+				"text": "<pre>" + msg_text + "</pre>",
 				"parse_mode": "HTML"
 			})
 		except Exception:
@@ -41,18 +41,24 @@ def git_pull():
 def safe_file_write(file_path, data):
 	attempts = 6
 	interval = 0.5
-
+	
 	if type(data) == str:
 		data = data.encode("utf-8")
-
+	
+	last_exc = None
 	for i in range(attempts):
 		try:
 			with open(file_path, "wb") as file:
 				file.write(data)
+			last_exc = None
 			break
-		except Exception:
+		except Exception as exc:
 			log(f"Failed to write file {file_path} (attempt {i})", True)
+			last_exc = exc
 			time.sleep(interval)
+	
+	if last_exc:
+		raise last_exc
 
 def call_tg_api(method, params={}, files={}):
 	resp = requests.post(
