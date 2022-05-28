@@ -1,4 +1,4 @@
-import time, traceback, sys, util, json, asyncio, threading, schedule, queue
+import time, traceback, sys, util, json, asyncio, threading, schedule, queue, random
 from pathlib import Path
 from multiprocessing.connection import Listener
 from util import log
@@ -16,6 +16,8 @@ class PathyDaemon():
 			target=self.run_scheduler, daemon=True)
 	
 	def start(self):
+		self.lock()
+		
 		self.worker_thread.start()
 		self.scheduler_thread.start()
 		self.listen_actions()
@@ -28,6 +30,7 @@ class PathyDaemon():
 			log("Failed to softly stop worker thread, killing")
 		else:
 			log("Worker thread stopped softly")
+		self.unlock()
 	
 	def listen_actions(self):
 		listener = Listener(DAEMON_ADDR, authkey=DAEMON_AUTHKEY)
@@ -70,6 +73,18 @@ class PathyDaemon():
 				break
 			
 			time.sleep(1)
+	
+	def lock(self):
+		try:
+			LOCKFILE.unlink(missing_ok=True)
+		except Exception as e:
+			log("Failed to lock daemon, raising error")
+			raise e
+		
+		self.lock_handle = LOCKFILE.open("w+")
+	
+	def unlock(self):
+		self.lock_handle.close()
 	
 	def run_scheduler(self):
 		pass

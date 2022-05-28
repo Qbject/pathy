@@ -9,6 +9,7 @@ DAEMON_ADDR = ("localhost", 6914)
 DAEMON_AUTHKEY = b"***REMOVED***"
 
 DAEMON_STATE = PATHY_DIR / "data/state.json"
+LOCKFILE = PATHY_DIR / "data/parent.lock"
 
 DEBUG_CHAT_ID = ***REMOVED***
 
