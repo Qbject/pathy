@@ -6,7 +6,7 @@ import pathy, ctl, json, traceback
 @route('/upd_c3z82k4f')
 def handle_cron():
 	try:
-		ctl.entry("j394c02mx04nc23r4/keepalive")
+		ctl.entry("a7cbaff7dbf61481d23ad71301cb4b17/keepalive", from_web=True)
 		
 		pathy_bot = pathy.PathyRobot()
 		pathy_bot.pathy_upd()
