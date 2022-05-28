@@ -13,3 +13,5 @@ DAEMON_STATE = PATHY_DIR / "data/state.json"
 DEBUG_CHAT_ID = ***REMOVED***
 
 BOT_TOKEN = "***REMOVED***"
+
+WEBAPI_SECRET = "***REMOVED***"

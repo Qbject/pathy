@@ -1,23 +1,38 @@
 import time, traceback, sys, subprocess, util, json
 from pathlib import Path
+from hashlib import md5
 from multiprocessing.connection import Client
 from const import *
 
-def entry(action, args={}, body_raw=b""):
+def check_web_action(web_action):
+	key, action = web_action.split("/")
+	if key != md5((WEBAPI_SECRET + action).encode("utf-8")).hexdigest():
+		raise ValueError("Wrong webapi key")
+	return action
+
+def entry(action, args={}, body_raw=b"", from_web=False):
 	try:
-		if action == "c92jx72h0xcj092jk/git_pull":
+		if from_web:
+			action = check_web_action(action)
+		
+		if action == "git_pull":
 			return util.git_pull()
-		elif action == "j394c02mx04nc23r4/keepalive":
+		elif action == "keepalive":
 			return ensure_running()
-		elif action == "938ecj234jo0xj290/processes":
+		elif action == "get_web_endpoint":
+			action = args.get("action", "")
+			key = md5((WEBAPI_SECRET + action).encode("utf-8")).hexdigest()
+			return f"{key}/{action}"
+		elif action == "processes":
 			return subprocess.check_output(["ps", "aux"],
 				stderr=subprocess.STDOUT, text=True)
 		else:
 			ensure_running()
-			return send(action)
+			return send(action, args)
 		
 	except Exception:
-		err_msg = f"Failed to execute action {action}:\n{traceback.format_exc()}"
+		err_msg = f"Failed to execute action {action}:" \
+		f"\n{traceback.format_exc()}"
 		util.log(err_msg, err=True)
 		return "Failed to handle request"
 

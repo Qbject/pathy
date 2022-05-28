@@ -916,10 +916,17 @@ class PathyRobot():
 			return
 		chat_id = update["message"]["chat"]["id"]
 		if chat_id == self.DEBUG_CHAT_ID:
-			if update["message"]["text"].startswith("ctl"):
+			if update["message"]["text"].startswith("ctl "):
 				import ctl
-				cmd = update["message"]["text"][4:]
-				cmd_resp = ctl.entry(cmd) or "<empty>"
+				cmd_arr = update["message"]["text"].split(" ")
+				cmd = cmd_arr[1]
+				args_raw = " ".join(cmd_arr[2:])
+				if args_raw:
+					args = json.loads(args_raw)
+				else:
+					args = {}
+				
+				cmd_resp = ctl.entry(cmd, args) or "<empty>"
 				reply(cmd_resp, use_html=False)
 				return
 
