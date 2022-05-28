@@ -1,4 +1,4 @@
-import time, traceback, subprocess, os, requests, json
+import time, traceback, subprocess, os, requests, json, pytz, datetime
 from pathlib import Path
 from const import *
 
@@ -82,3 +82,9 @@ def html_sanitize(text):
 	text = text.replace("<", "&lt;")
 	text = text.replace(">", "&gt;")
 	return text
+
+def get_hours_offset():
+	tz = pytz.timezone("Europe/Kiev")
+	offset_seconds = tz.utcoffset(datetime.datetime.utcnow()).seconds
+	offset_hours = offset_seconds / 60 / 60
+	return int(offset_hours)

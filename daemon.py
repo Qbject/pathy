@@ -1,4 +1,4 @@
-import time, traceback, sys, util, json, asyncio, threading, schedule, queue, random
+import time, traceback, sys, util, json, asyncio, threading, queue, random, schedule
 from pathlib import Path
 from multiprocessing.connection import Listener
 from util import log
@@ -23,7 +23,7 @@ class PathyDaemon():
 		self.listen_actions()
 		
 		# if we are here, softly stopping everything
-		log("Stopping")
+		log("Stopping daemon")
 		self.stopping = True
 		self.worker_thread.join(timeout=10)
 		if self.worker_thread.is_alive():
@@ -87,9 +87,33 @@ class PathyDaemon():
 		self.lock_handle.close()
 	
 	def run_scheduler(self):
-		pass
+		def _hour(hour):
+			return str(8 - util.get_hours_offset()).zfill(2)
+		
+		def _test():
+			util.call_tg_api(
+				"sendMessage",
+				{
+					"chat_id": DEBUG_CHAT_ID,
+					"text": "hey",
+					"parse_mode": "HTML"
+				}
+			)
+		
+		schedule.every().monday.at(f"{_hour(8)}:00").do(
+			self.send_hate_monday_pic)
+		schedule.every().hour.at(":00").do(_test)
+		
+		while True:
+			try:
+				schedule.run_pending()
+			except Exception:
+				log(f"Failed to execute scheduled task:" \
+					f"\n{traceback.foemat_exc()}",
+					err=True, send_tg=True)
+			time.sleep(1)
 	
-	def sync_state(self): # TODO: mechanism of preventing a few daemons running on same state simultneously (some field that increments every sync)
+	def sync_state(self):
 		"""
 		universal method for reading and writing state
 		to/from disk depending on different conditions
@@ -117,6 +141,20 @@ class PathyDaemon():
 				log(f"Daemon worker signal handling error:" \
 					f"\n{traceback.format_exc()}",
 					err=True, send_tg=True)
+	
+	def send_hate_monday_pic(self):
+		monday_ing_id = "AgACAgIAAx0CTJBx5QADHWEiP2LrqUGngEIIOJ4BNUHmVk_" \
+		"4AAJntTEboQ8RSVxQerfln3yYAQADAgADeQADIAQ"
+		
+		util.call_tg_api(
+			"sendPhoto",
+			{
+				"chat_id": ASL_CHAT_ID,
+				"photo": monday_ing_id,
+				"parse_mode": "HTML",
+				"disable_notification": True
+			}
+		)
 
 
 if __name__ == "__main__":

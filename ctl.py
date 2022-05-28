@@ -2,6 +2,7 @@ import time, traceback, sys, subprocess, util, json
 from pathlib import Path
 from hashlib import md5
 from multiprocessing.connection import Client
+from util import log
 from const import *
 
 def check_web_action(web_action):
@@ -37,7 +38,7 @@ def entry(action, args={}, body_raw=b"", from_web=False):
 	except Exception:
 		err_msg = f"Failed to execute action {action}:" \
 		f"\n{traceback.format_exc()}"
-		util.log(err_msg, err=True)
+		log(err_msg, err=True)
 		return "Failed to handle request"
 
 def start():
@@ -69,12 +70,12 @@ def ensure_running():
 	try:
 		start()
 	except Exception:
-		util.log(
+		log(
 			f"Detected daemon down for {downtime:.2f}s, " \
 			f"failed to restart:\n{traceback.format_exc()}",
 			err=True, send_tg=True)
 	
-	util.log(
+	log(
 		f"Detected daemon down for {downtime:.2f}s, " \
 		f"restarted successfully",
 		send_tg=True)
