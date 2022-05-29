@@ -444,7 +444,7 @@ class PathyRobot():
 			"inLobby": "В Лобі",
 			"inMatch": "В матчі",
 			"optic_hcog_ranger": "3x приціл",
-			"shatter_caps": "Розривні (хопап)",
+			"shatter_caps": "Розривні (пердаки)",
 			"knockdown_shield": "Нокдаун щит",
 			"mobile_respawn_beacon": "Мобільна ресалка",
 			"med_kit": "Медкіт",

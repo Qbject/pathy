@@ -1,8 +1,10 @@
-import time, traceback, sys, util, json, asyncio, threading, queue, random, schedule
+import time, traceback, sys, json, asyncio, threading, queue, random, schedule
+import util, alsapi
 from pathlib import Path
 from multiprocessing.connection import Listener
 from util import log
 from const import *
+from timeline import PlayerStatTimeline
 
 class PathyDaemon():
 	def __init__(self):
@@ -16,6 +18,9 @@ class PathyDaemon():
 			target=self.run_scheduler, daemon=True)
 	
 	def start(self):
+		self.player_timeline = PlayerStatTimeline(1007161381428)
+		
+		log("Starting daemon")
 		self.lock()
 		
 		self.worker_thread.start()
@@ -62,7 +67,8 @@ class PathyDaemon():
 			try:
 				self.handle_signals()
 				
-				
+				player_stat = alsapi.get_player_stat(1007161381428)
+				self.player_timeline.consume_als_stat(player_stat)
 				
 				self.sync_state()
 			except Exception:

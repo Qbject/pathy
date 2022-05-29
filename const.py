@@ -3,6 +3,7 @@ from pathlib import Path
 #TODO: move sensitive data to env
 PATHY_DIR = Path(__file__).parent
 CACHE_DIR = PATHY_DIR / "data/cache"
+TIMELINE_DIR = PATHY_DIR / "data/timeline"
 LOGS_DIR = PATHY_DIR / "data/logs"
 ERROR_LOG = LOGS_DIR / "error.log"
 INFO_LOG = LOGS_DIR / "info.log"

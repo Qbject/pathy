@@ -74,7 +74,7 @@ def call_tg_api(method, params={}, files={}):
 	
 	return tg_reply["result"]
 
-class TgBotApiError(ValueError):
+class TgBotApiError(Exception):
 	pass
 
 def html_sanitize(text):
@@ -88,3 +88,24 @@ def get_hours_offset():
 	offset_seconds = tz.utcoffset(datetime.datetime.utcnow()).seconds
 	offset_hours = offset_seconds / 60 / 60
 	return int(offset_hours)
+
+def to_num(str_num):
+	result = None
+	try:
+		result = int(str_num)
+	except (ValueError, TypeError):
+		pass
+	
+	if result != None:
+		try:
+			result = float(str_num)
+		except (ValueError, TypeError) as e:
+			pass
+	return result
+
+# simple urlencoding-like algorythm for removing spaces from text
+def semiurlencode(text):
+	return text.replace("%", "%25").replace(" ", "%20")
+
+def semiurldecode(text):
+	return text.replace("%20", " ").replace("%25", "%")
