@@ -41,9 +41,16 @@ class PlayerStatTimeline():
 	def consume_als_stat(self, player_stat):
 		timestamp = int(datetime.datetime.utcnow().timestamp())
 		def _add(stat_name, stat_value, legend="_"):
-			stat_value = str(stat_value)
-			if stat_value == self.cur_stats.get((legend, stat_name)):
+			prev_value = self.cur_stats.get((legend, stat_name))
+			new_value = str(stat_value)
+			if prev_value == new_value:
 				return
+			
+			# value from api may deviate
+			if stat_name == "state_since":
+				if abs(int(prev_value) - int(new_value)) < 20:
+					return
+			
 			self.add_entry(timestamp, legend, stat_name, stat_value, False)
 		
 		_global = player_stat["global"]
@@ -60,25 +67,26 @@ class PlayerStatTimeline():
 			)
 		)
 		_add("is_online", int(is_online))
-		
+		_add("cur_state", _realtime["currentState"])
+		_add("state_since", _realtime["currentStateSinceTimestamp"])
 		_add("is_banned", int(_global["bans"]["isActive"]))
 		
-		_add("br_rank_score", _global["rank"]["rankScore"])
-		_add("br_rank_div", _global["rank"]["rankDiv"])
+		_add("br_rank_score",   _global["rank"]["rankScore"])
+		_add("br_rank_div",     _global["rank"]["rankDiv"])
 		_add("br_rank_top_pos", _global["rank"]["ladderPosPlatform"])
-		_add("br_rank_name", _global["rank"]["rankName"])
+		_add("br_rank_name",    _global["rank"]["rankName"])
 		
-		_add("ar_rank_score", _global["arena"]["rankScore"])
-		_add("ar_rank_div", _global["arena"]["rankDiv"])
+		_add("ar_rank_score",   _global["arena"]["rankScore"])
+		_add("ar_rank_div",     _global["arena"]["rankDiv"])
 		_add("ar_rank_top_pos", _global["arena"]["ladderPosPlatform"])
-		_add("ar_rank_name", _global["arena"]["rankName"])
+		_add("ar_rank_name",    _global["arena"]["rankName"])
 		
 		_add("name", _global["name"])
 		selected_legend = player_stat["legends"]["selected"]["LegendName"]
 		_add("legend", selected_legend)
 		
 		for tracker in player_stat["legends"]["selected"]["data"]:
-			_add("tracker_" + tracker["name"],
+			_add("tracker_" + tracker["key"],
 				tracker["value"], selected_legend)
 		
 		self.timeline_handle.flush()
