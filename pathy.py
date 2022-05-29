@@ -1099,8 +1099,10 @@ class PathyRobot():
 		return result_str
 
 	def fetch_players_stats(self):
+		_minute = int((int(time.time()) % (60 * 60)) / 60)
 		request_url = "https://api.mozambiquehe.re/bridge?version=5&platform=PC&player=%s&auth=%s" % (
-			",".join(["Nephelim1337", "Nuffai", "Alptraumsong"]),
+			#",".join(["Nephelim1337", "Nuffai", "Alptraumsong"]),
+			["Nephelim1337", "Nuffai", "Alptraumsong"][_minute % 3], # workaround to use less reqs/sec to work fine together with pathy daemon
 			self.MOZAM_API_KEY
 		)
 		resp_raw = requests.get(request_url)
