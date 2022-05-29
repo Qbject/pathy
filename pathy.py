@@ -1118,7 +1118,7 @@ class PathyRobot():
 			print("Invalid mozam response (json structure is not ok): %s" % resp_raw.text)
 			raise e
 
-		return resp
+		return [resp]
 
 
 	def validate_stats(self, stats):
