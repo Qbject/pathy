@@ -48,7 +48,7 @@ class PlayerStatTimeline():
 			
 			# value from api may deviate
 			if stat_name == "state_since":
-				if abs(int(prev_value) - int(new_value)) < 20:
+				if abs(int(prev_value or 0) - int(new_value)) < 20:
 					return
 			
 			self.add_entry(timestamp, legend, stat_name, stat_value, False)
