@@ -27,9 +27,6 @@ class PathyDaemon():
 		log("Starting daemon")
 		self.lock()
 		
-		for player_uid in self.state["tracked_players"]:
-			self.timelines[player_uid] = PlayerStatTimeline(player_uid)
-		
 		self.worker_thread.start()
 		self.scheduler_thread.start()
 		self.listen_actions()
@@ -73,9 +70,9 @@ class PathyDaemon():
 		i = 0
 		while True:
 			try:
+				self.sync_state()
 				self.handle_signals()
 				self.do_worker_step(i)
-				self.sync_state()
 			except Exception:
 				log(f"Daemon worker error:\n{traceback.format_exc()}",
 					err=True, send_tg=True)
@@ -87,6 +84,10 @@ class PathyDaemon():
 			i += 1
 	
 	def do_worker_step(self, i):
+		if not self.timelines:
+			for player_uid in self.state["tracked_players"]:
+				self.timelines[player_uid] = PlayerStatTimeline(player_uid)
+		
 		# this approach has minor problems while editing player list in runtime
 		player_idx = i % len(self.state["tracked_players"])
 		player_uid, timeline = self.timelines[player_idx]
