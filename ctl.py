@@ -69,11 +69,12 @@ def ensure_running():
 	
 	try:
 		start()
-	except Exception:
+	except Exception as e:
 		log(
 			f"Detected daemon down for {downtime:.2f}s, " \
 			f"failed to restart:\n{traceback.format_exc()}",
 			err=True, send_tg=True)
+		raise e
 	
 	log(
 		f"Detected daemon down for {downtime:.2f}s, " \
