@@ -89,7 +89,7 @@ class PathyDaemon():
 	def do_worker_step(self, i):
 		# this approach has minor problems while editing player list in runtime
 		player_idx = i % len(self.state["tracked_players"])
-		player_uid, timeline = self.timelines[player_idx]:
+		player_uid, timeline = self.timelines[player_idx]
 		player_stat = alsapi.get_player_stat(player_uid)
 		diff = timeline.consume_als_stat(player_stat)
 	
