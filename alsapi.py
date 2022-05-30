@@ -9,15 +9,16 @@ def get_player_stat(player_uid):
 	
 	if resp.status_code == 429:
 		time.sleep(1)
-	elif (resp.status_code - (resp.status_code % 100)) != 200:
-		raise AlsApiError(f"ALS API respond with code" \
-			f" {resp.status_code}:\n{resp.text}")
+		return get_player_stat(player_uid)
+	resp.raise_for_status()
 	
 	try:
 		stat = resp.json()
+		_ = stat["global"]
+		_ = stat["realtime"]
 	except Exception as e:
 		raise AlsApiError(f"ALS API respond with" \
-			f" invalid JSON:\n{resp.text}")
+			f" invalid data:\n{resp.text}")
 	
 	return stat
 
