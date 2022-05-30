@@ -40,18 +40,21 @@ class PlayerStatTimeline():
 	
 	def consume_als_stat(self, player_stat):
 		timestamp = int(datetime.datetime.utcnow().timestamp())
+		diff = {}
+		
 		def _add(stat_name, stat_value, legend="_"):
 			prev_value = self.cur_stats.get((legend, stat_name))
 			new_value = str(stat_value)
 			if prev_value == new_value:
 				return
 			
-			# value from api may deviate
+			# this value from api may deviate
 			if stat_name == "state_since":
 				if abs(int(prev_value or 0) - int(new_value)) < 20:
 					return
 			
 			self.add_entry(timestamp, legend, stat_name, stat_value, False)
+			diff[(legend, stat_name)] = (prev_value, new_value)
 		
 		_global = player_stat["global"]
 		_realtime = player_stat["realtime"]
@@ -90,6 +93,7 @@ class PlayerStatTimeline():
 				tracker["value"], selected_legend)
 		
 		self.timeline_handle.flush()
+		return diff
 	
 	def close(self):
 		self.timeline_handle.close()

@@ -8,9 +8,11 @@ from timeline import PlayerStatTimeline
 
 class PathyDaemon():
 	def __init__(self):
+		self.started = False
 		self.state = None
 		self.stopping = False
 		self.worker_signals = queue.Queue()
+		self.timelines = {}
 		
 		self.worker_thread = threading.Thread(
 			target=self.run_worker, daemon=True)
@@ -18,10 +20,15 @@ class PathyDaemon():
 			target=self.run_scheduler, daemon=True)
 	
 	def start(self):
-		self.player_timeline = PlayerStatTimeline(1007161381428)
+		if self.started:
+			raise RuntimeError("Daemon object can be started only once")
+		self.started = True
 		
 		log("Starting daemon")
 		self.lock()
+		
+		for player_uid in self.state["tracked_players"]:
+			self.timelines[player_uid] = PlayerStatTimeline(player_uid)
 		
 		self.worker_thread.start()
 		self.scheduler_thread.start()
@@ -63,13 +70,11 @@ class PathyDaemon():
 					f"\n{traceback.format_exc()}", err=True, send_tg=True)
 	
 	def run_worker(self):
+		i = 0
 		while True:
 			try:
 				self.handle_signals()
-				
-				player_stat = alsapi.get_player_stat(1007161381428)
-				self.player_timeline.consume_als_stat(player_stat)
-				
+				self.do_worker_step(i)
 				self.sync_state()
 			except Exception:
 				log(f"Daemon worker error:\n{traceback.format_exc()}",
@@ -79,6 +84,14 @@ class PathyDaemon():
 				break
 			
 			time.sleep(1)
+			i++
+	
+	def do_worker_step(self, i):
+		# this approach has minor problems if player gets added in runtime
+		player_idx = i % len(self.state["tracked_players"])
+		player_uid, timeline = self.timelines[player_idx]:
+		player_stat = alsapi.get_player_stat(player_uid)
+		diff = timeline.consume_als_stat(player_stat)
 	
 	def lock(self):
 		try:
