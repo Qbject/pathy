@@ -927,7 +927,7 @@ class PathyRobot():
 					args = {}
 				
 				cmd_resp = ctl.entry(cmd, args) or "<empty>"
-				reply(cmd_resp, use_html=False)
+				reply(str(cmd_resp), use_html=False)
 				return
 
 			msg_json = html_sanitize(json.dumps(update["message"], indent="\t"))
