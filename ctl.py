@@ -31,9 +31,24 @@ def entry(action, args={}, body_raw=b"", from_web=False):
 			return subprocess.check_output(["ps", "aux"],
 				stderr=subprocess.STDOUT, text=True)
 		
-		else:
+		elif action == "start":
+			start()
+			return
+		
+		elif action == "stop":
+			stop()
+			return
+		
+		elif action == "status":
 			ensure_running()
-			return send(action, args)
+			return send("status")
+		
+		elif action == "tgupdate":
+			ensure_running()
+			return
+		
+		else:
+			raise ValueError(f"Unknown Pathy ctl action: {action}")
 		
 	except Exception:
 		err_msg = f"Failed to execute action {action}:" \
@@ -53,10 +68,20 @@ def start():
 	
 	raise OSError("Daemon process started, but not responding")
 
-def send(msg, args={}):
+def stop():
+	send("stop")
+
+def send(msg, **args):
 	conn = Client(DAEMON_ADDR, authkey=DAEMON_AUTHKEY)
 	conn.send((msg, args))
 	
+	if not conn.poll(5):
+		try:
+			conn.send("timeout, closing")
+		except Exception:
+			pass
+		raise TimeoutError(
+			f"Ctl: no response to msg {msg}")
 	resp = conn.recv()
 	conn.close()
 	return resp

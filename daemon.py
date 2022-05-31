@@ -16,6 +16,16 @@ class PathyDaemon():
 		self.worker_tasks = queue.Queue()
 		self.timelines = {}
 		
+		self.statistics = { # TODO TODO TODO
+			"started_at": time.time(),
+			"ctl_msgs_received": 0,
+			"tg_updates_received": 0,
+			"state_rewritten": 0,
+			"worker_steps": 0,
+			"als_api_requests": 0,
+			"timeline_entries": 0
+		}
+		
 		self.worker_thread = threading.Thread(
 			target=self.run_worker, daemon=True)
 		self.scheduler_thread = threading.Thread(
@@ -32,7 +42,7 @@ class PathyDaemon():
 		
 		self.worker_thread.start()
 		self.scheduler_thread.start()
-		self.listen_actions()
+		self.listen_msgs()
 		
 		# if we are here, softly stopping everything
 		log("Stopping daemon")
@@ -44,7 +54,7 @@ class PathyDaemon():
 			log("Worker thread stopped softly")
 		self.unlock()
 	
-	def listen_actions(self):
+	def listen_msgs(self):
 		listener = Listener(DAEMON_ADDR, authkey=DAEMON_AUTHKEY)
 		
 		running = True
@@ -54,20 +64,34 @@ class PathyDaemon():
 				conn = listener.accept()
 				
 				if not conn.poll(5):
-					conn.send("timeout, closing")
+					try:
+						conn.send("timeout, closing")
+					except Exception:
+						pass
 					raise TimeoutError(
 						"Daemon: accepted connection but got no msg")
 				
 				msg, args = conn.recv()
-				log(msg)
-				conn.send(f"ECHO\n{msg = }\n{args = }")
-				
 				if msg == "stop":
 					running = False
+					conn.send("STOPPING")
+					log("Stopping daemon")
+				else:
+					conn.send(self.handle_msg(msg, args))
+				
 				conn.close()
 			except Exception:
 				log(f"Failed to handle daemon command:" \
 					f"\n{traceback.format_exc()}", err=True, send_tg=True)
+	
+	def handle_msg(self, msg, args):
+		if msg == "status":
+			return self.get_status()
+		elif msg == "tgupd":
+			self.handle_tg_upd(args.get("tg_upd"))
+			return "DONE"
+		else:
+			return "UNKNOWN_MSG"
 	
 	def run_worker(self):
 		i = 0
@@ -97,6 +121,15 @@ class PathyDaemon():
 		player_uid, timeline = list(self.timelines.items())[player_idx] # FIX
 		player_stat = alsapi.get_player_stat(player_uid)
 		diff = timeline.consume_als_stat(player_stat)
+	
+	def get_status(self):
+		status = {
+			"msg_listener_alive": True,
+			"worker_thread_alive": self.worker_thread.is_alive(),
+			"scheduler_thread_alive": self.scheduler_thread.is_alive(),
+			"statistics": self.statistics
+		}
+		return status
 	
 	def lock(self):
 		try:
@@ -158,6 +191,9 @@ class PathyDaemon():
 					f"\n{traceback.format_exc()}",
 					err=True, send_tg=True)
 	
+	def handle_tg_upd(self, tg_upd):
+		pass # TODO
+	
 	def send_hate_monday_pic(self):
 		monday_ing_id = "AgACAgIAAx0CTJBx5QADHWEiP2LrqUGngEIIOJ4BNUHmVk_" \
 		"4AAJntTEboQ8RSVxQerfln3yYAQADAgADeQADIAQ"
@@ -193,6 +229,8 @@ class PathyDaemon():
 		for link in vids_to_notify:
 			util.call_tg_api(
 				"sendMessage", {"chat_id": ASL_CHAT_ID, "text": link})
+		
+		util.log(f"YT videos check completed: {len(vids_to_notify)} found")
 
 
 if __name__ == "__main__":

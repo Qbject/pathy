@@ -20,7 +20,7 @@ def get_player_stat(player_uid):
 		_ = stat["global"]
 		_ = stat["realtime"]
 	except Exception as e:
-		util.log(f"ALS API invalid stat response:\n{resp.text}")
+		log(f"ALS API invalid stat response:\n{resp.text}")
 		raise AlsApiError(f"ALS API respond with invalid data")
 	
 	return stat
