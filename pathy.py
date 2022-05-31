@@ -82,10 +82,10 @@ class RandGrGenerator():
 		self.PREFIXES_CACHE = None
 
 		self.TARG_DIR = Path(__file__).parent
-		self.GRS_FILE_PATH = self.TARG_DIR / "testgen/grs.txt"
-		self.GRS_PLUR_FILE_PATH = self.TARG_DIR / "testgen/grs_plur.txt"
-		self.MODIFIERS_FILE_PATH = self.TARG_DIR / "testgen/adjectives.txt"
-		self.PREFIXES_FILE_PATH = self.TARG_DIR / "testgen/prefixes.txt"
+		self.GRS_FILE_PATH = self.TARG_DIR / "textgen/grs.txt"
+		self.GRS_PLUR_FILE_PATH = self.TARG_DIR / "textgen/grs_plur.txt"
+		self.MODIFIERS_FILE_PATH = self.TARG_DIR / "textgen/adjectives.txt"
+		self.PREFIXES_FILE_PATH = self.TARG_DIR / "textgen/prefixes.txt"
 
 	def get_modifiers(self, ending=None, max_count=3):
 		self.ensure_cached_modifiers()
