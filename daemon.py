@@ -11,7 +11,6 @@ class PathyDaemon():
 	def __init__(self):
 		self.started = False
 		self.state = None
-		self.last_saved_state = None
 		self.stopping = False
 		self.worker_tasks = queue.Queue()
 		self.timelines = {}
@@ -89,6 +88,7 @@ class PathyDaemon():
 			return self.get_status()
 		elif msg == "tgupd":
 			self.handle_tg_upd(args.get("tg_upd"))
+			# self.as_worker(self.handle_tg_upd, args.get("tg_upd"))
 			return "DONE"
 		else:
 			return "UNKNOWN_MSG"
@@ -176,10 +176,7 @@ class PathyDaemon():
 		self.state["last_save"] = time.time()
 		
 		state_raw = json.dumps(self.state, indent="\t")
-		if state_raw == self.last_saved_state:
-			return
 		util.safe_file_write(DAEMON_STATE, state_raw)
-		self.last_saved_state = state_raw
 	
 	def handle_tasks(self):
 		while self.worker_tasks.qsize():
@@ -232,6 +229,12 @@ class PathyDaemon():
 		
 		util.log(f"YT videos check completed: {len(vids_to_notify)} found")
 
+class TrackedPlayer():
+	def __init__(self, player_state):
+		self.state = player_state
+	
+	def serialize(self):
+		return self.state
 
 if __name__ == "__main__":
 	if len(sys.argv) == 2 and sys.argv[1] == "start":
