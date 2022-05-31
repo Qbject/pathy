@@ -70,7 +70,7 @@ class PathyDaemon():
 		i = 0
 		while True:
 			try:
-				self.sync_state()
+				self.sync_state() # FIX order
 				self.handle_signals()
 				self.do_worker_step(i)
 			except Exception:
@@ -84,13 +84,13 @@ class PathyDaemon():
 			i += 1
 	
 	def do_worker_step(self, i):
-		if not self.timelines:
+		if not self.timelines: # FIX
 			for player_uid in self.state["tracked_players"]:
 				self.timelines[player_uid] = PlayerStatTimeline(player_uid)
 		
 		# this approach has minor problems while editing player list in runtime
 		player_idx = i % len(self.state["tracked_players"])
-		player_uid, timeline = list(self.timelines.items())[player_idx]
+		player_uid, timeline = list(self.timelines.items())[player_idx] # FIX
 		player_stat = alsapi.get_player_stat(player_uid)
 		diff = timeline.consume_als_stat(player_stat)
 	
@@ -131,7 +131,7 @@ class PathyDaemon():
 				log(f"Failed to execute scheduled task:" \
 					f"\n{traceback.foemat_exc()}",
 					err=True, send_tg=True)
-			time.sleep(1)
+			time.sleep(10)
 	
 	def sync_state(self):
 		"""

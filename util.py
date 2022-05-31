@@ -68,7 +68,7 @@ def call_tg_api(method, params={}, files={}):
 	)
 	tg_reply = json.loads(resp.text)
 	
-	if (not "result" in tg_reply) or (not tg_reply["ok"]):
+	if (not "result" in tg_reply) or (not tg_reply["ok"]) or (not resp.ok):
 		raise TgBotApiError("result['ok'] == False:\n" \
 			+ json.dumps(tg_reply, indent="\t"))
 	
