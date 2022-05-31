@@ -88,13 +88,13 @@ def is_alive():
 	except ConnectionRefusedError:
 		return False
 
-def get_last_sync():
+def get_last_state_save():
 	if not DAEMON_STATE.exists():
 		return None
 	
 	state_raw = DAEMON_STATE.read_text(encoding="utf-8")
 	state = json.loads(state_raw)
-	return state.get("last_sync") or None
+	return state.get("last_save") or None
 
 def get_downtime():
-	return time.time() - (get_last_sync() or 0.0)
+	return time.time() - (get_last_state_save() or 0.0)

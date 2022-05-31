@@ -1,6 +1,8 @@
-import time, traceback, subprocess, os, requests, json, pytz, datetime
+import time, traceback, subprocess, os, requests, json, pytz, datetime, random, re
+import localtext
 from pathlib import Path
 from const import *
+from localtext import trans
 
 def log(text, err=False, send_tg=False):
 	log_entry = f"{time.asctime()}: {text}"
@@ -48,8 +50,7 @@ def safe_file_write(file_path, data):
 	last_exc = None
 	for i in range(attempts):
 		try:
-			with open(file_path, "wb") as file:
-				file.write(data)
+			file_path.write_bytes(data)
 			last_exc = None
 			break
 		except Exception as exc:
@@ -109,3 +110,112 @@ def semiurlencode(text):
 
 def semiurldecode(text):
 	return text.replace("%20", " ").replace("%25", "%")
+
+def get_rnd_str(length=16):
+	return ''.join(random.choice(string.ascii_letters) for x in range(length))
+
+def format_time(seconds_total, include_seconds=False):
+	seconds_total = int(seconds_total)
+	mins, secs = divmod(seconds_total, 60)
+	hours, mins = divmod(mins, 60)
+	days, hours = divmod(hours, 24)
+
+	result_str = ""
+	if days:
+		result_str += f"{days}дн" % days
+	if hours:
+		result_str += f" {hours}год" % hours
+	if mins:
+		result_str += f" {mins}хв" % mins
+	if secs and include_seconds:
+		result_str += f" {secs}сек" % secs
+	if not result_str:
+		result_str = f"{secs}сек" % secs
+
+	return result_str.strip()
+
+def replace_char_map(txt, replacements):
+	result_letters = []
+	for char in txt:
+		result_letters.append(replacements.get(char) or char)
+	result_str = "".join(result_letters)
+	return result_str
+
+def chance(probability):
+	return random.random() < probability
+
+def format_rank(score, div, top_pos, rank_name, mode="br"):
+	points_name = "RP" if mode == "br" else "AP"
+	
+	if rank_name == "Apex Predator":
+		return f"Предатор #{top_pos}"
+	if rank_name == "Master":
+		return f"Мастер ({score}{points_name})"
+	
+	rank_div_scores = {
+		"br": [
+			0, 250, 500, 750,
+			1000, 1500, 2000, 2500,
+			3000, 3600, 4200, 4800,
+			5400, 6100, 6800, 7500,
+			8200, 9000, 9800, 10600,
+			11400, 12300, 13200, 14100,
+			15000
+		],
+		"arena": [
+			0, 400, 800, 1200,
+			1600, 2000, 2400, 2800,
+			3200, 3600, 4000, 4400,
+			4800, 5200, 5600, 6000,
+			6400, 6800, 7200, 7600,
+			8000
+		]
+	}
+	
+	next_percentage = calc_mid_percentage(
+		score, rank_div_scores[mode])
+	return f"{trans(rank_name)} {div} ({next_percentage}%)"
+
+def parse_bot_command(msg_text):
+	command_search = re.findall(
+		"^(/[a-zA-Z0-9_]+)(@[a-zA-Z0-9_]+){0,1}", msg_text)
+	if not command_search:
+		return (None, None)
+	
+	command = command_search[0][0]
+	botmention = command_search[0][1]
+	if botmention and (botmention.lower() != f"@{BOT_USERNAME.lower()}"):
+		return (None, None)
+	
+	full_command_len = len(command) + len(botmention)
+	params = msg_text[full_command_len:].strip()
+	
+	return (command, params)
+
+def get_yt_videos(channel_url):
+	channel_page = requests.get(channel_url).text
+	video_ids = re.findall("\"videoId\":\\s*\"([^\"]+)\"", channel_page)
+	
+	result_videos = []
+	for vid_id in video_ids:
+		vid_url = f"https://www.youtube.com/watch?v={vid_id}"
+		if not vid_url in result_videos:
+			result_videos.append(vid_url)
+	
+	return result_videos
+
+def dl_file_through_tg(url, dest):
+	sent_msg = call_tg_api("sendDocument",
+		{
+		"chat_id": DL_PROXY_CHAT_ID,
+		"document": url,
+		"caption": f"Caching {url}"
+		})
+	file_id = sent_msg["document"]["file_id"]
+	
+	tg_file = call_tg_api("getFile", {"file_id": file_id})
+	tg_url = f"https://api.telegram.org/file/bot" \
+		f"{BOT_TOKEN}/{tg_file['file_path']}"
+	
+	resp = requests.get(tg_url, allow_redirects=True)
+	open(dest, 'wb').write(resp.content)

@@ -1,8 +1,9 @@
-import util, time, datetime
+import time, datetime
+import util, localtext
 from util import log
 from const import *
 
-class PlayerStatTimeline():
+class PlayerTimeline():
 	def __init__(self, player_uid):
 		self.player_uid = player_uid
 		self.timeline_path = TIMELINE_DIR / f"{player_uid}.txt"
