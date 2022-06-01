@@ -17,13 +17,27 @@ class TrackedPlayer():
 		stat = alsapi.get_player_stat(self.uid)
 		diff = self.timeline.consume_als_stat(stat)
 	
-	def close(self):
-		self.timeline.close()
-	
-	# is it needed, or file handles gets
-	# released when all the refs are deleted?
-	def __del__(self):
-		self.close()
+	def get_session_start(self, before_time):
+		session_max_break = 30 * 60 # 30 min
+		
+		last_online = None
+		for time, legend, stat_name, stat_value in self.iter(reverse=True):
+			if time > before_time:
+				continue
+			
+			if last_online == None:
+				# looking for went offline event
+				if stat_name == "is_online" and stat_value == "1":
+					last_online = time
+			else:
+				# looking for any event happened earlier than
+				# session_max_break since player went offline
+				# or went online event to reset state
+				if stat_name == "is_online" and stat_value == "0":
+					last_online = None
+				elif time < (last_online - session_max_break):
+					return last_online
+			
 
 class PlayerTimeline():
 	def __init__(self, player_uid):
@@ -58,12 +72,66 @@ class PlayerTimeline():
 		if flush:
 			self.timeline_handle.flush()
 	
-	def iter(self):
-		return TimelineIterator(self.player_uid)
+	def iter(self, reverse=False):
+		if reverse:
+			iterator = util.reverse_readline(self.timeline_path)
+		else:
+			iterator = self.timeline_path.open("r")
+		
+		try:
+			for line in iterator:
+				entry = line.strip(" \r\n")
+				entry_split = entry.split(" ")
+				
+				if not entry:
+					continue
+				
+				def _log_invalid():
+					log(f"Skipping invalid entry in" \
+						f" {self.player_uid}.txt timeline: '{entry}'")
+				
+				if len(entry_split) != 4:
+					_log_invalid()
+					continue
+				
+				entry_split[0] = util.to_num(entry_split[0])
+				entry_split[1] = util.semiurldecode(str(entry_split[1]))
+				entry_split[2] = util.semiurldecode(str(entry_split[2]))
+				entry_split[3] = util.semiurldecode(str(entry_split[3]))
+				
+				if entry_split[0] == None:
+					_log_invalid()
+					continue
+				
+				yield entry_split
+		except GeneratorExit:
+			iterator.close()
+	
+	def get_diff(self, start, end):
+		diff_data = {}
+		# (legend or "_", stat): (start_value, end_value)
+		
+		for time, legend, stat_name, stat_value in self.iter():
+			if time > end:
+				break
+			
+			key = (legend, stat_name)
+			if not diff_data.get(key):
+				diff_data[key] = (None, None)
+			
+			if time < start:
+				diff_data[key][0] = stat_value
+			
+			elif start <= time <= end:
+				if diff_data[key][0] == None:
+					diff_data[key][0] = stat_value
+				diff_data[key][1] = stat_value
+		
+		return TimelineDiff(diff_data)
 	
 	def consume_als_stat(self, player_stat):
 		timestamp = int(datetime.datetime.utcnow().timestamp())
-		diff = {}
+		diff_data = {}
 		
 		def _add(stat_name, stat_value, legend="_"):
 			prev_value = self.cur_stats.get((legend, stat_name))
@@ -77,7 +145,7 @@ class PlayerTimeline():
 					return
 			
 			self.add_entry(timestamp, legend, stat_name, stat_value, False)
-			diff[(legend, stat_name)] = (prev_value, new_value)
+			diff_data[(legend, stat_name)] = (prev_value, new_value)
 		
 		_global = player_stat["global"]
 		_realtime = player_stat["realtime"]
@@ -116,7 +184,7 @@ class PlayerTimeline():
 				tracker["value"], selected_legend)
 		
 		self.timeline_handle.flush()
-		return diff
+		return TimelineDiff(diff_data)
 	
 	def close(self):
 		self.timeline_handle.close()
@@ -125,7 +193,7 @@ class PlayerTimeline():
 		self.close()
 
 class TimelineIterator():
-	def __init__(self, player_uid):
+	def __init__(self, player_uid, reverse=False):
 		self.player_uid = player_uid
 		self.timeline_path = TIMELINE_DIR / f"{player_uid}.txt"
 		self.file_handle = self.timeline_path.open("r")
@@ -166,3 +234,7 @@ class TimelineIterator():
 			return _skip()
 		
 		return entry_split
+
+class TimelineDiff():
+	def __init__(self, data):
+		self.data = data
