@@ -1,7 +1,29 @@
 import time, datetime
-import util, localtext
+import util, localtext, alsapi
 from util import log
 from const import *
+
+
+class TrackedPlayer():
+	def __init__(self, player_state):
+		self.uid = player_state["uid"]
+		self.state = player_state
+		self.timeline = PlayerTimeline(self.uid)
+	
+	def serialize(self):
+		return self.state
+	
+	def update(self):
+		stat = alsapi.get_player_stat(self.uid)
+		diff = self.timeline.consume_als_stat(stat)
+	
+	def close(self):
+		self.timeline.close()
+	
+	# is it needed, or file handles gets
+	# released when all the refs are deleted?
+	def __del__(self):
+		self.close()
 
 class PlayerTimeline():
 	def __init__(self, player_uid):

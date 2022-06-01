@@ -4,7 +4,7 @@ from pathlib import Path
 from multiprocessing.connection import Listener
 from util import log
 from const import *
-from timeline import PlayerTimeline
+from pathylib import PlayerTimeline, TrackedPlayer
 from localtext import trans
 
 class PathyDaemon():
@@ -13,7 +13,6 @@ class PathyDaemon():
 		self.state = None
 		self.stopping = False
 		self.worker_tasks = queue.Queue()
-		self.timelines = {}
 		
 		self.statistics = { # TODO TODO TODO
 			"started_at": time.time(),
@@ -97,8 +96,6 @@ class PathyDaemon():
 		i = 0
 		while True:
 			try:
-				self.handle_tasks()
-				self.save_state()
 				self.do_worker_step(i)
 				self.save_state()
 			except Exception:
@@ -108,19 +105,22 @@ class PathyDaemon():
 			if self.stopping:
 				break
 			
-			time.sleep(10)
 			i += 1
 	
 	def do_worker_step(self, i):
-		if not self.timelines: # FIX
-			for player_uid in self.state["tracked_players"]:
-				self.timelines[player_uid] = PlayerTimeline(player_uid)
-		
-		# this approach has minor problems while editing player list in runtime
-		player_idx = i % len(self.state["tracked_players"])
-		player_uid, timeline = list(self.timelines.items())[player_idx] # FIX
-		player_stat = alsapi.get_player_stat(player_uid)
-		diff = timeline.consume_als_stat(player_stat)
+		if (i % 3) == 0:
+			# this approach is inconsistent is player list gets edited in runtime
+			players_count = len(self.state["tracked_players"])
+			if not players_count:
+				time.sleep(1)
+			player_idx = int((i / 3) % players_count)
+			player = self.state["tracked_players"][player_idx]
+			player.update()
+			time.sleep(10)
+		elif (i % 3) == 1:
+			self.handle_tasks()
+		elif (i % 3) == 2:
+			self.handle_delayed_tasks()
 	
 	def get_status(self):
 		status = {
@@ -170,12 +170,22 @@ class PathyDaemon():
 			return
 		
 		state_raw = DAEMON_STATE.read_text(encoding="utf-8")
-		self.state = json.loads(state_raw)
+		state = json.loads(state_raw)
+		
+		if state["tracked_players"]:
+			for i, player_state in enumerate(state["tracked_players"]):
+				state["tracked_players"][i] = TrackedPlayer(player_state)
+		
+		self.state = state
 	
 	def save_state(self):
+		def _serialize(item):
+			if type(item) == TrackedPlayer:
+				return item.serialize()
+		
 		self.state["last_save"] = time.time()
 		
-		state_raw = json.dumps(self.state, indent="\t")
+		state_raw = json.dumps(self.state, indent="\t", default=_serialize)
 		util.safe_file_write(DAEMON_STATE, state_raw)
 	
 	def handle_tasks(self):
@@ -187,6 +197,9 @@ class PathyDaemon():
 				log(f"Daemon worker task executing error:" \
 					f"\n{traceback.format_exc()}",
 					err=True, send_tg=True)
+	
+	def handle_delayed_tasks(self):
+		pass # TODO
 	
 	def handle_tg_upd(self, tg_upd):
 		pass # TODO
@@ -229,12 +242,6 @@ class PathyDaemon():
 		
 		util.log(f"YT videos check completed: {len(vids_to_notify)} found")
 
-class TrackedPlayer():
-	def __init__(self, player_state):
-		self.state = player_state
-	
-	def serialize(self):
-		return self.state
 
 if __name__ == "__main__":
 	if len(sys.argv) == 2 and sys.argv[1] == "start":
