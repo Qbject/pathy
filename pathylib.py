@@ -2,6 +2,7 @@ import time, datetime
 import util, localtext, alsapi
 from util import log
 from const import *
+from localtext import trans
 
 
 class TrackedPlayer():
@@ -13,37 +14,76 @@ class TrackedPlayer():
 	def serialize(self):
 		return self.state
 	
+	def get_name(self):
+		return self.timeline.cur_stats.get(("_", "name"), "???")
+	
+	def get_moniker(self):
+		return self.timeline.cur_stats.get(("_", "moniker"), "???")
+	
 	def update(self):
 		stat = alsapi.get_player_stat(self.uid)
 		diff = self.timeline.consume_als_stat(stat)
+		
+		if diff.get(("_", "is_online")) and diff[("_", "is_online")] == "0":
+			sess_end = time.time()
+			sess_start = self.get_session_start(sess_end)
+			sess_diff = self.timeline.get_diff(sess_start, sess_end)
+			
+			sess_summary_msg = ""
+			sess_summary_msg += f"{self.get_name()} " \
+				f"більше не {self.get_moniker()} :(\n"
+			
+			sess_length = sess_end - sess_start
+			sess_summary_msg += f"Зіграно часу: " \
+				f"{util.format_time(sess_length)}\n"
+			sess_summary_msg += f"Левел: {sess_diff[('_', stat_name)][0]} ->" \
+				f" {sess_diff[('_', stat_name)][1]}\n"
+			
+			for legend, stat_name in sess_diff:
+				delta = sess_diff[(legend, stat_name)][1] - \
+					sess_diff[(legend, stat_name)][0]
+				sess_summary_msg += f"{trans(stat_name)} на " \
+					f"{trans('on_'+legend)}: {delta}\n"
+			self.notify_chats(sess_summary_msg)
 	
 	def get_session_start(self, before_time):
 		session_max_break = 30 * 60 # 30 min
 		
-		last_online = None
+		sess_start = None
 		for time, legend, stat_name, stat_value in self.iter(reverse=True):
 			if time > before_time:
 				continue
 			
-			if last_online == None:
-				# looking for went offline event
+			if sess_start == None:
+				# looking for went online event
 				if stat_name == "is_online" and stat_value == "1":
-					last_online = time
+					sess_start = time
 			else:
-				# looking for any event happened earlier than
-				# session_max_break since player went offline
-				# or went online event to reset state
-				if stat_name == "is_online" and stat_value == "0":
-					last_online = None
-				elif time < (last_online - session_max_break):
-					return last_online
+				# looking for any event happened earlier
+				# than (sess_start - session_max_break) or to reset
+				# sess_start if another went offline event found earlier
+				if time < (sess_start - session_max_break):
+					break
+				elif stat_name == "is_online" and stat_value == "0":
+					sess_start = None
+		
+		return sess_start
+	
+	def notify_chats(self, msg, as_html=False, silent=False):
+		for chat_id, chat_state in self.state.chats:
+			call_tg_api("sendMessage", {
+				"chat_id": chat_id,
+				"text": msg,
+				"parse_mode": "HTML" if as_html else None,
+				"disable_notification": silent
+			})
 			
 
 class PlayerTimeline():
 	def __init__(self, player_uid):
 		self.player_uid = player_uid
 		self.timeline_path = TIMELINE_DIR / f"{player_uid}.txt"
-		self.cur_stats = {} # keys are tuples (legend_name or "_", stat_name)
+		self.cur_stats = {} # keys are tuples (legend or "_", stat_name)
 		
 		TIMELINE_DIR.mkdir(exist_ok=True)
 		self.timeline_handle = self.timeline_path.open("a", encoding="utf-8")
@@ -74,12 +114,12 @@ class PlayerTimeline():
 	
 	def iter(self, reverse=False):
 		if reverse:
-			iterator = util.reverse_readline(self.timeline_path)
+			iterable = util.reverse_readline(self.timeline_path)
 		else:
-			iterator = self.timeline_path.open("r")
+			iterable = self.timeline_path.open("r")
 		
 		try:
-			for line in iterator:
+			for line in iterable:
 				entry = line.strip(" \r\n")
 				entry_split = entry.split(" ")
 				
@@ -105,7 +145,7 @@ class PlayerTimeline():
 				
 				yield entry_split
 		except GeneratorExit:
-			iterator.close()
+			iterable.close()
 	
 	def get_diff(self, start, end):
 		diff_data = {}
@@ -123,9 +163,16 @@ class PlayerTimeline():
 				diff_data[key][0] = stat_value
 			
 			elif start <= time <= end:
-				if diff_data[key][0] == None:
-					diff_data[key][0] = stat_value
-				diff_data[key][1] = stat_value
+				if stat_value != "$null":
+					if diff_data[key][0] in (None, "$null"):
+						diff_data[key][0] = stat_value
+					diff_data[key][1] = stat_value
+		
+		for key, stat_values in diff_data.items():
+			if (None in stat_values) or \
+			("$null" in stat_values) or \
+			(stat_values[0] == stat_values[1]):
+				diff_data.remove(key)
 		
 		return TimelineDiff(diff_data)
 	
@@ -179,61 +226,37 @@ class PlayerTimeline():
 		selected_legend = player_stat["legends"]["selected"]["LegendName"]
 		_add("legend", selected_legend)
 		
+		untouched_trackers = self.get_legend_trackers(selected_legend)
 		for tracker in player_stat["legends"]["selected"]["data"]:
 			_add("tracker_" + tracker["key"],
 				tracker["value"], selected_legend)
+			
+			if tracker["key"] in untouched_trackers:
+				untouched_trackers.remove(tracker["key"])
+		
+		# nullifying unavailable trackers (probably unequipped)
+		# $null is treated as a special value
+		for tracker_name in untouched_trackers:
+			_add(f"tracker_{tracker_name}", "$null", selected_legend)
 		
 		self.timeline_handle.flush()
 		return TimelineDiff(diff_data)
+	
+	def get_legend_trackers(self, targ_legend):
+		legend_trackers = []
+		for (legend, stat_name) in self.cur_stats:
+			if legend != targ_legend:
+				continue
+			if not stat_name.startswith("tracker_"):
+				continue
+			legend_trackers.append(stat_name[8:])
+		return legend_trackers
 	
 	def close(self):
 		self.timeline_handle.close()
 	
 	def __del__(self):
 		self.close()
-
-class TimelineIterator():
-	def __init__(self, player_uid, reverse=False):
-		self.player_uid = player_uid
-		self.timeline_path = TIMELINE_DIR / f"{player_uid}.txt"
-		self.file_handle = self.timeline_path.open("r")
-		self.ended = False
-	
-	def __iter__(self):
-		return self
-	
-	def __next__(self):
-		if self.ended:
-			raise StopIteration
-		
-		line = self.file_handle.readline()
-		if not line.endswith("\n"):
-			self.ended = True
-			self.file_handle.close()
-		
-		entry = line.strip(" \r\n")
-		entry_split = entry.split(" ")
-		
-		if not entry:
-			return self.__next__()
-		
-		def _skip():
-			log(f"Skipping invalid entry in" \
-				f" {self.player_uid}.txt timeline: '{entry}'")
-			return self.__next__()
-		
-		if len(entry_split) != 4:
-			return _skip()
-		
-		entry_split[0] = util.to_num(entry_split[0])
-		entry_split[1] = util.semiurldecode(str(entry_split[1]))
-		entry_split[2] = util.semiurldecode(str(entry_split[2]))
-		entry_split[3] = util.semiurldecode(str(entry_split[3]))
-		
-		if entry_split[0] == None:
-			return _skip()
-		
-		return entry_split
 
 class TimelineDiff():
 	def __init__(self, data):

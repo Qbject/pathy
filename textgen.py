@@ -14,14 +14,8 @@ def ensure_cached(dict_path):
 	_cached_textdata[dict_path.name] = [s.strip() for s in lines]
 
 def get_moniker(plural=False):
-	is_doubled = util.chance(0.05)
-	
 	gr, adj_ending = _get_base_gr(plural=plural)
 	adjectives = get_adjectives(ending=adj_ending)
-	
-	if is_doubled:
-		suffix_gr, _ = _get_base_gr(plural=plural)
-		gr = f"{gr}-{suffix_gr}"
 	
 	return f"{adjectives} {gr}"
 

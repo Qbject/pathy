@@ -104,12 +104,12 @@ def to_num(str_num):
 			pass
 	return result
 
-# simple urlencoding-like algorythm for removing spaces from text
+# simple urlencoding-like algorythm for preventing spaces and "$" in text
 def semiurlencode(text):
-	return text.replace("%", "%25").replace(" ", "%20")
+	return text.replace("%", "%25").replace(" ", "%20").replace("$", "%24")
 
 def semiurldecode(text):
-	return text.replace("%20", " ").replace("%25", "%")
+	return text.replace("%24", "$").replace("%20", " ").replace("%25", "%")
 
 def get_rnd_str(length=16):
 	return ''.join(random.choice(string.ascii_letters) for x in range(length))
