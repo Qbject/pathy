@@ -24,7 +24,7 @@ class TrackedPlayer():
 		stat = alsapi.get_player_stat(self.uid)
 		diff = self.timeline.consume_als_stat(stat)
 		
-		if diff.get(("_", "is_online")) and diff[("_", "is_online")] == "0":
+		if diff.data.get(("_", "is_online")) and diff.data[("_", "is_online")] == "0":
 			sess_end = time.time()
 			sess_start = self.get_session_start(sess_end)
 			sess_diff = self.timeline.get_diff(sess_start, sess_end)
@@ -36,12 +36,12 @@ class TrackedPlayer():
 			sess_length = sess_end - sess_start
 			sess_summary_msg += f"Зіграно часу: " \
 				f"{util.format_time(sess_length)}\n"
-			sess_summary_msg += f"Левел: {sess_diff[('_', stat_name)][0]} ->" \
-				f" {sess_diff[('_', stat_name)][1]}\n"
+			sess_summary_msg += f"Левел: {sess_diff.data[('_', stat_name)][0]} ->" \
+				f" {sess_diff.data[('_', stat_name)][1]}\n"
 			
-			for legend, stat_name in sess_diff:
-				delta = sess_diff[(legend, stat_name)][1] - \
-					sess_diff[(legend, stat_name)][0]
+			for legend, stat_name in sess_diff.data:
+				delta = sess_diff.data[(legend, stat_name)][1] - \
+					sess_diff.data[(legend, stat_name)][0]
 				sess_summary_msg += f"{trans(stat_name)} на " \
 					f"{trans('on_'+legend)}: {delta}\n"
 			self.notify_chats(sess_summary_msg)
