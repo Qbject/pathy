@@ -70,13 +70,17 @@ class TrackedPlayer():
 		return sess_start
 	
 	def notify_chats(self, msg, as_html=False, silent=False):
+		msg_ids = []
 		for chat_id, chat_state in self.state.chats:
-			call_tg_api("sendMessage", {
+			sent_msg = call_tg_api("sendMessage", {
 				"chat_id": chat_id,
 				"text": msg,
 				"parse_mode": "HTML" if as_html else None,
 				"disable_notification": silent
 			})
+			msg_ids.append(sent_msg.get("message_id"))
+		
+		return msg_ids
 			
 
 class PlayerTimeline():
