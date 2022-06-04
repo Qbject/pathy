@@ -10,61 +10,64 @@ class TrackedPlayer():
 		self.uid = player_state["uid"]
 		self.state = player_state
 		self.timeline = PlayerTimeline(self.uid)
+		
+		self.name = self.timeline.cur_stats.get(("_", "name"), "???")
+		self.moniker = self.timeline.cur_stats.get(("_", "moniker"), "???")
 	
 	def serialize(self):
 		return self.state
 	
-	def get_name(self):
-		return self.timeline.cur_stats.get(("_", "name"), "???")
-	
-	def get_moniker(self):
-		return self.timeline.cur_stats.get(("_", "moniker"), "???")
+	def get_rank(self, mode):
+		return PlayerRank.from_stat(self.timeline.cur_stats, mode=mode)
 	
 	def update(self):
 		stat = alsapi.get_player_stat(self.uid)
 		diff = self.timeline.consume_als_stat(stat)
 		
-		if diff.data.get(("_", "is_online")) and diff.data[("_", "is_online")] == "0":
+		went_online = went_offline = False
+		if diff.get(("_", "is_online")):
+			if diff[("_", "is_online")][1] == "1":
+				went_online = True
+			else:
+				went_offline = True
+		
+		if went_online or went_offline:
+			o = "online" if went_online else "offline"
+			log(f"Player {self.name} went {o}", send_tg=True)
+		
+		if went_offline:
 			sess_end = time.time()
 			sess_start = self.get_session_start(sess_end)
-			sess_diff = self.timeline.get_diff(sess_start, sess_end)
+			log(f"Session start: {sess_start}", send_tg=True)
+			if sess_start == None:
+				return
+			sess = self.timeline.get_segment(sess_start, sess_end)
 			
-			sess_summary_msg = ""
-			sess_summary_msg += f"{self.get_name()} " \
-				f"більше не {self.get_moniker()} :(\n"
+			msg = ""
+			msg += f"<b>{self.name}</b> більше не <i>{self.moniker}</i> :(\n"
+			msg += f"<pre>{sess.format()}</pre>"
 			
-			sess_length = sess_end - sess_start
-			sess_summary_msg += f"Зіграно часу: " \
-				f"{util.format_time(sess_length)}\n"
-			sess_summary_msg += f"Левел: {sess_diff.data[('_', stat_name)][0]} ->" \
-				f" {sess_diff.data[('_', stat_name)][1]}\n"
-			
-			for legend, stat_name in sess_diff.data:
-				delta = sess_diff.data[(legend, stat_name)][1] - \
-					sess_diff.data[(legend, stat_name)][0]
-				sess_summary_msg += f"{trans(stat_name)} на " \
-					f"{trans('on_'+legend)}: {delta}\n"
-			self.notify_chats(sess_summary_msg)
+			self.notify_chats(msg)
 	
 	def get_session_start(self, before_time):
 		session_max_break = 30 * 60 # 30 min
 		
 		sess_start = None
-		for time, legend, stat_name, stat_value in self.iter(reverse=True):
-			if time > before_time:
+		for entry in self.iter(reverse=True):
+			if entry.time > before_time:
 				continue
 			
 			if sess_start == None:
 				# looking for went online event
-				if stat_name == "is_online" and stat_value == "1":
-					sess_start = time
+				if entry.stat_name == "is_online" and entry.stat_value_num:
+					sess_start = entry.time
 			else:
 				# looking for any event happened earlier
 				# than (sess_start - session_max_break) or to reset
 				# sess_start if another went offline event found earlier
-				if time < (sess_start - session_max_break):
+				if entry.time < (sess_start - session_max_break):
 					break
-				elif stat_name == "is_online" and stat_value == "0":
+				elif entry.stat_name == "is_online" and entry.stat_value_num:
 					sess_start = None
 		
 		return sess_start
@@ -91,28 +94,21 @@ class PlayerTimeline():
 		
 		TIMELINE_DIR.mkdir(exist_ok=True)
 		self.timeline_handle = self.timeline_path.open("a", encoding="utf-8")
-		self.load()
+		self.fill_cur_stats()
 	
-	def load(self):
+	def fill_cur_stats(self):
 		self.cur_stats = {}
 		
 		if not self.timeline_path.exists():
 			return
 		
-		for _, legend, stat_name, stat_value in self.iter():
-			self.cur_stats[(legend, stat_name)] = stat_value
+		for entry in self.iter():
+			self.cur_stats[(entry.legend, entry.stat_name)] = entry.stat_value
 	
-	def add_entry(self, timestamp, legend, stat_name, stat_value, flush=True):
-		self.cur_stats[(legend, stat_name)] = str(stat_value)
+	def add_entry(self, entry, flush=True):
+		self.cur_stats[(entry.legend, entry.stat_name)] = str(entry.stat_value)
+		self.timeline_handle.write(entry.serialize() + "\n")
 		
-		line = " ".join((
-			str(timestamp),
-			util.semiurlencode(str(legend)),
-			util.semiurlencode(str(stat_name)),
-			util.semiurlencode(str(stat_value))
-		))
-		
-		self.timeline_handle.write(line + "\n")
 		if flush:
 			self.timeline_handle.flush()
 	
@@ -124,61 +120,31 @@ class PlayerTimeline():
 		
 		try:
 			for line in iterable:
-				entry = line.strip(" \r\n")
-				entry_split = entry.split(" ")
-				
-				if not entry:
+				try:
+					entry = TimelineEntry.parse(line)
+				except TimelineEntryError:
+					if line.strip(): # do not report empty lines
+						log(f"Skipping invalid entry in" \
+							f" {self.player_uid}.txt timeline: '{entry}'")
 					continue
 				
-				def _log_invalid():
-					log(f"Skipping invalid entry in" \
-						f" {self.player_uid}.txt timeline: '{entry}'")
-				
-				if len(entry_split) != 4:
-					_log_invalid()
-					continue
-				
-				entry_split[0] = util.to_num(entry_split[0])
-				entry_split[1] = util.semiurldecode(str(entry_split[1]))
-				entry_split[2] = util.semiurldecode(str(entry_split[2]))
-				entry_split[3] = util.semiurldecode(str(entry_split[3]))
-				
-				if entry_split[0] == None:
-					_log_invalid()
-					continue
-				
-				yield entry_split
+				yield entry
 		except GeneratorExit:
 			iterable.close()
 	
-	def get_diff(self, start, end):
-		diff_data = {}
-		# (legend or "_", stat): (start_value, end_value)
+	def get_segment(self, start, end):
+		start_stat = {}
+		entries = []
 		
-		for time, legend, stat_name, stat_value in self.iter():
-			if time > end:
+		for entry in self.iter():
+			if entry.time < start:
+				start_stat[(entry.legend, entry.stat_name)] = entry.stat_value
+			elif entry.time > end:
 				break
-			
-			key = (legend, stat_name)
-			if not diff_data.get(key):
-				diff_data[key] = (None, None)
-			
-			if time < start:
-				diff_data[key][0] = stat_value
-			
-			elif start <= time <= end:
-				if stat_value != "$null":
-					if diff_data[key][0] in (None, "$null"):
-						diff_data[key][0] = stat_value
-					diff_data[key][1] = stat_value
+			else:
+				entries.append(entry)
 		
-		for key, stat_values in diff_data.items():
-			if (None in stat_values) or \
-			("$null" in stat_values) or \
-			(stat_values[0] == stat_values[1]):
-				diff_data.remove(key)
-		
-		return TimelineDiff(diff_data)
+		return TimelineSegment(start, end, start_stat, entries)
 	
 	def consume_als_stat(self, player_stat):
 		timestamp = int(datetime.datetime.utcnow().timestamp())
@@ -195,7 +161,8 @@ class PlayerTimeline():
 				if abs(int(prev_value or 0) - int(new_value)) < 20:
 					return
 			
-			self.add_entry(timestamp, legend, stat_name, stat_value, False)
+			entry = TimelineEntry(timestamp, legend, stat_name, stat_value)
+			self.add_entry(entry, False)
 			diff_data[(legend, stat_name)] = (prev_value, new_value)
 		
 		_global = player_stat["global"]
@@ -230,7 +197,7 @@ class PlayerTimeline():
 		selected_legend = player_stat["legends"]["selected"]["LegendName"]
 		_add("legend", selected_legend)
 		
-		untouched_trackers = self.get_legend_trackers(selected_legend)
+		untouched_trackers = self.get_stored_legend_trackers(selected_legend)
 		for tracker in player_stat["legends"]["selected"]["data"]:
 			_add("tracker_" + tracker["key"],
 				tracker["value"], selected_legend)
@@ -244,9 +211,9 @@ class PlayerTimeline():
 			_add(f"tracker_{tracker_name}", "$null", selected_legend)
 		
 		self.timeline_handle.flush()
-		return TimelineDiff(diff_data)
+		return diff_data
 	
-	def get_legend_trackers(self, targ_legend):
+	def get_stored_legend_trackers(self, targ_legend):
 		legend_trackers = []
 		for (legend, stat_name) in self.cur_stats:
 			if legend != targ_legend:
@@ -262,6 +229,173 @@ class PlayerTimeline():
 	def __del__(self):
 		self.close()
 
-class TimelineDiff():
-	def __init__(self, data):
-		self.data = data
+class TimelineSegment():
+	def __init__(self, start, end, start_stat, entries):
+		self.start = start
+		self.end = end
+		self.duration = end - start
+		self.start_stat = start_stat
+		self.entries = entries
+		self.fill_diff()
+		self.fill_end_stat()
+	
+	def fill_diff(self):
+		self.diff = {}
+		# (legend or "_", stat): (start_value, end_value)
+		
+		for key in start_stat:
+			if start_stat.stat_value == "$null":
+				continue
+			self.diff[key] = (start_stat.stat_value, None)
+		
+		for entry in self.entries:
+			key = (entry.legend, entry.stat_name)
+			
+			if not self.diff.get(key):
+				self.diff[key] = (entry.stat_value, entry.stat_value)
+				continue
+			
+			if entry.isnull:
+				continue
+			
+			self.diff[key][1] = entry.stat_value
+		
+		for key, stat_values in self.diff.items():
+			if (stat_values[0] == stat_values[1]):
+				self.diff.remove(key)
+	
+	def fill_end_stat(self):
+		self.end_stat = self.start_stat.copy()
+		# (legend or "_", stat): (start_value, end_value)
+		
+		for entry in self.entries:
+			key = (entry.legend, entry.stat_name)
+			self.end_stat[key] = entry.stat_value
+	
+	def format(self):
+		arw = "→"
+		
+		legends = {}
+		for legend, stat_name in self.diff:
+			if legend == "_" or not stat_name.startswith("tracker_"):
+				continue
+			if not legend in legends:
+				legends[legend] = {}
+			
+			val_before = util.to_num(self.diff[(legend, stat_name)][0])
+			val_after  = util.to_num(self.diff[(legend, stat_name)][1])
+			if None in (val_before, val_after):
+				stat_delta = "???"
+			else:
+				stat_delta = val_after - val_before
+			legends[legend][stat_name[8:]] = stat_delta
+		
+		text = ""
+		text += f"Зіграно часу: {util.format_time(self.duration)}\n"
+		# TODO: matches played
+		
+		lvl_diff = self.diff.get(("_", "level"))
+		if lvl_diff:
+			text += f"Левел: {lvl_diff[0]} {arw} {lvl_diff[1]}\n"
+		
+		if self.diff.get(("_", "br_rank_score")):
+			before = PlayerRank.from_stat(self.start_stat, mode="br")
+			after  = PlayerRank.from_stat(self.end_stat,   mode="br")
+		text += f"Ранг в БР: {before.format()} {arw} {after.format()}"
+		
+		if self.diff.get(("_", "ar_rank_score")):
+			before = PlayerRank.from_stat(self.start_stat, mode="ar")
+			after  = PlayerRank.from_stat(self.end_stat,   mode="ar")
+		text += f"Ранг в БР: {before.format()} {arw} {after.format()}"
+		
+		for legend, trackers in legends.items():
+			text += f"На {trans('on_'+legend)}:\n"
+			for tracker, delta in trackers.items():
+				text += f"  {trans(stat_name)}: {delta}\n"
+
+class TimelineEntry():
+	def __init__(self, timestamp, legend, stat_name, stat_value):
+		self.timestamp = timestamp
+		self.legend = legend
+		self.stat_name = stat_name
+		self.stat_value = stat_value
+		self.stat_value_num = util.to_num(self.stat_value)
+		self.isnull = self.stat_value == "$null"
+	
+	@classmethod
+	def parse(cls, entry_line):
+		entry = entry_line.strip(" \r\n")
+		entry_split = entry.split(" ")
+		
+		if len(entry_split) != 4:
+			raise TimelineEntryError
+		
+		entry_split[0] = util.to_num(entry_split[0])
+		entry_split[1] = util.semiurldecode(str(entry_split[1]))
+		entry_split[2] = util.semiurldecode(str(entry_split[2]))
+		entry_split[3] = util.semiurldecode(str(entry_split[3]))
+		
+		if entry_split[0] == None:
+			raise TimelineEntryError
+		
+		return cls(*entry_split)
+	
+	def serialize(self):
+		return " ".join((
+			str(self.timestamp),
+			util.semiurlencode(str(self.legend)),
+			util.semiurlencode(str(self.stat_name)),
+			util.semiurlencode(str(self.stat_value))
+		))
+
+class TimelineEntryError(ValueError):
+	pass
+
+class PlayerRank():
+	def __init__(self, score, div, top_pos, rank_name, mode):
+		self.score = score
+		self.div = div
+		self.top_pos = top_pos
+		self.rank_name = rank_name
+		self.mode = mode
+	
+	def format(self):
+		points_name = "RP" if self.mode == "br" else "AP"
+		
+		if self.rank_name == "Apex Predator":
+			return f"Предатор #{self.top_pos}"
+		if self.rank_name == "Master":
+			return f"Мастер ({self.score}{points_name})"
+		
+		rank_div_scores = {
+			"br": [
+				0, 250, 500, 750,
+				1000, 1500, 2000, 2500,
+				3000, 3600, 4200, 4800,
+				5400, 6100, 6800, 7500,
+				8200, 9000, 9800, 10600,
+				11400, 12300, 13200, 14100,
+				15000
+			],
+			"ar": [
+				0, 400, 800, 1200,
+				1600, 2000, 2400, 2800,
+				3200, 3600, 4000, 4400,
+				4800, 5200, 5600, 6000,
+				6400, 6800, 7200, 7600,
+				8000
+			]
+		}
+		
+		next_percentage = util.calc_mid_percentage(
+			self.score, rank_div_scores[mode])
+		return f"{trans(self.rank_name)} {self.div} ({next_percentage}%)"
+	
+	@classmethod
+	def from_stat(cls, stat, mode):
+		return cls(
+			stat.get(f"{mode}_rank_score"),
+			stat.get(f"{mode}_rank_div"),
+			stat.get(f"{mode}_rank_top_pos"),
+			stat.get(f"{mode}_rank_name")
+		)

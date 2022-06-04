@@ -144,38 +144,6 @@ def replace_char_map(txt, replacements):
 def chance(probability):
 	return random.random() < probability
 
-def format_rank(score, div, top_pos, rank_name, mode="br"):
-	points_name = "RP" if mode == "br" else "AP"
-	
-	if rank_name == "Apex Predator":
-		return f"Предатор #{top_pos}"
-	if rank_name == "Master":
-		return f"Мастер ({score}{points_name})"
-	
-	rank_div_scores = {
-		"br": [
-			0, 250, 500, 750,
-			1000, 1500, 2000, 2500,
-			3000, 3600, 4200, 4800,
-			5400, 6100, 6800, 7500,
-			8200, 9000, 9800, 10600,
-			11400, 12300, 13200, 14100,
-			15000
-		],
-		"arena": [
-			0, 400, 800, 1200,
-			1600, 2000, 2400, 2800,
-			3200, 3600, 4000, 4400,
-			4800, 5200, 5600, 6000,
-			6400, 6800, 7200, 7600,
-			8000
-		]
-	}
-	
-	next_percentage = calc_mid_percentage(
-		score, rank_div_scores[mode])
-	return f"{trans(rank_name)} {div} ({next_percentage}%)"
-
 def parse_bot_command(msg_text):
 	command_search = re.findall(
 		"^(/[a-zA-Z0-9_]+)(@[a-zA-Z0-9_]+){0,1}", msg_text)
@@ -191,6 +159,20 @@ def parse_bot_command(msg_text):
 	params = msg_text[full_command_len:].strip()
 	
 	return (command, params)
+
+def calc_mid_percentage(targ_num, comp_nums):
+	"""
+	Really struggle to describe what this func does,
+	so you better compile it in your head
+	"""
+	for i in range(len(comp_nums) - 1):
+		prev_num = comp_nums[i]
+		next_num = comp_nums[i+1]
+		
+		if prev_num <= targ_num < next_num:
+			return int(((targ_num - prev_num) / (next_num - prev_num)) * 100)
+	
+	return -1
 
 def get_yt_videos(channel_url):
 	channel_page = requests.get(channel_url).text

@@ -12,7 +12,7 @@ def get_player_stat(player_uid):
 		return get_player_stat(player_uid)
 	
 	if not resp.ok:
-		raise AlsApiError(f"ALS API respond with code " \
+		raise AlsApiError(f"ALS API respont with code " \
 			f"{resp.status_code}: {resp.reason}")
 	
 	try:
@@ -21,7 +21,7 @@ def get_player_stat(player_uid):
 		_ = stat["realtime"]
 	except Exception as e:
 		log(f"ALS API invalid stat response:\n{resp.text}")
-		raise AlsApiError(f"ALS API respond with invalid data")
+		raise AlsApiError(f"ALS API respont with invalid data")
 	
 	return stat
 
@@ -34,14 +34,14 @@ def get_map_rotation():
 		return get_map_rotation()
 	
 	if not resp.ok:
-		raise AlsApiError(f"ALS API respond with code " \
+		raise AlsApiError(f"ALS API respont with code " \
 			f"{resp.status_code}: {resp.reason}")
 	
 	try:
 		rotation = resp.json()
 	except Exception as e:
 		log(f"ALS API invalid map rotation response:\n{resp.text}")
-		raise AlsApiError(f"ALS API respond with invalid data")
+		raise AlsApiError(f"ALS API respont with invalid data")
 	
 	return rotation
 
@@ -54,14 +54,14 @@ def get_craft_rotation():
 		return get_craft_rotation()
 	
 	if not resp.ok:
-		raise AlsApiError(f"ALS API respond with code " \
+		raise AlsApiError(f"ALS API respont with code " \
 			f"{resp.status_code}: {resp.reason}")
 	
 	try:
 		rotation = resp.json()
 	except Exception as e:
 		log(f"ALS API invalid craft rotation response:\n{resp.text}")
-		raise AlsApiError(f"ALS API respond with invalid data")
+		raise AlsApiError(f"ALS API respont with invalid data")
 	
 	return rotation
 
