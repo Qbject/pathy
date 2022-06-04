@@ -77,7 +77,7 @@ class TrackedPlayer():
 	
 	def notify_chats(self, msg, as_html=False, silent=False):
 		msg_ids = []
-		for chat_id, chat_state in self.state["chats"]:
+		for chat_id, chat_state in self.state["chats"].items():
 			sent_msg = call_tg_api("sendMessage", {
 				"chat_id": chat_id,
 				"text": msg,
