@@ -360,9 +360,9 @@ class PlayerRank():
 		points_name = "RP" if self.mode == "br" else "AP"
 		
 		if self.rank_name == "Apex Predator":
-			return f"Предатор #{self.top_pos}"
+			return f"{trans(self.rank_name)} #{self.top_pos}"
 		if self.rank_name == "Master":
-			return f"Мастер ({self.score}{points_name})"
+			return f"{trans(self.rank_name)} ({self.score}{points_name})"
 		
 		rank_div_scores = {
 			"br": [
