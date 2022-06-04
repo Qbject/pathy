@@ -122,15 +122,15 @@ def format_time(seconds_total, include_seconds=False):
 
 	result_str = ""
 	if days:
-		result_str += f"{days}дн" % days
+		result_str += f"{days}дн"
 	if hours:
-		result_str += f" {hours}год" % hours
+		result_str += f" {hours}год"
 	if mins:
-		result_str += f" {mins}хв" % mins
+		result_str += f" {mins}хв"
 	if secs and include_seconds:
-		result_str += f" {secs}сек" % secs
+		result_str += f" {secs}сек"
 	if not result_str:
-		result_str = f"{secs}сек" % secs
+		result_str = f"{secs}сек"
 
 	return result_str.strip()
 
