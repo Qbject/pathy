@@ -97,7 +97,7 @@ def to_num(str_num):
 	except (ValueError, TypeError):
 		pass
 	
-	if result != None:
+	if result == None:
 		try:
 			result = float(str_num)
 		except (ValueError, TypeError) as e:
