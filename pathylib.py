@@ -54,18 +54,18 @@ class TrackedPlayer():
 		
 		sess_start = None
 		for entry in self.timeline.iter(reverse=True):
-			if entry.time > before_time:
+			if entry.timestamp > before_time:
 				continue
 			
 			if sess_start == None:
 				# looking for went online event
 				if entry.stat_name == "is_online" and entry.stat_value_num:
-					sess_start = entry.time
+					sess_start = entry.timestamp
 			else:
 				# looking for any event happened earlier
 				# than (sess_start - session_max_break) or to reset
 				# sess_start if another went offline event found earlier
-				if entry.time < (sess_start - session_max_break):
+				if entry.timestamp < (sess_start - session_max_break):
 					break
 				elif entry.stat_name == "is_online" and entry.stat_value_num:
 					sess_start = None
@@ -137,9 +137,9 @@ class PlayerTimeline():
 		entries = []
 		
 		for entry in self.iter():
-			if entry.time < start:
+			if entry.timestamp < start:
 				start_stat[(entry.legend, entry.stat_name)] = entry.stat_value
-			elif entry.time > end:
+			elif entry.timestamp > end:
 				break
 			else:
 				entries.append(entry)
