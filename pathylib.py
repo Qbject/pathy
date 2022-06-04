@@ -53,7 +53,7 @@ class TrackedPlayer():
 		session_max_break = 30 * 60 # 30 min
 		
 		sess_start = None
-		for entry in self.iter(reverse=True):
+		for entry in self.timeline.iter(reverse=True):
 			if entry.time > before_time:
 				continue
 			
