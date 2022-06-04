@@ -394,5 +394,6 @@ class PlayerRank():
 			stat.get(f"{mode}_rank_score"),
 			stat.get(f"{mode}_rank_div"),
 			stat.get(f"{mode}_rank_top_pos"),
-			stat.get(f"{mode}_rank_name")
+			stat.get(f"{mode}_rank_name"),
+			mode
 		)
