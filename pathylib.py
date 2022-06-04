@@ -50,7 +50,7 @@ class TrackedPlayer():
 			sess_end_msg += f"<b>{self.name}</b> більше не <i>{self.moniker}</i> :(\n"
 			sess_end_msg += f"<pre>{sess.format()}</pre>"
 			
-			self.notify_chats(sess_end_msg, silent=True)
+			self.notify_chats(sess_end_msg, as_html=True, silent=True)
 	
 	def get_session_start(self, before_time):
 		session_max_break = 30 * 60 # 30 min
@@ -312,6 +312,8 @@ class TimelineSegment():
 			text += f"На {trans('on_'+legend)}:\n"
 			for tracker, delta in trackers.items():
 				text += f"  {trans(stat_name)}: {delta}\n"
+		
+		return text
 
 class TimelineEntry():
 	def __init__(self, timestamp, legend, stat_name, stat_value):
