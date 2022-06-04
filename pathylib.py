@@ -249,7 +249,7 @@ class TimelineSegment():
 			self.diff[key] = [self.start_stat[key], None]
 		
 		for entry in self.entries:
-			key = [entry.legend, entry.stat_name]
+			key = (entry.legend, entry.stat_name)
 			
 			if not self.diff.get(key):
 				self.diff[key] = [entry.stat_value, entry.stat_value]
