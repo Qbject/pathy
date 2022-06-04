@@ -52,12 +52,12 @@ class TrackedPlayer():
 			
 			self.notify_chats(sess_end_msg, as_html=True, silent=True)
 	
-	def get_session_start(self, before_time):
+	def get_session_start(self, before_moment):
 		session_max_break = 30 * 60 # 30 min
 		
 		sess_start = None
 		for entry in self.timeline.iter(reverse=True):
-			if entry.timestamp > before_time:
+			if entry.timestamp > before_moment:
 				continue
 			
 			if sess_start == None:
