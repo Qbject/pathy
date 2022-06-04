@@ -385,7 +385,7 @@ class PlayerRank():
 		}
 		
 		next_percentage = util.calc_mid_percentage(
-			self.score, rank_div_scores[mode])
+			self.score, rank_div_scores[self.mode])
 		return f"{trans(self.rank_name)} {self.div} ({next_percentage}%)"
 	
 	@classmethod
