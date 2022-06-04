@@ -243,10 +243,10 @@ class TimelineSegment():
 		self.diff = {}
 		# (legend or "_", stat): (start_value, end_value)
 		
-		for key in start_stat:
-			if start_stat.stat_value == "$null":
+		for key in self.start_stat:
+			if self.start_stat.stat_value == "$null":
 				continue
-			self.diff[key] = (start_stat.stat_value, None)
+			self.diff[key] = (self.start_stat.stat_value, None)
 		
 		for entry in self.entries:
 			key = (entry.legend, entry.stat_name)
