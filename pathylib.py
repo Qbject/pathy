@@ -262,7 +262,7 @@ class TimelineSegment():
 		
 		for key, stat_values in self.diff.items():
 			if (stat_values[0] == stat_values[1]):
-				self.diff.remove(key)
+				self.diff.pop(key)
 	
 	def fill_end_stat(self):
 		self.end_stat = self.start_stat.copy()
