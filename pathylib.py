@@ -260,9 +260,7 @@ class TimelineSegment():
 			
 			self.diff[key][1] = entry.stat_value
 		
-		for key, stat_values in self.diff.items():
-			if (stat_values[0] == stat_values[1]):
-				self.diff.pop(key)
+		self.diff = {k: v for k, v in self.diff.items() if v[0] != v[1]}
 	
 	def fill_end_stat(self):
 		self.end_stat = self.start_stat.copy()
