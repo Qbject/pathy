@@ -258,8 +258,9 @@ class TimelineSegment():
 			if entry.isnull:
 				continue
 			
-			self.diff[key][1] = entry.stat_value
+			self.diff[key] = (self.diff[key][0], entry.stat_value)
 		
+		# filtering out equal start-end values values
 		self.diff = {k: v for k, v in self.diff.items() if v[0] != v[1]}
 	
 	def fill_end_stat(self):
