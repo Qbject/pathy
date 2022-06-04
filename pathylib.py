@@ -43,11 +43,11 @@ class TrackedPlayer():
 				return
 			sess = self.timeline.get_segment(sess_start, sess_end)
 			
-			msg = ""
-			msg += f"<b>{self.name}</b> більше не <i>{self.moniker}</i> :(\n"
-			msg += f"<pre>{sess.format()}</pre>"
+			sess_end_msg = ""
+			sess_end_msg += f"<b>{self.name}</b> більше не <i>{self.moniker}</i> :(\n"
+			sess_end_msg += f"<pre>{sess.format()}</pre>"
 			
-			self.notify_chats(msg)
+			self.notify_chats(sess_end_msg, silent=True)
 	
 	def get_session_start(self, before_time):
 		session_max_break = 30 * 60 # 30 min
