@@ -9,6 +9,9 @@ class TrackedPlayer():
 	def __init__(self, player_state):
 		self.uid = player_state["uid"]
 		self.state = player_state
+		if not "chats" in self.state:
+			self.state["chats"] = {}
+		
 		self.timeline = PlayerTimeline(self.uid)
 		
 		self.name = self.timeline.cur_stats.get(("_", "name"), "???")
@@ -74,7 +77,7 @@ class TrackedPlayer():
 	
 	def notify_chats(self, msg, as_html=False, silent=False):
 		msg_ids = []
-		for chat_id, chat_state in self.state.chats:
+		for chat_id, chat_state in self.state["chats"]:
 			sent_msg = call_tg_api("sendMessage", {
 				"chat_id": chat_id,
 				"text": msg,
