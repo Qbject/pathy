@@ -263,7 +263,7 @@ class TimelineSegment():
 			
 			self.diff[key] = (self.diff[key][0], entry.stat_value)
 		
-		# filtering out equal start-end values values
+		# filtering out equal start-end values
 		self.diff = {k: v for k, v in self.diff.items() if v[0] != v[1]}
 	
 	def fill_end_stat(self):
@@ -298,22 +298,23 @@ class TimelineSegment():
 		if lvl_diff:
 			text += f"Левел: {lvl_diff[0]} → {lvl_diff[1]}\n"
 		
+		log(str(self.diff), send_tg=True)
 		if self.diff.get(("_", "br_rank_score")):
 			before = PlayerRank.from_stat(self.start_stat, mode="br")
 			after  = PlayerRank.from_stat(self.end_stat,   mode="br")
-			text += f"Ранг в БР: {before.format()} → {after.format()}"
+			text += f"Ранг в БР: {before.format()} → {after.format()}\n"
 		
 		if self.diff.get(("_", "ar_rank_score")):
 			before = PlayerRank.from_stat(self.start_stat, mode="ar")
 			after  = PlayerRank.from_stat(self.end_stat,   mode="ar")
-			text += f"Ранг в БР: {before.format()} → {after.format()}"
+			text += f"Ранг в БР: {before.format()} → {after.format()}\n"
 		
 		for legend, trackers in legends.items():
 			text += f"На {trans('on_'+legend)}:\n"
 			for tracker, delta in trackers.items():
-				text += f"  {trans(stat_name)}: {delta}\n"
+				text += f"  {trans(tracker)}: {delta}\n"
 		
-		return text
+		return text.strip()
 
 class TimelineEntry():
 	def __init__(self, timestamp, legend, stat_name, stat_value):
