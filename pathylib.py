@@ -390,10 +390,14 @@ class PlayerRank():
 	
 	@classmethod
 	def from_stat(cls, stat, mode):
-		return cls(
-			stat.get(f"{mode}_rank_score"),
-			stat.get(f"{mode}_rank_div"),
-			stat.get(f"{mode}_rank_top_pos"),
-			stat.get(f"{mode}_rank_name"),
-			mode
-		)
+		args = [
+			util.to_num(stat.get(("_", f"{mode}_rank_score"))),
+			util.to_num(stat.get(("_", f"{mode}_rank_div"))),
+			util.to_num(stat.get(("_", f"{mode}_rank_top_pos"))),
+			stat.get(("_", f"{mode}_rank_name"))
+		]
+		if None in args:
+			raise ValueError(
+				f"Given stats is invalid for getting {mode} rank")
+		
+		return cls(*args, mode)
