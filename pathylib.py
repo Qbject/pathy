@@ -244,9 +244,9 @@ class TimelineSegment():
 		# (legend or "_", stat): (start_value, end_value)
 		
 		for key in self.start_stat:
-			if self.start_stat.stat_value == "$null":
+			if self.start_stat[key] == "$null":
 				continue
-			self.diff[key] = (self.start_stat.stat_value, None)
+			self.diff[key] = (self.start_stat[key], None)
 		
 		for entry in self.entries:
 			key = (entry.legend, entry.stat_name)
@@ -273,8 +273,6 @@ class TimelineSegment():
 			self.end_stat[key] = entry.stat_value
 	
 	def format(self):
-		arw = "→"
-		
 		legends = {}
 		for legend, stat_name in self.diff:
 			if legend == "_" or not stat_name.startswith("tracker_"):
@@ -296,17 +294,17 @@ class TimelineSegment():
 		
 		lvl_diff = self.diff.get(("_", "level"))
 		if lvl_diff:
-			text += f"Левел: {lvl_diff[0]} {arw} {lvl_diff[1]}\n"
+			text += f"Левел: {lvl_diff[0]} → {lvl_diff[1]}\n"
 		
 		if self.diff.get(("_", "br_rank_score")):
 			before = PlayerRank.from_stat(self.start_stat, mode="br")
 			after  = PlayerRank.from_stat(self.end_stat,   mode="br")
-		text += f"Ранг в БР: {before.format()} {arw} {after.format()}"
+			text += f"Ранг в БР: {before.format()} → {after.format()}"
 		
 		if self.diff.get(("_", "ar_rank_score")):
 			before = PlayerRank.from_stat(self.start_stat, mode="ar")
 			after  = PlayerRank.from_stat(self.end_stat,   mode="ar")
-		text += f"Ранг в БР: {before.format()} {arw} {after.format()}"
+			text += f"Ранг в БР: {before.format()} → {after.format()}"
 		
 		for legend, trackers in legends.items():
 			text += f"На {trans('on_'+legend)}:\n"
