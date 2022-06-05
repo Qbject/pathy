@@ -31,3 +31,5 @@ TEXT_GRS_DICT = PATHY_DIR / "textgen/grs.txt"
 TEXT_GRS_PLUR_DICT = PATHY_DIR / "textgen/grs_plur.txt"
 TEXT_ADJECTIVES_DICT = PATHY_DIR / "textgen/adjectives.txt"
 TEXT_PREFIXES_DICT = PATHY_DIR / "textgen/prefixes.txt"
+
+SESS_MAX_BREAK = 30 * 60 # 30 min

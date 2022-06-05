@@ -203,6 +203,12 @@ easter_wishes = [
 	"Гуд лак, хев фан, ни слова по-русски..."
 ]
 
+def get_wish():
+	wish = default_wish
+	if util.chance(0.2):
+		wish = random.choice(easter_wishes)
+	return wish
+
 def marsian_to_ua(txt):
 	replace_map = {
 		"q": "й",

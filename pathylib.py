@@ -1,8 +1,9 @@
-import time, datetime
+import time
 import util, localtext, alsapi
-from util import log
+from util import log, format_time
 from const import *
-from localtext import trans
+from localtext import trans, get_wish
+from textgen import get_moniker, get_adjectives
 
 
 class TrackedPlayer():
@@ -13,9 +14,15 @@ class TrackedPlayer():
 			self.state["chats"] = {}
 		
 		self.timeline = PlayerTimeline(self.uid)
+		self.read_timeline()
+	
+	def read_timeline(self):
+		cur_stats = self.timeline.cur_stats
 		
-		self.name = self.timeline.cur_stats.get(("_", "name"), "???")
-		self.moniker = self.timeline.cur_stats.get(("_", "moniker"), "???")
+		self.name = cur_stats.get(("_", "name"), "???")
+		self.moniker = cur_stats.get(("_", "moniker"), "???")
+		self.is_online = cur_stats.get(("_", "is_online"), "0")
+		self.is_banned = cur_stats.get(("_", "is_banned"), "0")
 	
 	def serialize(self):
 		return self.state
@@ -23,9 +30,16 @@ class TrackedPlayer():
 	def get_rank(self, mode):
 		return PlayerRank.from_stat(self.timeline.cur_stats, mode=mode)
 	
+	def gen_new_moniker(self):
+		self.moniker = get_moniker()
+		moniker_entry = TimelineEntry(
+			int(time.time()), "_", "moniker", self.moniker)
+		self.timeline.add_entry(moniker_entry)
+	
 	def update(self):
 		stat = alsapi.get_player_stat(self.uid)
 		diff = self.timeline.consume_als_stat(stat)
+		self.read_timeline()
 		
 		went_online = went_offline = False
 		if diff.get(("_", "is_online")):
@@ -34,27 +48,49 @@ class TrackedPlayer():
 			else:
 				went_offline = True
 		
-		if went_online or went_offline:
-			o = "online" if went_online else "offline"
-			log(f"Player {self.name} went {o}", send_tg=True)
+		if went_online:
+			self.gen_new_moniker()
+			
+			last_online = self.get_last_online(time.time())
+			if last_online:
+				offline_duraion = format_time(int(time.time()) - last_online)
+			else:
+				offline_duraion = "довгого"
+			
+			sess_start_msg = f"<b>{self.name}</b> тепер " \
+				f"<i>{self.moniker}</i>" \
+				f" після {offline_duraion} відпочинку\n"
+			sess_start_msg += f"<i>{get_wish()}</i>"
+			
+			self.notify_all_chats(sess_start_msg, as_html=True)
 		
 		if went_offline:
 			sess_end = time.time()
-			sess_start = self.get_session_start(sess_end)
-			log(f"Session start: {sess_start}", send_tg=True)
+			sess_start = self.get_sess_start(sess_end)
 			if sess_start == None:
 				return
 			sess = self.timeline.get_segment(sess_start, sess_end)
 			
 			sess_end_msg = ""
-			sess_end_msg += f"<b>{self.name}</b> більше не <i>{self.moniker}</i> :(\n"
+			sess_end_msg += f"<b>{self.name}</b> більше не " \
+				f"<i>{self.moniker}</i> :(\n"
 			sess_end_msg += f"<pre>{sess.format()}</pre>"
 			
-			self.notify_chats(sess_end_msg, as_html=True, silent=True)
+			for chat_id, chat_state in self.state["chats"].items():
+				msg_id = self.notify_chat(chat_id, sess_end_msg,
+					as_html=True, silent=True)
+				chat_state["sess_end_msg_id"] = msg_id
+				chat_state["sess_end_time"] = int(time.time())
+			
 	
-	def get_session_start(self, before_moment):
-		session_max_break = 30 * 60 # 30 min
-		
+	def get_last_online(self, before_moment):
+		for entry in self.timeline.iter(reverse=True):
+			if entry.timestamp > before_moment:
+				continue
+			if entry.stat_name == "is_online" and entry.stat_value == "0":
+				return entry.timestamp
+	
+	def get_sess_start(self, before_moment):
 		sess_start = None
 		for entry in self.timeline.iter(reverse=True):
 			if entry.timestamp > before_moment:
@@ -62,31 +98,31 @@ class TrackedPlayer():
 			
 			if sess_start == None:
 				# looking for went online event
-				if entry.stat_name == "is_online" and entry.stat_value_num:
+				if entry.stat_name == "is_online" and entry.stat_value == "1":
 					sess_start = entry.timestamp
 			else:
 				# looking for any event happened earlier
-				# than (sess_start - session_max_break) or to reset
+				# than (sess_start - SESS_MAX_BREAK) or to reset
 				# sess_start if another went offline event found earlier
-				if entry.timestamp < (sess_start - session_max_break):
+				if entry.timestamp < (sess_start - SESS_MAX_BREAK):
 					break
-				elif entry.stat_name == "is_online" and entry.stat_value_num:
+				elif entry.stat_name == "is_online" and entry.stat_value == "0":
 					sess_start = None
 		
 		return sess_start
 	
-	def notify_chats(self, msg, as_html=False, silent=False):
-		msg_ids = []
+	def notify_chat(self, chat_id, msg, as_html=False, silent=False):
+		sent_msg = util.call_tg_api("sendMessage", {
+			"chat_id": chat_id,
+			"text": msg,
+			"parse_mode": "HTML" if as_html else None,
+			"disable_notification": silent
+		})
+		return sent_msg.get("message_id")
+	
+	def notify_all_chats(self, msg, as_html=False, silent=False):
 		for chat_id, chat_state in self.state["chats"].items():
-			sent_msg = util.call_tg_api("sendMessage", {
-				"chat_id": chat_id,
-				"text": msg,
-				"parse_mode": "HTML" if as_html else None,
-				"disable_notification": silent
-			})
-			msg_ids.append(sent_msg.get("message_id"))
-		
-		return msg_ids
+			self.notify_chat(chat_id, msg, as_html, silent)
 			
 
 class PlayerTimeline():
@@ -150,7 +186,8 @@ class PlayerTimeline():
 		return TimelineSegment(start, end, start_stat, entries)
 	
 	def consume_als_stat(self, player_stat):
-		timestamp = int(datetime.datetime.utcnow().timestamp())
+		#timestamp = int(datetime.datetime.utcnow().timestamp())
+		timestamp = int(time.time())
 		diff_data = {}
 		
 		def _add(stat_name, stat_value, legend="_"):
@@ -291,7 +328,7 @@ class TimelineSegment():
 			legends[legend][stat_name[8:]] = stat_delta
 		
 		text = ""
-		text += f"Зіграно часу: {util.format_time(self.duration)}\n"
+		text += f"Зіграно часу: {format_time(self.duration)}\n"
 		# TODO: matches played
 		
 		lvl_diff = self.diff.get(("_", "level"))
