@@ -57,7 +57,7 @@ class TrackedPlayer():
 			else:
 				offline_duraion = "довгого"
 			
-			sess_start_msg = f"<b>{self.name}</b> тепер " \
+			sess_start_msg = f"🟢 <b>{self.name}</b> тепер " \
 				f"<i>{self.moniker}</i>" \
 				f" після {offline_duraion} відпочинку\n"
 			sess_start_msg += f"<i>{get_wish()}</i>"
@@ -72,7 +72,7 @@ class TrackedPlayer():
 			sess = self.timeline.get_segment(sess_start, sess_end)
 			
 			sess_end_msg = ""
-			sess_end_msg += f"<b>{self.name}</b> більше не " \
+			sess_end_msg += f"🔴 <b>{self.name}</b> більше не " \
 				f"<i>{self.moniker}</i> :(\n"
 			sess_end_msg += f"<pre>{sess.format()}</pre>"
 			
