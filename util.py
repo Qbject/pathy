@@ -80,7 +80,7 @@ class TgBotApiError(Exception):
 
 def delete_tg_msg(chat_id, msg_id):
 	try:
-		deleted_resp = util.call_tg_api("deleteMessage", {
+		deleted_resp = call_tg_api("deleteMessage", {
 			"chat_id": chat_id,
 			"message_id": msg_id
 		})
