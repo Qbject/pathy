@@ -78,6 +78,17 @@ def call_tg_api(method, params={}, files={}):
 class TgBotApiError(Exception):
 	pass
 
+def delete_tg_msg(chat_id, msg_id):
+	try:
+		deleted_resp = util.call_tg_api("deleteMessage", {
+			"chat_id": chat_id,
+			"message_id": msg_id
+		})
+		return True
+	except TgBotApiError:
+		log(f"Failed to delete msg {chat_id}/{msg_id}", err=True, send_tg=True)
+		return False
+
 def html_sanitize(text):
 	text = text.replace("&", "&amp;")
 	text = text.replace("<", "&lt;")

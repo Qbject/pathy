@@ -49,67 +49,55 @@ class TrackedPlayer():
 				went_offline = True
 		
 		if went_online:
-			self.gen_new_moniker()
-			
-			last_online = self.get_last_online(time.time())
-			if last_online:
-				offline_duraion = format_time(int(time.time()) - last_online)
-			else:
-				offline_duraion = "довгого"
-			
-			sess_start_msg = f"🟢 <b>{self.name}</b> тепер " \
-				f"<i>{self.moniker}</i>" \
-				f" після {offline_duraion} відпочинку\n"
-			sess_start_msg += f"<i>{get_wish()}</i>"
-			
-			self.notify_all_chats(sess_start_msg, as_html=True)
+			self.on_online()
+		elif went_offline:
+			self.on_offline()
+	
+	def on_online(self):
+		last_online = self.timeline.get_last_online(time.time())
+		# is new session or just break end
+		is_new_sess = (time.time() - SESS_MAX_BREAK) > (last_online or 0)
 		
-		if went_offline:
-			sess_end = time.time()
-			sess_start = self.get_sess_start(sess_end)
-			if sess_start == None:
-				return
-			sess = self.timeline.get_segment(sess_start, sess_end)
-			
-			sess_end_msg = ""
-			sess_end_msg += f"🔴 <b>{self.name}</b> більше не " \
-				f"<i>{self.moniker}</i> :(\n"
-			sess_end_msg += f"<pre>{sess.format()}</pre>"
-			
+		if not is_new_sess:
 			for chat_id, chat_state in self.state["chats"].items():
-				msg_id = self.notify_chat(chat_id, sess_end_msg,
-					as_html=True, silent=True)
-				chat_state["sess_end_msg_id"] = msg_id
-				chat_state["sess_end_time"] = int(time.time())
-			
-	
-	def get_last_online(self, before_moment):
-		for entry in self.timeline.iter(reverse=True):
-			if entry.timestamp > before_moment:
-				continue
-			if entry.stat_name == "is_online" and entry.stat_value == "0":
-				return entry.timestamp
-	
-	def get_sess_start(self, before_moment):
-		sess_start = None
-		for entry in self.timeline.iter(reverse=True):
-			if entry.timestamp > before_moment:
-				continue
-			
-			if sess_start == None:
-				# looking for went online event
-				if entry.stat_name == "is_online" and entry.stat_value == "1":
-					sess_start = entry.timestamp
-			else:
-				# looking for any event happened earlier
-				# than (sess_start - SESS_MAX_BREAK) or to reset
-				# sess_start if another went offline event found earlier
-				if entry.timestamp < (sess_start - SESS_MAX_BREAK):
-					break
-				elif entry.stat_name == "is_online" and entry.stat_value == "0":
-					sess_start = None
+				msg_to_del = chat_state.get("sess_end_msg_id")
+				if msg_to_del:
+					util.delete_tg_msg(chat_id, msg_to_del)
+			return
 		
-		return sess_start
+		self.gen_new_moniker()
+		
+		if last_online:
+			offline_duraion = format_time(int(time.time()) - last_online)
+		else:
+			offline_duraion = "довгого"
+		
+		sess_start_msg = f"🟢 <b>{self.name}</b> тепер " \
+			f"<i>{self.moniker}</i>" \
+			f" після {offline_duraion} відпочинку\n"
+		sess_start_msg += f"<i>{get_wish()}</i>"
+		
+		for chat_id, chat_state in self.state["chats"].items():
+			msg_id = self.notify_chat(
+				chat_id, sess_start_msg, as_html=True)
+			chat_state["sess_end_msg_id"] = None
+	
+	def on_offline(self):
+		sess_end = int(time.time())
+		sess_start = self.timeline.get_sess_start(sess_end)
+		if sess_start == None:
+			return
+		sess = self.timeline.get_segment(sess_start, sess_end)
+		
+		sess_end_msg = ""
+		sess_end_msg += f"🔴 <b>{self.name}</b> більше не " \
+			f"<i>{self.moniker}</i> :(\n"
+		sess_end_msg += f"<pre>{sess.format()}</pre>"
+		
+		for chat_id, chat_state in self.state["chats"].items():
+			msg_id = self.notify_chat(chat_id, sess_end_msg,
+				as_html=True, silent=True)
+			chat_state["sess_end_msg_id"] = msg_id
 	
 	def notify_chat(self, chat_id, msg, as_html=False, silent=False):
 		sent_msg = util.call_tg_api("sendMessage", {
@@ -194,16 +182,12 @@ class PlayerTimeline():
 			prev_value = self.cur_stats.get((legend, stat_name))
 			new_value = str(stat_value)
 			if prev_value == new_value:
-				return
-			
-			# this value from api may deviate
-			if stat_name == "state_since":
-				if abs(int(prev_value or 0) - int(new_value)) < 20:
-					return
+				return False
 			
 			entry = TimelineEntry(timestamp, legend, stat_name, stat_value)
 			self.add_entry(entry, False)
 			diff_data[(legend, stat_name)] = (prev_value, new_value)
+			return True
 		
 		_global = player_stat["global"]
 		_realtime = player_stat["realtime"]
@@ -219,9 +203,15 @@ class PlayerTimeline():
 			)
 		)
 		_add("is_online", int(is_online))
-		_add("cur_state", _realtime["currentState"])
-		_add("state_since", _realtime["currentStateSinceTimestamp"])
 		_add("is_banned", int(_global["bans"]["isActive"]))
+		
+		# a bit of logic to handle state_since deviation
+		state_changed = _add("cur_state", _realtime["currentState"])
+		state_since = _realtime["currentStateSinceTimestamp"]
+		prev_state_since = self.cur_stats.get(("_", "state_since"), 0)
+		state_since_delta = abs(int(prev_state_since) - state_since)
+		if state_changed or (state_since_delta > 20):
+			_add("state_since", state_since)
 		
 		_add("br_rank_score",   _global["rank"]["rankScore"])
 		_add("br_rank_div",     _global["rank"]["rankDiv"])
@@ -262,6 +252,34 @@ class PlayerTimeline():
 				continue
 			legend_trackers.append(stat_name[8:])
 		return legend_trackers
+	
+	def get_last_online(self, before_moment):
+		for entry in self.iter(reverse=True):
+			if entry.timestamp > before_moment:
+				continue
+			if entry.stat_name == "is_online" and entry.stat_value == "0":
+				return entry.timestamp
+	
+	def get_sess_start(self, before_moment):
+		sess_start = None
+		for entry in self.iter(reverse=True):
+			if entry.timestamp > before_moment:
+				continue
+			
+			if sess_start == None:
+				# looking for went online event
+				if entry.stat_name == "is_online" and entry.stat_value == "1":
+					sess_start = entry.timestamp
+			else:
+				# looking for any event happened earlier
+				# than (sess_start - SESS_MAX_BREAK) or to reset
+				# sess_start if another went offline event found earlier
+				if entry.timestamp < (sess_start - SESS_MAX_BREAK):
+					break
+				elif entry.stat_name == "is_online" and entry.stat_value == "0":
+					sess_start = None
+		
+		return sess_start
 	
 	def close(self):
 		self.timeline_handle.close()
@@ -311,8 +329,33 @@ class TimelineSegment():
 			key = (entry.legend, entry.stat_name)
 			self.end_stat[key] = entry.stat_value
 	
+	def iter_stat_stamps(self):
+		stat_stamp = self.start_stat.copy()
+		
+		prev_timestamp = self.start
+		for i, entry in enumerate(self.entries):
+			if entry.timestamp != prev_timestamp:
+				yield (prev_timestamp, stat_stamp)
+			
+			stat_stamp[(entry.legend, entry.stat_name)] = entry.stat_value
+			prev_timestamp = entry.timestamp
+		
+		yield (prev_timestamp, stat_stamp)
+	
 	def format(self):
 		legends = {}
+		
+		# filling matches count to display
+		matches = self.get_matches()
+		for match in matches:
+			legend = match.get("legend")
+			if not legend:
+				continue
+			if not legends.get(legend):
+				legends[legend] = {"_matches": 0}
+			legends[legend]["_matches"] += 1
+		
+		# filling all the trackers to display
 		for legend, stat_name in self.diff:
 			if legend == "_" or not stat_name.startswith("tracker_"):
 				continue
@@ -326,6 +369,7 @@ class TimelineSegment():
 			else:
 				stat_delta = val_after - val_before
 			legends[legend][stat_name[8:]] = stat_delta
+		
 		
 		text = ""
 		text += f"Зіграно часу: {format_time(self.duration)}\n"
@@ -352,6 +396,27 @@ class TimelineSegment():
 				text += f"  {trans(tracker)}: {delta}\n"
 		
 		return text.strip()
+	
+	def get_matches(self):
+		matches = []
+		
+		cur_state = None
+		for timestamp, stat_stamp in self.iter_stat_stamps():
+			new_state = stat_stamp.get(("_", "cur_state"))
+			if new_state != cur_state:
+				if new_state == "inMatch":
+					matches.append({
+						"start": stat_stamp.get(("_", "state_since"))
+					})
+				elif cur_state == "inMatch":
+					matches[-1]["end"] = stat_stamp.get(("_", "state_since"))
+			
+			if cur_state == "inMatch" and matches:
+				matches[-1]["legend"] = stat_stamp.get(("_", "legend"))
+			
+			cur_state = new_state
+		
+		return matches
 
 class TimelineEntry():
 	def __init__(self, timestamp, legend, stat_name, stat_value):
