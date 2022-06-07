@@ -16,7 +16,7 @@ def get_dict(dict_path):
 	return _cached_textdata[dict_path.name]
 
 def get_moniker(plural=False):
-	is_doubled = chance(0.05)
+	is_doubled = util.chance(0.05)
 	
 	gr, adj_ending = _get_base_gr(plural=plural)
 	adjectives = get_adjectives(ending=adj_ending)
