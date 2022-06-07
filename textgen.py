@@ -6,12 +6,10 @@ from const import *
 _cached_textdata = {}
 
 def get_dict(dict_path):
-	if _cached_textdata.get(dict_path.name):
-		return
-	
-	with dict_path.open("r", encoding="utf-8") as fhandle:
-		lines = fhandle.readlines()
-	_cached_textdata[dict_path.name] = [s.strip() for s in lines]
+	if not _cached_textdata.get(dict_path.name):
+		with dict_path.open("r", encoding="utf-8") as fhandle:
+			lines = fhandle.readlines()
+		_cached_textdata[dict_path.name] = [s.strip() for s in lines]
 	
 	return _cached_textdata[dict_path.name]
 
