@@ -116,7 +116,7 @@ class PathyDaemon():
 			player_idx = int((i / 3) % players_count)
 			player = self.state["tracked_players"][player_idx]
 			player.update()
-			time.sleep(10)
+			time.sleep(1)
 		elif (i % 3) == 1:
 			self.handle_tasks()
 		elif (i % 3) == 2:
