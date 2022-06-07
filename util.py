@@ -155,22 +155,6 @@ def replace_char_map(txt, replacements):
 def chance(probability):
 	return random.random() < probability
 
-def parse_bot_command(msg_text):
-	command_search = re.findall(
-		"^(/[a-zA-Z0-9_]+)(@[a-zA-Z0-9_]+){0,1}", msg_text)
-	if not command_search:
-		return (None, None)
-	
-	command = command_search[0][0]
-	botmention = command_search[0][1]
-	if botmention and (botmention.lower() != f"@{BOT_USERNAME.lower()}"):
-		return (None, None)
-	
-	full_command_len = len(command) + len(botmention)
-	params = msg_text[full_command_len:].strip()
-	
-	return (command, params)
-
 def calc_mid_percentage(targ_num, comp_nums):
 	"""
 	Really struggle to describe what this func does,
@@ -252,3 +236,60 @@ def reverse_readline(filename, buf_size=8192):
 		# Don't yield None if the file was empty
 		if segment is not None:
 			yield segment
+
+class TgUpdate():
+	def __init__(self, update_data):
+		self.data = update_data
+	
+	@classmethod
+	def from_raw_body(cls, body_raw):
+		update_data = json.loads(body_raw.decode("utf-8"))
+		return cls(update_data)
+	
+	def is_msg(self):
+		return "message" in self.data
+	
+	def reply(self, text, as_html=False):
+		return self.call_tg_api(
+			"sendMessage",
+			{
+				"chat_id": self.data["message"]["chat"]["id"],
+				"text": text,
+				"parse_mode": "HTML" if as_html else None
+			}
+		)
+	
+	def is_bebug_cmd(self):
+		return self.data["message"]["chat"]["id"] == DEBUG_CHAT_ID and \
+		update["message"]["text"].startswith("ctl ")
+	
+	def parse_debug_cmd(self):
+		if not self.is_bebug_cmd():
+			return (None, None)
+		
+		cmd_arr = update["message"]["text"].split(" ")
+		cmd = cmd_arr[1]
+		args_raw = " ".join(cmd_arr[2:])
+		if args_raw:
+			args = json.loads(args_raw)
+		else:
+			args = {}
+		
+		return (cmd, args)
+	
+	def parse_bot_command(self):
+		msg_text = update["message"]["text"]
+		command_search = re.findall(
+			"^(/[a-zA-Z0-9_]+)(@[a-zA-Z0-9_]+){0,1}", msg_text)
+		if not command_search:
+			return (None, None)
+		
+		command = command_search[0][0]
+		botmention = command_search[0][1]
+		if botmention and (botmention.lower() != f"@{BOT_USERNAME.lower()}"):
+			return (None, None)
+		
+		full_command_len = len(command) + len(botmention)
+		params = msg_text[full_command_len:].strip()
+		
+		return (command, params)

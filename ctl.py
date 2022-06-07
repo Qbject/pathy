@@ -1,4 +1,5 @@
-import time, traceback, sys, subprocess, util, json
+import time, traceback, sys, subprocess, json
+import util
 from pathlib import Path
 from hashlib import md5
 from multiprocessing.connection import Client
@@ -123,3 +124,21 @@ def get_last_state_save():
 
 def get_downtime():
 	return time.time() - (get_last_state_save() or 0.0)
+
+def handle_tg_upd(body_raw):
+	"""
+	handling possible actions required before passing to daemon,
+	returns True if update should be passed to daemon
+	"""
+	update = util.TgUpdate.from_raw_body(body_raw)
+	
+	debug_cmd, debug_cmd_args = update.parse_debug_cmd()
+	if debug_cmd:
+		cmd_resp = entry(debug_cmd, debug_cmd_args)  or "<empty>"
+		update.reply(html_sanitize(cmd_resp), as_html=True)
+		return False
+	
+	bot_cmd, bot_cmd_args = update.parse_bot_command()
+	if bot_cmd == "/alive":
+		"TODO"
+		return False
