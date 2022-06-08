@@ -540,7 +540,7 @@ def format_map(mode_name, mapinfo):
 	cur_map_time  = format_time(mapinfo["current"]["remainingSecs"])
 	next_map_time = format_time(mapinfo["next"]["DurationInSecs"])
 	
-	return f"{mode_name} зараз на карті <b>{cur_map}</b>\n<i>Через " \
+	return f"<b>{mode_name}</b> зараз на карті <b>{cur_map}</b>\n<i>Через " \
 	f"{cur_map_time} перейде на <b>{next_map}</b>, де буде {next_map_time}</i>"
 
 def format_map_rotation():
