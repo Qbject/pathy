@@ -547,9 +547,9 @@ def format_map_rotation():
 	maps = alsapi.get_map_rotation()
 	delim = "\n--- --- ---\n"
 	
-	return delim.join(
+	return delim.join((
 		format_map("БР",           maps["battle_royale"]),
 		format_map("Ранкед БР",    maps["ranked"]),
 		format_map("Арени",        maps["arenas"]),
 		format_map("Ранкед арени", maps["arenasRanked"])
-	)
+	))
