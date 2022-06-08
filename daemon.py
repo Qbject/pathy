@@ -225,9 +225,8 @@ class PathyDaemon():
 		if bot_cmd == "/status":
 			resp = ""
 			for player in self.get_chat_players(chat_id):
-				_tag = "pre" if player.is_online else "i"
-				resp += player.get_status()
-				resp += "--- --- ---\n"
+				resp += player.format_status()
+				resp += "\n--- --- ---\n"
 			
 			if resp.endswith("\n--- --- ---\n"):
 				resp = resp[:-13]

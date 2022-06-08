@@ -30,7 +30,7 @@ class TrackedPlayer():
 	def get_rank(self, mode):
 		return PlayerRank.from_stat(self.timeline.cur_stats, mode=mode)
 	
-	def get_status(self):
+	def format_status(self):
 		result = f"<b>{self.name}</b>"
 		if self.is_online:
 			result += f" <i>{self.moniker}</i>"
@@ -44,7 +44,7 @@ class TrackedPlayer():
 			sess = self.timeline.get_segment(sess_start, now)
 			result += f"<pre>{sess.format()}</pre>"
 		
-		else :
+		else:
 			last_online = self.timeline.get_last_online(time.time())
 			offline_duraion = format_time(int(time.time()) - last_online)
 			result += f"<i>Вже {offline_duraion} як зайнятий " \
