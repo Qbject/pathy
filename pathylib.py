@@ -32,11 +32,12 @@ class TrackedPlayer():
 	
 	def format_status(self):
 		result = f"<b>{self.name}</b>"
-		if self.is_online:
+		is_online = int(self.is_online)
+		if is_online:
 			result += f" <i>{self.moniker}</i>"
 		result += "\n"
 		
-		if self.is_online:
+		if is_online:
 			now = int(time.time())
 			sess_start = self.timeline.get_sess_start(now)
 			if sess_start == None:
