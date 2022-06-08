@@ -233,7 +233,7 @@ class PathyDaemon():
 				resp = resp[:-len(delim)]
 			update.reply(resp.strip(), as_html=True)
 		
-		elif bot_cmd == "/maprotation":
+		elif bot_cmd == "/maps":
 			update.reply(format_map_rotation(), as_html=True)
 	
 	def send_hate_monday_pic(self):
