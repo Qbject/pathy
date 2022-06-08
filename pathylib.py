@@ -549,11 +549,11 @@ def format_map_rotation():
 	delim = "--- --- ---"
 	
 	result = ""
-	result += f"{_format("БР", maps["battle_royale"])}\n{delim}\n"
-	result += f"{_format("Ранкед БР", maps["ranked"])}\n{delim}\n"
+	result += f"{_format('БР', maps['battle_royale'])}\n{delim}\n"
+	result += f"{_format('Ранкед БР', maps['ranked'])}\n{delim}\n"
 	#result += f"БР ранкед зараз на карті <b>{trans(maps['ranked']['current']['map'])}</b>\n{delim}\n"
-	result += f"{_format("Арени", maps["arenas"])}\n{delim}\n"
-	result += f"{_format("Ранкед арени", maps["arenasRanked"])}\n{delim}\n"
+	result += f"{_format('Арени', maps['arenas'])}\n{delim}\n"
+	result += f"{_format('Ранкед арени', maps['arenasRanked'])}\n{delim}\n"
 	
 	if result.endswith(delim):
 		result = result[:-len(delim)]
