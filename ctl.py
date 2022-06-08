@@ -141,7 +141,7 @@ def handle_tg_upd(body_raw):
 	debug_cmd, debug_cmd_args = update.parse_debug_cmd()
 	if debug_cmd:
 		cmd_resp = entry(debug_cmd, debug_cmd_args)  or "<empty>"
-		update.reply(html_sanitize(cmd_resp), as_html=True)
+		update.reply(util.html_sanitize(cmd_resp), as_html=True)
 		return
 	
 	bot_cmd, bot_cmd_args = update.parse_bot_command()
@@ -150,7 +150,7 @@ def handle_tg_upd(body_raw):
 			result = send("status")
 		except ConnectionRefusedError:
 			result = "😵"
-		update.reply(html_sanitize(result), as_html=True)
+		update.reply(util.html_sanitize(result), as_html=True)
 		return
 	
 	ensure_running()
