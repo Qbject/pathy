@@ -36,7 +36,7 @@ class TrackedPlayer():
 	def format_status(self):
 		result = f"<b>{self.name}</b>"
 		if self.is_online:
-			result += f" <i>{self.moniker}</i>"
+			result += f" <i>{self.moniker}</i>\n"
 			result += f"<i>{self.format_state()}</i>"
 		result += "\n"
 		
