@@ -533,3 +533,29 @@ class PlayerRank():
 			return None
 		
 		return cls(*args, mode)
+
+def format_map_rotation():
+	def _format(mode_name, rotation_stats):
+		return "%s зараз на карті <b>\"%s\"</b>\n<i>Через %s перейде на <b>%s</b>, де буде %s</i>" % (
+			mode_name,
+			trans(rotation_stats["current"]["map"]),
+			format_time(rotation_stats["current"]["remainingSecs"]),
+			trans(rotation_stats["next"]["map"]),
+			format_time(rotation_stats["next"]["DurationInSecs"])
+		)
+	
+	maps = alsapi.get_map_rotation()
+	
+	delim = "--- --- ---"
+	
+	result = ""
+	result += f"{_format("БР", maps["battle_royale"])}\n{delim}\n"
+	result += f"{_format("Ранкед БР", maps["ranked"])}\n{delim}\n"
+	#result += f"БР ранкед зараз на карті <b>{trans(maps['ranked']['current']['map'])}</b>\n{delim}\n"
+	result += f"{_format("Арени", maps["arenas"])}\n{delim}\n"
+	result += f"{_format("Ранкед арени", maps["arenasRanked"])}\n{delim}\n"
+	
+	if result.endswith(delim):
+		result = result[:-len(delim)]
+	
+	return result.strip()

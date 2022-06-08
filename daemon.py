@@ -4,7 +4,7 @@ from pathlib import Path
 from multiprocessing.connection import Listener
 from util import log
 from const import *
-from pathylib import PlayerTimeline, TrackedPlayer
+from pathylib import TrackedPlayer, format_map_rotation
 from localtext import trans
 
 class PathyDaemon():
@@ -220,17 +220,21 @@ class PathyDaemon():
 		if not update.is_whitelisted():
 			return
 		
+		delim = "\n--- --- ---\n"
 		chat_id = update.data["message"]["chat"]["id"]
 		bot_cmd, bot_cmd_args = update.parse_bot_command()
+		
 		if bot_cmd == "/status":
 			resp = ""
 			for player in self.get_chat_players(chat_id):
-				resp += player.format_status()
-				resp += "\n--- --- ---\n"
+				resp += player.format_status() + delim
 			
-			if resp.endswith("\n--- --- ---\n"):
-				resp = resp[:-13]
+			if resp.endswith(delim):
+				resp = resp[:-len(delim)]
 			update.reply(resp.strip(), as_html=True)
+		
+		elif bot_cmd == "/maprotation":
+			update.reply(format_map_rotation(), as_html=True)
 	
 	def send_hate_monday_pic(self):
 		monday_ing_id = "AgACAgIAAx0CTJBx5QADHWEiP2LrqUGngEIIOJ4BNUHmVk_" \
