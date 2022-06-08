@@ -17,12 +17,12 @@ class TrackedPlayer():
 		self.read_timeline()
 	
 	def read_timeline(self):
-		cur_stats = self.timeline.cur_stats
-		
-		self.name = cur_stats.get(("_", "name"), "???")
-		self.moniker = cur_stats.get(("_", "moniker"), "???")
-		self.is_online = cur_stats.get(("_", "is_online"), "0")
-		self.is_banned = cur_stats.get(("_", "is_banned"), "0")
+		self.name = self.get_stat("name") or "???"
+		self.moniker = self.get_stat("moniker") or "???"
+		self.legend = self.get_stat("legend") or "???"
+		self.cur_state = self.get_stat("cur_state") or "???"
+		self.is_online = bool(int(self.get_stat("is_online") or "0"))
+		self.is_banned = bool(int(self.get_stat("is_banned") or "0"))
 	
 	def serialize(self):
 		return self.state
@@ -30,14 +30,17 @@ class TrackedPlayer():
 	def get_rank(self, mode):
 		return PlayerRank.from_stat(self.timeline.cur_stats, mode=mode)
 	
+	def get_stat(self, stat_name, legend="_"):
+		return self.timeline.cur_stats.get((legend, stat_name))
+	
 	def format_status(self):
 		result = f"<b>{self.name}</b>"
-		is_online = int(self.is_online)
-		if is_online:
+		if self.is_online:
 			result += f" <i>{self.moniker}</i>"
+			result += f"<i>{self.format_state()}</i>"
 		result += "\n"
 		
-		if is_online:
+		if self.is_online:
 			now = int(time.time())
 			sess_start = self.timeline.get_sess_start(now)
 			if sess_start == None:
@@ -53,6 +56,12 @@ class TrackedPlayer():
 		
 		return result
 		
+	def format_state(self):
+		state = trans(self.cur_state)
+		legend = trans("on_"+self.legend)
+		state_duration = format_time(int(self.get_stat("state_since") or "0"))
+		
+		return f"{state} на {legend} ({state_duration})"
 	
 	def gen_new_moniker(self):
 		self.moniker = get_moniker()
