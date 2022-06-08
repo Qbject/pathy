@@ -131,9 +131,9 @@ class PathyDaemon():
 		
 		result += f"Головний потік: " \
 			f"{'Живий' if True else '😵'}\n"
-		result += f"Робочий потік': " \
+		result += f"Робочий потік: " \
 			f"{'Живий' if self.worker_thread.is_alive() else '😵'}\n"
-		result += f"Потік планувальника': " \
+		result += f"Потік планувальника: " \
 			f"{'Живий' if self.scheduler_thread.is_alive() else '😵'}\n"
 		
 		return result.strip()

@@ -2,6 +2,7 @@ import random
 import util
 
 translations = {
+	"Unranked": "Ніхто",
 	"Rookie": "Нуб",
 	"Bronze": "Бронза",
 	"Silver": "Сільвер",

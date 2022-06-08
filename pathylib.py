@@ -382,12 +382,14 @@ class TimelineSegment():
 		if self.diff.get(("_", "br_rank_score")):
 			before = PlayerRank.from_stat(self.start_stat, mode="br")
 			after  = PlayerRank.from_stat(self.end_stat,   mode="br")
-			text += f"Ранг в БР: {before.format()} → {after.format()}\n"
+			if before and after:
+				text += f"Ранг в БР: {before.format()} → {after.format()}\n"
 		
 		if self.diff.get(("_", "ar_rank_score")):
 			before = PlayerRank.from_stat(self.start_stat, mode="ar")
 			after  = PlayerRank.from_stat(self.end_stat,   mode="ar")
-			text += f"Ранг в БР: {before.format()} → {after.format()}\n"
+			if before and after:
+				text += f"Ранг в БР: {before.format()} → {after.format()}\n"
 		
 		for legend, trackers in legends.items():
 			text += f"На {trans('on_'+legend)}:\n"
@@ -504,7 +506,6 @@ class PlayerRank():
 			stat.get(("_", f"{mode}_rank_name"))
 		]
 		if None in args:
-			raise ValueError(
-				f"Given stats is invalid for getting {mode} rank")
+			return None
 		
 		return cls(*args, mode)
