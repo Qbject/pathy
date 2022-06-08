@@ -30,6 +30,20 @@ class TrackedPlayer():
 	def get_rank(self, mode):
 		return PlayerRank.from_stat(self.timeline.cur_stats, mode=mode)
 	
+	def get_status(self):
+		if not self.is_online:
+			last_online = self.timeline.get_last_online(time.time())
+			offline_duraion = format_time(int(time.time()) - last_online)
+			return f"Вже {offline_duraion} як зайнятий " \
+				f"більш корисними справами, ніж Апекс"
+		
+		now = int(time.time())
+		sess_start = self.timeline.get_sess_start(now)
+		if sess_start == None:
+			return
+		sess = self.timeline.get_segment(sess_start, now)
+		return sess.format()
+	
 	def gen_new_moniker(self):
 		self.moniker = get_moniker()
 		moniker_entry = TimelineEntry(

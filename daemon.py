@@ -173,7 +173,7 @@ class PathyDaemon():
 	
 	def load_state(self):
 		if not DAEMON_STATE.exists():
-			self.state = {}
+			self.state = {"tracked_players": []}
 			return
 		
 		state_raw = DAEMON_STATE.read_text(encoding="utf-8")
@@ -208,9 +208,27 @@ class PathyDaemon():
 	def handle_delayed_tasks(self):
 		pass # TODO
 	
+	def get_chat_players(self, chat_id):
+		for player in self.state["tracked_players"]:
+			if str(chat_id) in player.state["chats"]:
+				yield player
+	
 	def handle_tg_upd(self, body_raw):
 		update = util.TgUpdate.from_raw_body(body_raw)
-		update.reply("😴")
+		if not update.is_msg():
+			return
+		if not update.is_whitelisted():
+			return
+		
+		chat_id = update.data["message"]["chat"]["id"]
+		bot_cmd, bot_cmd_args = update.parse_bot_command()
+		if bot_cmd == "/status":
+			resp = ""
+			for player in self.get_chat_players(chat_id):
+				_tag = "pre" if player.is_online else "i"
+				resp += f"<b>{player.name}</b>\n" \
+					f"<{_tag}>{player.get_status()}</{_tag}>\n"
+			update.reply(resp.strip())
 	
 	def send_hate_monday_pic(self):
 		monday_ing_id = "AgACAgIAAx0CTJBx5QADHWEiP2LrqUGngEIIOJ4BNUHmVk_" \
