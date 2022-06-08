@@ -154,4 +154,4 @@ def handle_tg_upd(body_raw):
 		return
 	
 	ensure_running()
-	send("tgupd", tg_upd=body_raw)
+	send("tgupd", upd_body=body_raw)

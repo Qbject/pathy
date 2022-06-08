@@ -208,7 +208,7 @@ class PathyDaemon():
 	def handle_delayed_tasks(self):
 		pass # TODO
 	
-	def handle_tg_upd(self, tg_upd):
+	def handle_tg_upd(self, body_raw):
 		update = util.TgUpdate.from_raw_body(body_raw)
 		update.reply("😴")
 	
