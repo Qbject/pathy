@@ -59,7 +59,8 @@ class TrackedPlayer():
 	def format_state(self):
 		state = trans(self.cur_state)
 		legend = trans("on_"+self.legend)
-		state_duration = format_time(int(self.get_stat("state_since") or "0"))
+		state_duration = format_time(
+			time.time() - int(self.get_stat("state_since") or "0"))
 		
 		return f"{state} на {legend} ({state_duration})"
 	
