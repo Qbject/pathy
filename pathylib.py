@@ -370,16 +370,15 @@ class TimelineSegment():
 				stat_delta = val_after - val_before
 			legends[legend][stat_name[8:]] = stat_delta
 		
-		
 		text = ""
 		text += f"Зіграно часу: {format_time(self.duration)}\n"
-		# TODO: matches played
+		if matches:
+			text += f"Зіграно матчів: {len(matches)}\n"
 		
 		lvl_diff = self.diff.get(("_", "level"))
 		if lvl_diff:
 			text += f"Левел: {lvl_diff[0]} → {lvl_diff[1]}\n"
 		
-		log(str(self.diff), send_tg=True)
 		if self.diff.get(("_", "br_rank_score")):
 			before = PlayerRank.from_stat(self.start_stat, mode="br")
 			after  = PlayerRank.from_stat(self.end_stat,   mode="br")

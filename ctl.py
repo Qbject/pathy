@@ -45,7 +45,12 @@ def entry(action, args={}, body_raw=b"", from_web=False):
 			return send("status")
 		
 		elif action == "tgupdate":
+			handle_tg_upd(body_raw)
+			return
+		
+		elif action == "setdelay":
 			ensure_running()
+			send("setdelay", delay=args.get("delay", 1))
 			return
 		
 		else:
@@ -126,19 +131,27 @@ def get_downtime():
 	return time.time() - (get_last_state_save() or 0.0)
 
 def handle_tg_upd(body_raw):
-	"""
-	handling possible actions required before passing to daemon,
-	returns True if update should be passed to daemon
-	"""
 	update = util.TgUpdate.from_raw_body(body_raw)
+	
+	if not update.is_msg():
+		return
+	if not update.is_whitelisted():
+		return
 	
 	debug_cmd, debug_cmd_args = update.parse_debug_cmd()
 	if debug_cmd:
 		cmd_resp = entry(debug_cmd, debug_cmd_args)  or "<empty>"
 		update.reply(html_sanitize(cmd_resp), as_html=True)
-		return False
+		return
 	
 	bot_cmd, bot_cmd_args = update.parse_bot_command()
 	if bot_cmd == "/alive":
-		"TODO"
-		return False
+		try:
+			result = send("status")
+		except ConnectionRefusedError:
+			result = "😵"
+		update.reply(html_sanitize(result), as_html=True)
+		return
+	
+	ensure_running()
+	send("tgupd", tg_upd=body_raw)

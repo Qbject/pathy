@@ -249,6 +249,9 @@ class TgUpdate():
 	def is_msg(self):
 		return "message" in self.data
 	
+	def is_whitelisted(self):
+		return self.data["message"]["chat"]["id"] in ALLOWED_CHATS
+	
 	def reply(self, text, as_html=False):
 		return self.call_tg_api(
 			"sendMessage",

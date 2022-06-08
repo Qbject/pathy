@@ -75,16 +75,19 @@ class PathyDaemon():
 					conn.send("STOPPING")
 					log("Stopping daemon")
 				else:
-					conn.send(self.handle_msg(msg, args))
+					conn.send(self.handle_cmd(msg, args))
 				
 				conn.close()
 			except Exception:
 				log(f"Failed to handle daemon command:" \
-					f"\n{traceback.format_exc()}", err=True, send_tg=True)
+					f"\n{traceback.format_exc()}",
+					err=True, send_tg=True)
 	
-	def handle_msg(self, msg, args):
+	def handle_cmd(self, msg, args):
 		if msg == "status":
 			return self.get_status()
+		elif msg == "setdelay":
+			self.state["player_fetch_delay"] = int(args.get("delay", 1))
 		elif msg == "tgupd":
 			self.handle_tg_upd(args.get("tg_upd"))
 			# self.as_worker(self.handle_tg_upd, args.get("tg_upd"))
@@ -109,27 +112,31 @@ class PathyDaemon():
 	
 	def do_worker_step(self, i):
 		if (i % 3) == 0:
-			# this approach is inconsistent is player list gets edited in runtime
+			# this approach is inconsistent if
+			# player list is updated in runtime
 			players_count = len(self.state["tracked_players"])
 			if not players_count:
 				time.sleep(1)
 			player_idx = int((i / 3) % players_count)
 			player = self.state["tracked_players"][player_idx]
 			player.update()
-			time.sleep(1)
+			time.sleep(self.state.get("player_fetch_delay", 1))
 		elif (i % 3) == 1:
-			self.handle_tasks()
+			self.handle_cmds()
 		elif (i % 3) == 2:
 			self.handle_delayed_tasks()
 	
 	def get_status(self):
-		status = {
-			"msg_listener_alive": True,
-			"worker_thread_alive": self.worker_thread.is_alive(),
-			"scheduler_thread_alive": self.scheduler_thread.is_alive(),
-			"statistics": self.statistics
-		}
-		return status
+		result = ""
+		
+		result += f"Головний потік: " \
+			f"{'Живий' if True else '😵'}\n"
+		result += f"Робочий потік': " \
+			f"{'Живий' if self.worker_thread.is_alive() else '😵'}\n"
+		result += f"Потік планувальника': " \
+			f"{'Живий' if self.scheduler_thread.is_alive() else '😵'}\n"
+		
+		return result.strip()
 	
 	def lock(self):
 		try:
@@ -188,7 +195,7 @@ class PathyDaemon():
 		state_raw = json.dumps(self.state, indent="\t", default=_serialize)
 		util.safe_file_write(DAEMON_STATE, state_raw)
 	
-	def handle_tasks(self):
+	def handle_cmds(self):
 		while self.worker_tasks.qsize():
 			try:
 				func, args, kwargs = self.worker_tasks.get()
@@ -202,7 +209,8 @@ class PathyDaemon():
 		pass # TODO
 	
 	def handle_tg_upd(self, tg_upd):
-		pass # TODO
+		update = util.TgUpdate.from_raw_body(body_raw)
+		update.reply("😴")
 	
 	def send_hate_monday_pic(self):
 		monday_ing_id = "AgACAgIAAx0CTJBx5QADHWEiP2LrqUGngEIIOJ4BNUHmVk_" \
