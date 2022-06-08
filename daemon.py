@@ -228,7 +228,10 @@ class PathyDaemon():
 				_tag = "pre" if player.is_online else "i"
 				resp += f"<b>{player.name}</b>\n" \
 					f"<{_tag}>{player.get_status()}</{_tag}>\n"
-				resp += "--- --- ---"
+				resp += "--- --- ---\n"
+			
+			if resp.endswith("\n--- --- ---\n"):
+				resp = resp[:-13]
 			update.reply(resp.strip(), as_html=True)
 	
 	def send_hate_monday_pic(self):
