@@ -253,7 +253,7 @@ class TgUpdate():
 		return self.data["message"]["chat"]["id"] in ALLOWED_CHATS
 	
 	def reply(self, text, as_html=False):
-		return self.call_tg_api(
+		return call_tg_api(
 			"sendMessage",
 			{
 				"chat_id": self.data["message"]["chat"]["id"],
