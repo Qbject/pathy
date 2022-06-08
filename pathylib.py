@@ -42,13 +42,15 @@ class TrackedPlayer():
 			if sess_start == None:
 				return
 			sess = self.timeline.get_segment(sess_start, now)
-			return sess.format()
+			result += f"<pre>sess.format()</pre>"
 		
 		else :
 			last_online = self.timeline.get_last_online(time.time())
 			offline_duraion = format_time(int(time.time()) - last_online)
-			return f"Вже {offline_duraion} як зайнятий " \
-				f"більш корисними справами, ніж Апекс"
+			result += f"<i>Вже {offline_duraion} як зайнятий " \
+				f"більш корисними справами, ніж Апекс</i>"
+		
+		return result
 		
 	
 	def gen_new_moniker(self):

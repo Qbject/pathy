@@ -226,8 +226,7 @@ class PathyDaemon():
 			resp = ""
 			for player in self.get_chat_players(chat_id):
 				_tag = "pre" if player.is_online else "i"
-				resp += f"<b>{player.name}</b>\n" \
-					f"<{_tag}>{player.get_status()}</{_tag}>\n"
+				resp += player.get_status()
 				resp += "--- --- ---\n"
 			
 			if resp.endswith("\n--- --- ---\n"):
