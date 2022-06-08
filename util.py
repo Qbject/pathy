@@ -262,15 +262,15 @@ class TgUpdate():
 			}
 		)
 	
-	def is_bebug_cmd(self):
+	def is_debug_cmd(self):
 		return self.data["message"]["chat"]["id"] == DEBUG_CHAT_ID and \
-		update["message"]["text"].startswith("ctl ")
+		self.data["message"]["text"].startswith("ctl ")
 	
 	def parse_debug_cmd(self):
-		if not self.is_bebug_cmd():
+		if not self.is_debug_cmd():
 			return (None, None)
 		
-		cmd_arr = update["message"]["text"].split(" ")
+		cmd_arr = self.data["message"]["text"].split(" ")
 		cmd = cmd_arr[1]
 		args_raw = " ".join(cmd_arr[2:])
 		if args_raw:
@@ -281,7 +281,7 @@ class TgUpdate():
 		return (cmd, args)
 	
 	def parse_bot_command(self):
-		msg_text = update["message"]["text"]
+		msg_text = self.data["message"]["text"]
 		command_search = re.findall(
 			"^(/[a-zA-Z0-9_]+)(@[a-zA-Z0-9_]+){0,1}", msg_text)
 		if not command_search:
