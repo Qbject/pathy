@@ -544,13 +544,12 @@ def format_map(mode_name, mapinfo):
 	f"{cur_map_time} перейде на <b>{next_map}</b>, де буде {next_map_time}</i>"
 
 def format_map_rotation():
-	delim = "\n--- --- ---\n"
 	maps = alsapi.get_map_rotation()
+	delim = "\n--- --- ---\n"
 	
-	result = ""
-	result += format_map("БР",           maps["battle_royale"]) + delim
-	result += format_map("Ранкед БР",    maps["ranked"])        + delim
-	result += format_map("Арени",        maps["arenas"])        + delim
-	result += format_map("Ранкед арени", maps["arenasRanked"])
-	
-	return result.strip()
+	return delim.join(
+		format_map("БР",           maps["battle_royale"])
+		format_map("Ранкед БР",    maps["ranked"])
+		format_map("Арени",        maps["arenas"])
+		format_map("Ранкед арени", maps["arenasRanked"])
+	)
