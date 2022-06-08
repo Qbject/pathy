@@ -534,28 +534,23 @@ class PlayerRank():
 		
 		return cls(*args, mode)
 
-def format_map_rotation():
-	def _format(mode_name, rotation_stats):
-		return "%s зараз на карті <b>\"%s\"</b>\n<i>Через %s перейде на <b>%s</b>, де буде %s</i>" % (
-			mode_name,
-			trans(rotation_stats["current"]["map"]),
-			format_time(rotation_stats["current"]["remainingSecs"]),
-			trans(rotation_stats["next"]["map"]),
-			format_time(rotation_stats["next"]["DurationInSecs"])
-		)
+def format_map(mode_name, mapinfo):
+	cur_map  = trans(mapinfo["current"]["map"])
+	next_map = trans(mapinfo["next"]["map"])
+	cur_map_time  = format_time(mapinfo["current"]["remainingSecs"])
+	next_map_time = format_time(mapinfo["next"]["DurationInSecs"])
 	
+	return f"{mode_name} зараз на карті <b>{cur_map}</b>\n<i>Через " \
+	f"{cur_map_time} перейде на <b>{next_map}</b>, де буде {next_map_time}</i>"
+
+def format_map_rotation():
+	delim = "\n--- --- ---\n"
 	maps = alsapi.get_map_rotation()
 	
-	delim = "--- --- ---"
-	
 	result = ""
-	result += f"{_format('БР', maps['battle_royale'])}\n{delim}\n"
-	result += f"{_format('Ранкед БР', maps['ranked'])}\n{delim}\n"
-	#result += f"БР ранкед зараз на карті <b>{trans(maps['ranked']['current']['map'])}</b>\n{delim}\n"
-	result += f"{_format('Арени', maps['arenas'])}\n{delim}\n"
-	result += f"{_format('Ранкед арени', maps['arenasRanked'])}\n{delim}\n"
-	
-	if result.endswith(delim):
-		result = result[:-len(delim)]
+	result += format_map("БР",           maps["battle_royale"]) + delim
+	result += format_map("Ранкед БР",    maps["ranked"])        + delim
+	result += format_map("Арени",        maps["arenas"])        + delim
+	result += format_map("Ранкед арени", maps["arenasRanked"])
 	
 	return result.strip()
