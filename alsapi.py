@@ -1,69 +1,42 @@
-import util, requests, time
+import requests, time, traceback
+import util
 from util import log
 from const import *
+
+def _send_rquest(url, validate_fn=None, retries=3):
+	for attempt in range(retries):
+		try:
+			resp = requests.get(url, headers={"Authorization": MOZAM_API_KEY})
+			
+			try:
+				resp.raise_for_status()
+				resp_data = resp.json()
+				if validate_fn:
+					assert validate_fn(resp_data)
+			except Exception as e:
+				log(f"ALS API invalid resp:\n{resp.text}", err=True)
+				raise e
+			
+			return resp_data
+		except Exception as e:
+			log(f"Failed to retrieve ALS API data (attempt #{attempt+1}):\n" +
+				traceback.format_exc(), err=True)
+			time.sleep(1)
+			if (attempt + 1) == retries:
+				raise e
 
 def get_player_stat(player_uid):
 	url = f"https://api.mozambiquehe.re/bridge?version=5&platform=PC" \
 	f"&uid={player_uid}&merge=true&removeMerged=true"
-	resp = requests.get(url, headers={"Authorization": MOZAM_API_KEY})
-	
-	if resp.status_code == 429:
-		time.sleep(1)
-		return get_player_stat(player_uid)
-	
-	if not resp.ok:
-		raise AlsApiError(f"ALS API respont with code " \
-			f"{resp.status_code}: {resp.reason}")
-	
-	try:
-		stat = resp.json()
-		_ = stat["global"]
-		_ = stat["realtime"]
-	except Exception as e:
-		log(f"ALS API invalid stat response:\n{resp.text}")
-		raise AlsApiError(f"ALS API respont with invalid data")
-	
-	return stat
+	return _send_rquest(url, lambda r: "global" in r and "realtime" in r)
 
 def get_map_rotation():
 	url = f"https://api.mozambiquehe.re/maprotation?version=5"
-	resp = requests.get(url, headers={"Authorization": MOZAM_API_KEY})
-	
-	if resp.status_code == 429:
-		time.sleep(1)
-		return get_map_rotation()
-	
-	if not resp.ok:
-		raise AlsApiError(f"ALS API respont with code " \
-			f"{resp.status_code}: {resp.reason}")
-	
-	try:
-		rotation = resp.json()
-	except Exception as e:
-		log(f"ALS API invalid map rotation response:\n{resp.text}")
-		raise AlsApiError(f"ALS API respont with invalid data")
-	
-	return rotation
+	return _send_rquest(url)
 
 def get_craft_rotation():
 	url = f"https://api.mozambiquehe.re/crafting"
-	resp = requests.get(url, headers={"Authorization": MOZAM_API_KEY})
-	
-	if resp.status_code == 429:
-		time.sleep(1)
-		return get_craft_rotation()
-	
-	if not resp.ok:
-		raise AlsApiError(f"ALS API respont with code " \
-			f"{resp.status_code}: {resp.reason}")
-	
-	try:
-		rotation = resp.json()
-	except Exception as e:
-		log(f"ALS API invalid craft rotation response:\n{resp.text}")
-		raise AlsApiError(f"ALS API respont with invalid data")
-	
-	return rotation
+	return _send_rquest(url)
 
 class AlsApiError(Exception):
 	pass
