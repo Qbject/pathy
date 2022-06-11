@@ -115,11 +115,10 @@ class PathyDaemon():
 			# this approach is inconsistent if
 			# player list is updated in runtime
 			players_count = len(self.state["tracked_players"])
-			if not players_count:
-				time.sleep(1)
-			player_idx = int((i / 3) % players_count)
-			player = self.state["tracked_players"][player_idx]
-			player.update()
+			if players_count:
+				player_idx = int((i / 3) % players_count)
+				player = self.state["tracked_players"][player_idx]
+				player.update()
 			time.sleep(self.state.get("player_fetch_delay", 1))
 		elif (i % 3) == 1:
 			self.handle_cmds()
