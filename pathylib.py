@@ -70,10 +70,18 @@ class TrackedPlayer():
 			int(time.time()), "_", "moniker", self.moniker)
 		self.timeline.add_entry(moniker_entry)
 	
-	def update(self):
+	def update(self, verbose=True):
 		stat = alsapi.get_player_stat(self.uid)
 		diff = self.timeline.consume_als_stat(stat)
 		self.read_timeline()
+		
+		if verbose:
+			msg = f"{self.name}:"
+			for (legend, stat_name), (before, after) in diff.items():
+				if legend != "_":
+					msg += f"({legend}) "
+				msg += f"{stat_name}: {before} -> {after}\n"
+			log(msg, send_tg=True)
 		
 		went_online = went_offline = False
 		if diff.get(("_", "is_online")):
@@ -186,7 +194,7 @@ class PlayerTimeline():
 				except TimelineEntryError:
 					if line.strip(): # do not report empty lines
 						log(f"Skipping invalid entry in" \
-							f" {self.player_uid}.txt timeline: '{entry}'")
+							f" {self.player_uid}.txt timeline: '{entry.raw}'")
 					continue
 				
 				yield entry
@@ -461,11 +469,12 @@ class TimelineEntry():
 		self.stat_value = stat_value
 		self.stat_value_num = util.to_num(self.stat_value)
 		self.isnull = self.stat_value == "$null"
+		self.raw = None
 	
 	@classmethod
 	def parse(cls, entry_line):
-		entry = entry_line.strip(" \r\n")
-		entry_split = entry.split(" ")
+		self.raw = entry_line.strip(" \r\n")
+		entry_split = self.raw.split(" ")
 		
 		if len(entry_split) != 4:
 			raise TimelineEntryError
