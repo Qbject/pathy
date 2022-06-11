@@ -472,6 +472,7 @@ class TimelineEntry():
 	
 	@classmethod
 	def parse(cls, entry_line):
+		entry = entry_line.strip(" \r\n")
 		entry_split = self.raw.split(" ")
 		
 		if len(entry_split) != 4:
