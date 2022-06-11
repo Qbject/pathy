@@ -136,6 +136,9 @@ def handle_tg_upd(body_raw):
 	if not update.is_msg():
 		return
 	if not update.is_whitelisted():
+		_tab = "\t"
+		log(f"Msg from not whitelisted chat:\n" \
+			f"{json.dumps(update.data, indent=_tab)}", send_tg=True)
 		return
 	
 	debug_cmd, debug_cmd_args = update.parse_debug_cmd()
