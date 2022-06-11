@@ -75,7 +75,7 @@ class TrackedPlayer():
 		diff = self.timeline.consume_als_stat(stat)
 		self.read_timeline()
 		
-		if verbose:
+		if verbose and diff:
 			msg = f"{self.name}:"
 			for (legend, stat_name), (before, after) in diff.items():
 				if legend != "_":
