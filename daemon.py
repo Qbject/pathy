@@ -118,7 +118,7 @@ class PathyDaemon():
 			if players_count:
 				player_idx = int((i / 3) % players_count)
 				player = self.state["tracked_players"][player_idx]
-				player.update()
+				player.update(verbose=(str(player.uid) == "1007161381428"))
 				log(f"Updated player {player.name}")
 			time.sleep(self.state.get("player_fetch_delay", 1))
 		elif (i % 3) == 1:
