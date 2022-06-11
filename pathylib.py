@@ -194,7 +194,7 @@ class PlayerTimeline():
 				except TimelineEntryError:
 					if line.strip(): # do not report empty lines
 						log(f"Skipping invalid entry in" \
-							f" {self.player_uid}.txt timeline: '{entry.raw}'")
+							f" {self.player_uid}.txt timeline: '{line}'")
 					continue
 				
 				yield entry
@@ -469,11 +469,9 @@ class TimelineEntry():
 		self.stat_value = stat_value
 		self.stat_value_num = util.to_num(self.stat_value)
 		self.isnull = self.stat_value == "$null"
-		self.raw = None
 	
 	@classmethod
 	def parse(cls, entry_line):
-		self.raw = entry_line.strip(" \r\n")
 		entry_split = self.raw.split(" ")
 		
 		if len(entry_split) != 4:
