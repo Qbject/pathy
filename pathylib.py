@@ -425,13 +425,15 @@ class TimelineSegment():
 			before = PlayerRank.from_stat(self.start_stat, mode="br")
 			after  = PlayerRank.from_stat(self.end_stat,   mode="br")
 			if before and after:
-				text += f"Ранг в БР: {before.format()} → {after.format()}\n"
+				text += f"Ранг в БР: {before.format()} " \
+					f"→ {after.format()}\n"
 		
 		if self.diff.get(("_", "ar_rank_score")):
 			before = PlayerRank.from_stat(self.start_stat, mode="ar")
 			after  = PlayerRank.from_stat(self.end_stat,   mode="ar")
 			if before and after:
-				text += f"Ранг в БР: {before.format()} → {after.format()}\n"
+				text += f"Ранг в Аренах: {before.format()} " \
+					f"→ {after.format()}\n"
 		
 		for legend, trackers in legends.items():
 			text += f"На {trans('on_'+legend)}:\n"
