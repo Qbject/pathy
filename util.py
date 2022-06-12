@@ -249,6 +249,11 @@ class TgUpdate():
 	def is_msg(self):
 		return "message" in self.data
 	
+	def is_text_msg(self):
+		if not self.is_msg():
+			return False
+		return "text" in self.data["message"]
+	
 	def is_whitelisted(self):
 		return self.data["message"]["chat"]["id"] in ALLOWED_CHATS
 	
@@ -263,6 +268,8 @@ class TgUpdate():
 		)
 	
 	def is_debug_cmd(self):
+		if not self.is_text_msg():
+			return False
 		return self.data["message"]["chat"]["id"] == DEBUG_CHAT_ID and \
 		self.data["message"]["text"].startswith("ctl ")
 	
@@ -281,6 +288,8 @@ class TgUpdate():
 		return (cmd, args)
 	
 	def parse_bot_command(self):
+		if not self.is_text_msg():
+			return (None, None)
 		msg_text = self.data["message"]["text"]
 		command_search = re.findall(
 			"^(/[a-zA-Z0-9_]+)(@[a-zA-Z0-9_]+){0,1}", msg_text)
