@@ -5,7 +5,7 @@ from multiprocessing.connection import Listener
 from util import log
 from const import *
 from pathylib import TrackedPlayer, format_map_rotation
-from localtext import trans
+from localtext import trans, marsian_to_ua
 
 class PathyDaemon():
 	def __init__(self):
@@ -246,7 +246,7 @@ class PathyDaemon():
 				targ_txt = bot_cmd_args
 			
 			if targ_txt.strip():
-				resp = util.html_sanitize(util.marsian_to_ua(targ_txt))
+				resp = util.html_sanitize(marsian_to_ua(targ_txt))
 			else:
 				resp = "Потрібно написати типу " \
 					"<b>/fuck Afr wtq vfhcsfycmrbq</b>"
