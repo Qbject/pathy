@@ -72,7 +72,7 @@ def _get_base_gr(plural=False):
 
 def get_goodnight_wish(player_name):
 	wish = f"Гуд найт, {player_name}\n"
-	wish += f"{get_adjectives(ending='их')} снів"
+	wish += f"{get_adjectives(ending='их')} снів "
 	wish += random.choice(["🥱", "🛌", "😴", "💤"])
 	return wish
 
