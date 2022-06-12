@@ -235,6 +235,23 @@ class PathyDaemon():
 		
 		elif bot_cmd == "/maps":
 			update.reply(format_map_rotation(), as_html=True)
+		
+		elif bot_cmd == "/fuck":
+			targ_txt = ""
+			if update.data["message"].get("reply_to_message"):
+				targ_msg = update.data["message"]["reply_to_message"]
+				if targ_msg.get("text"):
+					targ_txt = targ_msg["text"]
+			else:
+				targ_txt = bot_cmd_args
+			
+			if targ_txt.strip():
+				resp = util.html_sanitize(util.marsian_to_ua(targ_txt))
+			else:
+				resp = "Потрібно написати типу " \
+					"<b>/fuck Afr wtq vfhcsfycmrbq</b>"
+			
+			update.reply(resp, as_html=True)
 	
 	def send_hate_monday_pic(self):
 		monday_ing_id = "AgACAgIAAx0CTJBx5QADHWEiP2LrqUGngEIIOJ4BNUHmVk_" \
