@@ -46,7 +46,7 @@ class TrackedPlayer():
 			if sess_start == None:
 				return
 			sess = self.timeline.get_segment(sess_start, now)
-			result += f"<pre>{sess.format()}</pre>"
+			result += f"<pre>{sess.format(easter300=True)}</pre>"
 		
 		else:
 			last_online = self.timeline.get_last_online(time.time())
@@ -142,7 +142,7 @@ class TrackedPlayer():
 		sess_end_msg = ""
 		sess_end_msg += f"🔴 <b>{self.name}</b> більше не " \
 			f"<i>{self.moniker}</i> :(\n"
-		sess_end_msg += f"<pre>{sess.format()}</pre>"
+		sess_end_msg += f"<pre>{sess.format(easter300=True)}</pre>"
 		
 		for chat_id, chat_state in self.state["chats"].items():
 			msg_id = self.notify_chat(chat_id, sess_end_msg,
@@ -403,7 +403,7 @@ class TimelineSegment():
 		
 		yield (prev_timestamp, stat_stamp)
 	
-	def format(self):
+	def format(self, easter300=False):
 		legends = {}
 		
 		# filling matches count to display
@@ -457,7 +457,13 @@ class TimelineSegment():
 		for legend, trackers in legends.items():
 			text += f"На {trans('on_'+legend)}:\n"
 			for tracker, delta in trackers.items():
-				text += f"  {trans(tracker)}: {delta}\n"
+				text += f"  {trans(tracker)}: {delta}"
+			
+			if easter300 and str(delta).endswith("300"):
+				text += "  </pre><span class='tg-spoiler'>" \
+					"ВІДСОСИ У КРАБЕРИСТА</span><pre>"
+			else:
+				text += "\n"
 		
 		return text.strip()
 	
