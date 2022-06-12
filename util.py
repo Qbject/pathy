@@ -296,3 +296,6 @@ class TgUpdate():
 		params = msg_text[full_command_len:].strip()
 		
 		return (command, params)
+	
+	def format(self):
+		return html_sanitize(json.dumps(self.data, indent="\t"))

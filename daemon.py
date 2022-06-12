@@ -224,6 +224,9 @@ class PathyDaemon():
 		chat_id = update.data["message"]["chat"]["id"]
 		bot_cmd, bot_cmd_args = update.parse_bot_command()
 		
+		if (not bot_cmd) and chat_id == DEBUG_CHAT_ID:
+			update.reply(f"<pre>{update.format()}</pre>")
+		
 		if bot_cmd == "/status":
 			resp = ""
 			for player in self.get_chat_players(chat_id):
