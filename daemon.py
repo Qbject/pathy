@@ -246,10 +246,10 @@ class PathyDaemon():
 				targ_txt = bot_cmd_args
 			
 			if targ_txt.strip():
-				resp = util.html_sanitize(marsian_to_ua(targ_txt))
+				resp = f"<i>{util.html_sanitize(marsian_to_ua(targ_txt))}</i>"
 			else:
-				resp = "Потрібно написати типу " \
-					"<b>/fuck Afr wtq vfhcsfycmrbq</b>"
+				resp = "Потрібно писати з реплаєм на повідомлення " \
+					"або типу:\n<b>/fuck Afr wtq vfhcsfycmrbq</b>"
 			
 			update.reply(resp, as_html=True)
 	
