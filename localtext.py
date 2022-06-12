@@ -119,6 +119,8 @@ translations = {
 	"wins_season_11": "Віни в сезоні 11",
 	"kills_season_12": "Кіли в сезоні 12",
 	"wins_season_12": "Віни в сезоні 12",
+	"kills_season_13": "Кіли в сезоні 13",
+	"wins_season_13": "Віни в сезоні 13",
 	"wins": "Віни",
 	"_matches": "Матчі",
 	"on_Revenant": "Реві ☠️",
