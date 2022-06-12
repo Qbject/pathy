@@ -26,10 +26,10 @@ DL_PROXY_CHAT_ID = ***REMOVED***
 
 MOZAM_API_KEY = "***REMOVED***"
 
-TEXT_GRS_DICT = PATHY_DIR / "textgen/grs.txt"
-TEXT_GRS_PLUR_DICT = PATHY_DIR / "textgen/grs_plur.txt"
-TEXT_ADJECTIVES_DICT = PATHY_DIR / "textgen/adjectives.txt"
-TEXT_PREFIXES_DICT = PATHY_DIR / "textgen/prefixes.txt"
+TEXT_GRS_DICT = PATHY_DIR / "textdata/grs.txt"
+TEXT_GRS_PLUR_DICT = PATHY_DIR / "textdata/grs_plur.txt"
+TEXT_ADJECTIVES_DICT = PATHY_DIR / "textdata/adjectives.txt"
+TEXT_PREFIXES_DICT = PATHY_DIR / "textdata/prefixes.txt"
 
 SESS_MAX_BREAK = 30 * 60 # 30 min
 
