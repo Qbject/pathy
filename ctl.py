@@ -59,7 +59,7 @@ def entry(action, args={}, body_raw=b"", from_web=False):
 	except Exception:
 		err_msg = f"Failed to execute action {action}:" \
 		f"\n{traceback.format_exc()}"
-		log(err_msg, err=True)
+		log(err_msg, err=True, send_tg=True)
 		return "Failed to handle request"
 
 def start():
@@ -101,14 +101,12 @@ def ensure_running():
 	try:
 		start()
 	except Exception as e:
-		log(
-			f"Detected daemon down for {downtime:.2f}s, " \
+		log(f"Detected daemon down for {downtime:.2f}s, " \
 			f"failed to restart:\n{traceback.format_exc()}",
 			err=True, send_tg=True)
 		raise e
 	
-	log(
-		f"Detected daemon down for {downtime:.2f}s, " \
+	log(f"Detected daemon down for {downtime:.2f}s, " \
 		f"restarted successfully",
 		send_tg=True)
 
