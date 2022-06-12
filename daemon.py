@@ -207,7 +207,7 @@ class PathyDaemon():
 					err=True, send_tg=True)
 	
 	def handle_party_events(self):
-		players_online_now = len(list(self.get_online_players))
+		players_online_now = len(list(self.get_online_players()))
 		
 		if self.players_online_count == None:
 			self.players_online_count = players_online_now
