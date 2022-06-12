@@ -13,6 +13,7 @@ class PathyDaemon():
 		self.state = None
 		self.stopping = False
 		self.worker_tasks = queue.Queue()
+		self.players_online_count = None
 		
 		self.statistics = { # TODO TODO TODO
 			"started_at": time.time(),
@@ -124,7 +125,7 @@ class PathyDaemon():
 		elif (i % 3) == 1:
 			self.handle_cmds()
 		elif (i % 3) == 2:
-			self.handle_delayed_tasks()
+			self.handle_party_events()
 	
 	def get_status(self):
 		result = ""
@@ -205,8 +206,20 @@ class PathyDaemon():
 					f"\n{traceback.format_exc()}",
 					err=True, send_tg=True)
 	
-	def handle_delayed_tasks(self):
-		pass # TODO
+	def handle_party_events(self):
+		players_online_now = len(list(self.get_online_players))
+		
+		if self.players_online_count == None:
+			self.players_online_count = players_online_now
+			return
+		
+		if players_online_now > self.players_online_count:
+			pass
+	
+	def get_online_players(self):
+		for player in self.state["tracked_players"]:
+			if player.is_online:
+				yield player
 	
 	def get_chat_players(self, chat_id):
 		for player in self.state["tracked_players"]:
