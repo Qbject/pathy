@@ -449,8 +449,10 @@ class TimelineSegment():
 			
 			# if match beginning and stat changing happens at the same time
 			# stat changes should be saved to the previous match
-			if cur_state == "inMatch" and matches:
-				matches[-1]["legend"] = stat_stamp.get(("_", "legend"))
+			if matches:
+				if cur_state == "inMatch":
+					matches[-1]["legend"] = stat_stamp.get(("_", "legend"))
+				# save match stats here
 			
 			if new_state != cur_state:
 				if new_state == "inMatch":
