@@ -459,7 +459,8 @@ class TimelineSegment():
 			if new_state != cur_state:
 				if new_state == "inMatch":
 					matches.append({
-						"start": stat_stamp.get(("_", "state_since"))
+						"start": stat_stamp.get(("_", "state_since")),
+						"legend": stat_stamp.get(("_", "legend"))
 					})
 				elif cur_state == "inMatch":
 					matches[-1]["end"] = stat_stamp.get(("_", "state_since"))
