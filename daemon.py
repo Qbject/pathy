@@ -225,7 +225,7 @@ class PathyDaemon():
 		bot_cmd, bot_cmd_args = update.parse_bot_command()
 		
 		if (not bot_cmd) and chat_id == DEBUG_CHAT_ID:
-			update.reply(f"<pre>{update.format()}</pre>")
+			update.reply(f"<pre>{update.format()}</pre>", as_html=True)
 		
 		if bot_cmd == "/status":
 			resp = ""
