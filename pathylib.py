@@ -1,4 +1,4 @@
-import time
+import time, datetime
 import util, localtext, alsapi
 from util import log, format_time
 from const import *
@@ -71,6 +71,8 @@ class TrackedPlayer():
 		self.timeline.add_entry(moniker_entry)
 	
 	def update(self, verbose=False):
+		self.handle_goodnights()
+		
 		stat = alsapi.get_player_stat(self.uid)
 		diff = self.timeline.consume_als_stat(stat)
 		self.read_timeline()
@@ -96,6 +98,8 @@ class TrackedPlayer():
 			self.on_offline()
 	
 	def on_online(self):
+		self.state["goodnight_at"] = None
+		
 		last_online = self.timeline.get_last_online(time.time())
 		# is new session or just break end
 		is_new_sess = (time.time() - SESS_MAX_BREAK) > (last_online or 0)
@@ -125,6 +129,10 @@ class TrackedPlayer():
 			chat_state["sess_end_msg_id"] = None
 	
 	def on_offline(self):
+		hour_local = (time.gmtime().tm_hour + util.get_hours_offset()) % 24
+		if hour_local > 23 or hour_local < 6:
+			self.state["goodnight_at"] = int(time.time()) + (60 * 15)
+		
 		sess_end = int(time.time())
 		sess_start = self.timeline.get_sess_start(sess_end)
 		if sess_start == None:
@@ -140,6 +148,17 @@ class TrackedPlayer():
 			msg_id = self.notify_chat(chat_id, sess_end_msg,
 				as_html=True, silent=True)
 			chat_state["sess_end_msg_id"] = msg_id
+	
+	def handle_goodnights(self):
+		wish_at = self.state.get("goodnight_at")
+		if not wish_at:
+			return
+		if time.time() < wish_at:
+			return
+		
+		wish = textgen.get_goodnight_wish(self.name)
+		self.notify_all_chats(wish, silent=True)
+		self.state["goodnight_at"] = None
 	
 	def notify_chat(self, chat_id, msg, as_html=False, silent=False):
 		sent_msg = util.call_tg_api("sendMessage", {

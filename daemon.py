@@ -155,7 +155,7 @@ class PathyDaemon():
 	
 	def run_scheduler(self):
 		def _hour(hour):
-			return str(8 - util.get_hours_offset()).zfill(2)
+			return str(hour - util.get_hours_offset()).zfill(2)
 		
 		schedule.every().monday.at(f"{_hour(8)}:00").do(
 			self.as_worker, self.send_hate_monday_pic)
