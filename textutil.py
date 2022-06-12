@@ -1,6 +1,5 @@
 import random
 import util
-from util import log
 from const import *
 
 _cached_textdata = {}
