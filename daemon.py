@@ -5,7 +5,7 @@ from multiprocessing.connection import Listener
 from util import log
 from const import *
 from pathylib import TrackedPlayer, format_map_rotation
-from localtext import trans, marsian_to_ua
+from textutil import trans, marsian_to_ua
 
 class PathyDaemon():
 	def __init__(self):

@@ -1,9 +1,9 @@
 import time, datetime
-import util, localtext, alsapi
+import util, textutil, alsapi
 from util import log, format_time
 from const import *
-from localtext import trans, get_wish
-from textgen import get_moniker, get_adjectives
+from textutil import trans, get_wish, get_moniker, \
+	get_adjectives, get_goodnight_wish
 
 
 class TrackedPlayer():
@@ -156,7 +156,7 @@ class TrackedPlayer():
 		if time.time() < wish_at:
 			return
 		
-		wish = textgen.get_goodnight_wish(self.name)
+		wish = get_goodnight_wish(self.name)
 		self.notify_all_chats(wish, silent=True)
 		self.state["goodnight_at"] = None
 	

@@ -1,8 +1,8 @@
 import time, traceback, subprocess, os, requests, json, pytz, datetime, random, re
-import localtext
+import textutil
 from pathlib import Path
 from const import *
-from localtext import trans
+from textutil import trans
 
 def log(text, err=False, send_tg=False):
 	log_entry = f"{time.asctime()}: {text}"
