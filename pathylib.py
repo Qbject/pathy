@@ -446,6 +446,12 @@ class TimelineSegment():
 		cur_state = None
 		for timestamp, stat_stamp in self.iter_stat_stamps():
 			new_state = stat_stamp.get(("_", "cur_state"))
+			
+			# if match beginning and stat changing happens at the same time
+			# stat changes should be saved to the previous match
+			if cur_state == "inMatch" and matches:
+				matches[-1]["legend"] = stat_stamp.get(("_", "legend"))
+			
 			if new_state != cur_state:
 				if new_state == "inMatch":
 					matches.append({
@@ -453,9 +459,6 @@ class TimelineSegment():
 					})
 				elif cur_state == "inMatch":
 					matches[-1]["end"] = stat_stamp.get(("_", "state_since"))
-			
-			if cur_state == "inMatch" and matches:
-				matches[-1]["legend"] = stat_stamp.get(("_", "legend"))
 			
 			cur_state = new_state
 		
