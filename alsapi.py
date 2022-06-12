@@ -3,7 +3,7 @@ import util
 from util import log
 from const import *
 
-def _send_rquest(url, validate_fn=None, retries=3):
+def _send_request(url, validate_fn=None, retries=3):
 	for attempt in range(retries):
 		try:
 			resp = requests.get(url, headers={"Authorization": MOZAM_API_KEY})
@@ -28,15 +28,15 @@ def _send_rquest(url, validate_fn=None, retries=3):
 def get_player_stat(player_uid):
 	url = f"https://api.mozambiquehe.re/bridge?version=5&platform=PC" \
 	f"&uid={player_uid}&merge=true&removeMerged=true"
-	return _send_rquest(url, lambda r: "global" in r and "realtime" in r)
+	return _send_request(url, lambda r: "global" in r and "realtime" in r)
 
 def get_map_rotation():
 	url = f"https://api.mozambiquehe.re/maprotation?version=5"
-	return _send_rquest(url)
+	return _send_request(url)
 
 def get_craft_rotation():
 	url = f"https://api.mozambiquehe.re/crafting"
-	return _send_rquest(url)
+	return _send_request(url)
 
 class AlsApiError(Exception):
 	pass
