@@ -423,13 +423,18 @@ class TimelineSegment():
 			if not legend in legends:
 				legends[legend] = {}
 			
+			absolute_stats = ["scout_of_action_targets_hit",
+				"jackson_bow_out_damage_done", "smoke_show_damage_done"]
+			
 			val_before = util.to_num(self.diff[(legend, stat_name)][0])
 			val_after  = util.to_num(self.diff[(legend, stat_name)][1])
 			if None in (val_before, val_after):
-				stat_delta = "???"
+				stat_result = "???"
+			elif stat_name in absolute_stats:
+				stat_result = val_after
 			else:
-				stat_delta = val_after - val_before
-			legends[legend][stat_name[8:]] = stat_delta
+				stat_result = val_after - val_before
+			legends[legend][stat_name[8:]] = stat_result
 		
 		text = ""
 		text += f"Зіграно часу: {format_time(self.duration)}\n"
@@ -456,10 +461,10 @@ class TimelineSegment():
 		
 		for legend, trackers in legends.items():
 			text += f"На {trans('on_'+legend)}:\n"
-			for tracker, delta in trackers.items():
-				text += f"  {trans(tracker)}: {delta}"
+			for tracker, value in trackers.items():
+				text += f"  {trans(tracker)}: {value}"
 				
-				if easter300 and str(delta).endswith("300"):
+				if easter300 and str(value).endswith("300"):
 					text += "  </pre><span class='tg-spoiler'>" \
 						"ВІДСОСИ У КРАБЕРИСТА</span><pre>"
 				else:
