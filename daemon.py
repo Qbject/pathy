@@ -207,7 +207,7 @@ class PathyDaemon():
 					err=True, send_tg=True)
 	
 	def handle_party_events(self):
-		players_online_now = len(list(self.get_online_players()))
+		players_online_now = len(list(self.iter_players(online=True)))
 		
 		if self.players_online_count == None:
 			self.players_online_count = players_online_now
@@ -216,15 +216,13 @@ class PathyDaemon():
 		if players_online_now > self.players_online_count:
 			pass
 	
-	def get_online_players(self):
+	def iter_players(self, online=False, in_chat=None):
 		for player in self.state["tracked_players"]:
-			if player.is_online:
-				yield player
-	
-	def get_chat_players(self, chat_id):
-		for player in self.state["tracked_players"]:
-			if str(chat_id) in player.state["chats"]:
-				yield player
+			if online and not player.is_online:
+				continue
+			if in_chat and not str(in_chat) in player.state["chats"]:
+				continue
+			yield player
 	
 	def handle_tg_upd(self, body_raw):
 		update = util.TgUpdate.from_raw_body(body_raw)
@@ -242,7 +240,7 @@ class PathyDaemon():
 		
 		if bot_cmd == "/status":
 			resp = ""
-			for player in self.get_chat_players(chat_id):
+			for player in self.iter_players(in_chat=chat_id):
 				resp += player.format_status() + delim
 			
 			if resp.endswith(delim):
@@ -268,6 +266,19 @@ class PathyDaemon():
 					"або типу:\n<b>/fuck Afr wtq vfhcsfycmrbq</b>"
 			
 			update.reply(resp, as_html=True)
+		
+		elif bot_cmd == "/online":
+			for player in self.iter_players(online=True, in_chat=chat_id):
+				util.call_tg_api(
+					"sendPhoto",
+					{
+						"chat_id": chat_id,
+						"photo": "attach://file",
+						"parse_mode": "HTML",
+						"caption": player.format_status()
+					},
+					files={"file": util.get_legend_img().open("rb")}
+				)
 	
 	def send_hate_monday_pic(self):
 		monday_img_id = "AgACAgIAAx0CTJBx5QADHWEiP2LrqUGngEIIOJ4BNUHmVk_" \

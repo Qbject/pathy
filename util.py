@@ -235,6 +235,18 @@ def reverse_readline(filename, buf_size=8192):
 		if segment is not None:
 			yield segment
 
+def get_legend_img(legend):
+	default_img = IMGDATA_DIR / "legend/default.jpg"
+	legend_dir = IMGDATA_DIR / f"legend/{legend}"
+	if not (legend_dir.exists() and legend_dir.is_dir()):
+		return default_img
+	
+	legend_imgs = list(legend_dir.iterdir())
+	if not legend_imgs:
+		return default_img
+	
+	return random.choice(legend_imgs)
+
 class TgUpdate():
 	def __init__(self, update_data):
 		self.data = update_data
