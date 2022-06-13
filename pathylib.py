@@ -213,12 +213,14 @@ class PlayerTimeline():
 				except TimelineEntryError:
 					if line.strip(): # do not report empty lines
 						log(f"Skipping invalid entry in" \
-							f" {self.player_uid}.txt timeline: '{line}'")
+							f" {self.player_uid}.txt timeline: '{line}'\n" \
+							f"Traceback:\n{traceback.format_exc()}")
 					continue
 				
 				yield entry
-		except GeneratorExit:
+		except GeneratorExit as e:
 			iterable.close()
+			raise e
 	
 	def get_segment(self, start, end):
 		start_stat = {}
@@ -337,7 +339,8 @@ class PlayerTimeline():
 				# sess_start if another went offline event found earlier
 				if entry.timestamp < (sess_start - SESS_MAX_BREAK):
 					break
-				elif entry.stat_name == "is_online" and entry.stat_value == "0":
+				elif entry.stat_name == "is_online" and \
+				entry.stat_value == "0":
 					sess_start = None
 		
 		return sess_start
@@ -475,7 +478,7 @@ class TimelineSegment():
 		
 		return text.strip()
 	
-	def get_matches(self):
+	def get_matches(self, only_lvlup=True):
 		matches = []
 		
 		cur_state = None
@@ -485,8 +488,9 @@ class TimelineSegment():
 			# if match beginning and stat changing happens at the same time
 			# stat changes should be saved to the previous match
 			if matches:
+				cur_match = matches[-1]
 				if cur_state == "inMatch":
-					matches[-1]["legend"] = stat_stamp.get(("_", "legend"))
+					cur_match["legend"] = stat_stamp.get(("_", "legend"))
 				# save match stats here
 			
 			if new_state != cur_state:
@@ -496,7 +500,10 @@ class TimelineSegment():
 						"legend": stat_stamp.get(("_", "legend"))
 					})
 				elif cur_state == "inMatch":
-					matches[-1]["end"] = stat_stamp.get(("_", "state_since"))
+					prev_match = matches[-1]
+					prev_match["end"] = stat_stamp.get(("_", "state_since"))
+					prev_match["duration"] = prev_match["end"] - \
+						prev_match["start"]
 			
 			cur_state = new_state
 		
@@ -517,7 +524,7 @@ class TimelineEntry():
 		entry_split = entry.split(" ")
 		
 		if len(entry_split) != 4:
-			raise TimelineEntryError
+			raise TimelineEntryError("Invalid number of entry chunks")
 		
 		entry_split[0] = util.to_num(entry_split[0])
 		entry_split[1] = util.semiurldecode(str(entry_split[1]))
@@ -525,7 +532,7 @@ class TimelineEntry():
 		entry_split[3] = util.semiurldecode(str(entry_split[3]))
 		
 		if entry_split[0] == None:
-			raise TimelineEntryError
+			raise TimelineEntryError("Invalid entry timestamp")
 		
 		return cls(*entry_split)
 	
