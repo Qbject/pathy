@@ -502,8 +502,8 @@ class TimelineSegment():
 				elif cur_state == "inMatch":
 					prev_match = matches[-1]
 					prev_match["end"] = stat_stamp.get(("_", "state_since"))
-					prev_match["duration"] = prev_match["end"] - \
-						prev_match["start"]
+					prev_match["duration"] = int(prev_match["end"]) - \
+						int(prev_match["start"])
 			
 			cur_state = new_state
 		
