@@ -423,8 +423,11 @@ class TimelineSegment():
 			if not legend in legends:
 				legends[legend] = {}
 			
-			absolute_stats = ["scout_of_action_targets_hit",
-				"jackson_bow_out_damage_done", "smoke_show_damage_done"]
+			absolute_stats = [
+				"tracker_scout_of_action_targets_hit",
+				"tracker_jackson_bow_out_damage_done",
+				"tracker_smoke_show_damage_done"
+			]
 			
 			val_before = util.to_num(self.diff[(legend, stat_name)][0])
 			val_after  = util.to_num(self.diff[(legend, stat_name)][1])
