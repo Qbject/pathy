@@ -121,8 +121,6 @@ class PathyDaemon():
 				player = self.state["tracked_players"][player_idx]
 				#player.update(verbose=(str(player.uid) == "1007161381428"))
 				player.update(verbose=False)
-				
-				# TODO reduce indentation
 				if player.last_update_result.get("started_new_sess"):
 					self.on_new_online(player)
 					
