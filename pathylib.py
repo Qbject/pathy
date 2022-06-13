@@ -418,26 +418,26 @@ class TimelineSegment():
 		
 		# filling all the trackers to display
 		for legend, stat_name in self.diff:
+			skip_stats = [
+				"tracker_scout_of_action_targets_hit",
+				"tracker_jackson_bow_out_damage_done",
+				"tracker_smoke_show_damage_done"
+			]
+			if stat_name in skip_stats:
+				continue
+			
 			if legend == "_" or not stat_name.startswith("tracker_"):
 				continue
 			if not legend in legends:
 				legends[legend] = {}
 			
-			absolute_stats = [
-				"tracker_scout_of_action_targets_hit",
-				"tracker_jackson_bow_out_damage_done",
-				"tracker_smoke_show_damage_done"
-			]
-			
 			val_before = util.to_num(self.diff[(legend, stat_name)][0])
 			val_after  = util.to_num(self.diff[(legend, stat_name)][1])
 			if None in (val_before, val_after):
-				stat_result = "???"
-			elif stat_name in absolute_stats:
-				stat_result = val_after
+				stat_diff = "???"
 			else:
-				stat_result = val_after - val_before
-			legends[legend][stat_name[8:]] = stat_result
+				stat_diff = val_after - val_before
+			legends[legend][stat_name[8:]] = stat_diff
 		
 		text = ""
 		text += f"Зіграно часу: {format_time(self.duration)}\n"
@@ -464,10 +464,10 @@ class TimelineSegment():
 		
 		for legend, trackers in legends.items():
 			text += f"На {trans('on_'+legend)}:\n"
-			for tracker, value in trackers.items():
-				text += f"  {trans(tracker)}: {value}"
+			for tracker, tracker_diff in trackers.items():
+				text += f"  {trans(tracker)}: {tracker_diff}"
 				
-				if easter300 and str(value).endswith("300"):
+				if easter300 and str(tracker_diff).endswith("300"):
 					text += "  </pre><span class='tg-spoiler'>" \
 						"ВІДСОСИ У КРАБЕРИСТА</span><pre>"
 				else:
