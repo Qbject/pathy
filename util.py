@@ -247,6 +247,15 @@ def get_legend_img(legend):
 	
 	return random.choice(legend_imgs)
 
+def get_party_img(party_count):
+	if party_count < 2:
+		return None
+	elif party_count > 5:
+		party_count = 5
+	
+	party_dir = IMGDATA_DIR / f"party/{int(party_count)}"
+	return random.choice(list(party_dir.iterdir()))
+
 class TgUpdate():
 	def __init__(self, update_data):
 		self.data = update_data

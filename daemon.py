@@ -5,7 +5,7 @@ from multiprocessing.connection import Listener
 from util import log
 from const import *
 from pathylib import TrackedPlayer, format_map_rotation
-from textutil import trans, marsian_to_ua
+from textutil import trans, marsian_to_ua, get_moniker
 
 class PathyDaemon():
 	def __init__(self):
@@ -112,20 +112,44 @@ class PathyDaemon():
 			i += 1
 	
 	def do_worker_step(self, i):
-		if (i % 3) == 0:
+		if (i % 2) == 0:
 			# this approach is inconsistent if
 			# player list is updated in runtime
 			players_count = len(self.state["tracked_players"])
 			if players_count:
-				player_idx = int((i / 3) % players_count)
+				player_idx = int((i / 2) % players_count)
 				player = self.state["tracked_players"][player_idx]
 				#player.update(verbose=(str(player.uid) == "1007161381428"))
 				player.update(verbose=False)
+				
+				# TODO reduce indentation
+				if player.last_update_result.get("started_new_sess"):
+					self.on_new_online(player)
+					
 			time.sleep(self.state.get("player_fetch_delay", 1))
-		elif (i % 3) == 1:
+		elif (i % 2) == 1:
 			self.handle_cmds()
-		elif (i % 3) == 2:
-			self.handle_party_events()
+	
+	def on_new_online(self, player):
+		for chat_id in player.state["chats"]:
+			players_online = len(list(self.iter_players(
+				online=True, in_chat=chat_id)))
+			img = util.get_party_img(players_online)
+			if not img: continue
+			caption = f"{players_online} <i>{get_moniker(plural=True)}</i>!"
+			
+			util.call_tg_api(
+				"sendPhoto",
+				{
+					"chat_id": chat_id,
+					"photo": "attach://file",
+					"parse_mode": "HTML",
+					"caption": caption
+				},
+				files={
+					"file": img.open("rb")
+				}
+			)
 	
 	def get_status(self):
 		result = ""
@@ -205,16 +229,6 @@ class PathyDaemon():
 				log(f"Daemon worker task executing error:" \
 					f"\n{traceback.format_exc()}",
 					err=True, send_tg=True)
-	
-	def handle_party_events(self):
-		players_online_now = len(list(self.iter_players(online=True)))
-		
-		if self.players_online_count == None:
-			self.players_online_count = players_online_now
-			return
-		
-		if players_online_now > self.players_online_count:
-			pass
 	
 	def iter_players(self, online=False, in_chat=None):
 		for player in self.state["tracked_players"]:

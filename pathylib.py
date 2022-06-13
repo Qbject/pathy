@@ -12,6 +12,7 @@ class TrackedPlayer():
 		self.state = player_state
 		if not "chats" in self.state:
 			self.state["chats"] = {}
+		self.last_update_result = None
 		
 		self.timeline = PlayerTimeline(self.uid)
 		self.read_timeline()
@@ -71,6 +72,7 @@ class TrackedPlayer():
 		self.timeline.add_entry(moniker_entry)
 	
 	def update(self, verbose=False):
+		self.last_update_result = {}
 		self.handle_goodnights()
 		
 		stat = alsapi.get_player_stat(self.uid)
@@ -103,6 +105,7 @@ class TrackedPlayer():
 		last_online = self.timeline.get_last_online(time.time())
 		# is new session or just break end
 		is_new_sess = (time.time() - SESS_MAX_BREAK) > (last_online or 0)
+		self.last_update_result["started_new_sess"] = is_new_sess
 		
 		if not is_new_sess:
 			for chat_id, chat_state in self.state["chats"].items():
