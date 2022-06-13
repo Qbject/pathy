@@ -504,6 +504,7 @@ class TimelineSegment():
 					prev_match["end"] = stat_stamp.get(("_", "state_since"))
 					prev_match["duration"] = int(prev_match["end"]) - \
 						int(prev_match["start"])
+					# TODO: more reliable data structure
 			
 			cur_state = new_state
 		

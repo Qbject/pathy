@@ -277,7 +277,9 @@ class PathyDaemon():
 						"parse_mode": "HTML",
 						"caption": player.format_status()
 					},
-					files={"file": util.get_legend_img().open("rb")}
+					files={
+						"file": util.get_legend_img(player.legend).open("rb")
+					}
 				)
 	
 	def send_hate_monday_pic(self):
