@@ -270,14 +270,14 @@ class PathyDaemon():
 			update.reply(resp, as_html=True)
 	
 	def send_hate_monday_pic(self):
-		monday_ing_id = "AgACAgIAAx0CTJBx5QADHWEiP2LrqUGngEIIOJ4BNUHmVk_" \
+		monday_img_id = "AgACAgIAAx0CTJBx5QADHWEiP2LrqUGngEIIOJ4BNUHmVk_" \
 		"4AAJntTEboQ8RSVxQerfln3yYAQADAgADeQADIAQ"
 		
 		util.call_tg_api(
 			"sendPhoto",
 			{
 				"chat_id": ASL_CHAT_ID,
-				"photo": monday_ing_id,
+				"photo": monday_img_id,
 				"parse_mode": "HTML",
 				"disable_notification": True
 			}
