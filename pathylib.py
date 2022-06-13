@@ -157,7 +157,7 @@ class TrackedPlayer():
 			return
 		
 		wish = get_goodnight_wish(self.name)
-		self.notify_all_chats(wish, silent=True)
+		self.notify_all_chats(wish, as_html=True, silent=True)
 		self.state["goodnight_at"] = None
 	
 	def notify_chat(self, chat_id, msg, as_html=False, silent=False):
