@@ -250,10 +250,9 @@ def get_legend_img(legend):
 def get_party_img(party_count):
 	if party_count < 2:
 		return None
-	elif party_count > 5:
-		party_count = 5
+	dirname = str(int(party_count)) if party_count < 5 else "5"
 	
-	party_dir = IMGDATA_DIR / f"party/{int(party_count)}"
+	party_dir = IMGDATA_DIR / f"party/{dirname}"
 	return random.choice(list(party_dir.iterdir()))
 
 class TgUpdate():
