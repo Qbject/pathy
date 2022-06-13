@@ -458,12 +458,12 @@ class TimelineSegment():
 			text += f"На {trans('on_'+legend)}:\n"
 			for tracker, delta in trackers.items():
 				text += f"  {trans(tracker)}: {delta}"
-			
-			if easter300 and str(delta).endswith("300"):
-				text += "  </pre><span class='tg-spoiler'>" \
-					"ВІДСОСИ У КРАБЕРИСТА</span><pre>"
-			else:
-				text += "\n"
+				
+				if easter300 and str(delta).endswith("300"):
+					text += "  </pre><span class='tg-spoiler'>" \
+						"ВІДСОСИ У КРАБЕРИСТА</span><pre>"
+				else:
+					text += "\n"
 		
 		return text.strip()
 	
