@@ -280,7 +280,9 @@ class PathyDaemon():
 			update.reply(resp, as_html=True)
 		
 		elif bot_cmd == "/online":
+			online_in_chat = 0
 			for player in self.iter_players(online=True, in_chat=chat_id):
+				online_in_chat += 1
 				util.call_tg_api(
 					"sendPhoto",
 					{
@@ -293,6 +295,9 @@ class PathyDaemon():
 						"file": util.get_legend_img(player.legend).open("rb")
 					}
 				)
+			
+			if not online_in_chat:
+				update.reply("Немає грунів :(")
 	
 	def send_hate_monday_pic(self):
 		monday_img_id = "AgACAgIAAx0CTJBx5QADHWEiP2LrqUGngEIIOJ4BNUHmVk_" \
