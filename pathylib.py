@@ -133,7 +133,7 @@ class TrackedPlayer():
 	
 	def on_offline(self):
 		hour_local = (time.gmtime().tm_hour + util.get_hours_offset()) % 24
-		if hour_local > 23 or hour_local < 6:
+		if hour_local >= 23 or hour_local < 6:
 			self.state["goodnight_at"] = int(time.time()) + (60 * 15)
 		
 		sess_end = int(time.time())
