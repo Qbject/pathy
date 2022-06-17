@@ -119,10 +119,10 @@ class PathyDaemon():
 	def handle_party_events(self, player):
 		for chat_id in player.state["chats"]:
 			chat_state = self.get_chat_state(chat_id)
-			img_to_del = chat_state.get("last_party_img_id")
-			if img_to_del:
-				util.delete_tg_msg(chat_id, img_to_del)
-				chat_state["last_party_img_id"] = None
+			msg_to_del = chat_state.get("last_party_msg_id")
+			if msg_to_del:
+				util.delete_tg_msg(chat_id, msg_to_del)
+				chat_state["last_party_msg_id"] = None
 			
 			players_online = len(list(self.iter_players(
 				online=True, in_chat=chat_id)))
@@ -142,7 +142,7 @@ class PathyDaemon():
 					"file": img.open("rb")
 				}
 			)
-			chat_state["last_party_img_id"] = sent_msg.get("message_id")
+			chat_state["last_party_msg_id"] = sent_msg.get("message_id")
 	
 	def get_chat_state(self, chat_id):
 		if not str(chat_id) in self.state["chats_data"]:
