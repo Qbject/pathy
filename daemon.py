@@ -15,16 +15,6 @@ class PathyDaemon():
 		self.worker_tasks = queue.Queue()
 		self.players_online_count = None
 		
-		self.statistics = { # TODO TODO TODO
-			"started_at": time.time(),
-			"ctl_msgs_received": 0,
-			"tg_updates_received": 0,
-			"state_rewritten": 0,
-			"worker_steps": 0,
-			"als_api_requests": 0,
-			"timeline_entries": 0
-		}
-		
 		self.worker_thread = threading.Thread(
 			target=self.run_worker, daemon=True)
 		self.scheduler_thread = threading.Thread(
