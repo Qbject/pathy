@@ -110,22 +110,27 @@ class PathyDaemon():
 				player = self.state["tracked_players"][player_idx]
 				#player.update(verbose=(str(player.uid) == "1007161381428"))
 				player.update(verbose=False)
-				if player.last_update_result.get("started_new_sess"):
-					self.on_new_online(player)
+				self.handle_party_events(player)
 					
 			time.sleep(self.state.get("player_fetch_delay", 1))
 		elif (i % 2) == 1:
 			self.handle_cmds()
 	
-	def on_new_online(self, player):
+	def handle_party_events(self, player):
 		for chat_id in player.state["chats"]:
+			chat_state = self.get_chat_state(chat_id)
+			img_to_del = chat_state.get("last_party_img_id")
+			if img_to_del:
+				util.delete_tg_msg(chat_id, img_to_del)
+				chat_state["last_party_img_id"] = None
+			
 			players_online = len(list(self.iter_players(
 				online=True, in_chat=chat_id)))
 			img = util.get_party_img(players_online)
 			if not img: continue
 			caption = f"{players_online} <i>{get_moniker(plural=True)}</i>!"
 			
-			util.call_tg_api(
+			sent_msg = util.call_tg_api(
 				"sendPhoto",
 				{
 					"chat_id": chat_id,
@@ -137,6 +142,12 @@ class PathyDaemon():
 					"file": img.open("rb")
 				}
 			)
+			chat_state["last_party_img_id"] = sent_msg.get("message_id")
+	
+	def get_chat_state(self, chat_id):
+		if not str(chat_id) in self.state["chats_data"]:
+			self.state["chats_data"][str(chat_id)] = {}
+		return self.state["chats_data"][str(chat_id)]
 	
 	def get_status(self):
 		result = ""
@@ -184,18 +195,22 @@ class PathyDaemon():
 			time.sleep(1)
 	
 	def load_state(self):
-		if not DAEMON_STATE.exists():
+		if DAEMON_STATE.exists():
+			state_raw = DAEMON_STATE.read_text(encoding="utf-8")
+			state = json.loads(state_raw)
+			
+			if state["tracked_players"]:
+				for i, player_state in enumerate(state["tracked_players"]):
+					state["tracked_players"][i] = TrackedPlayer(player_state)
+			
+			self.state = state
+		else:
 			self.state = {"tracked_players": []}
-			return
 		
-		state_raw = DAEMON_STATE.read_text(encoding="utf-8")
-		state = json.loads(state_raw)
-		
-		if state["tracked_players"]:
-			for i, player_state in enumerate(state["tracked_players"]):
-				state["tracked_players"][i] = TrackedPlayer(player_state)
-		
-		self.state = state
+		if not "tracked_players" in self.state:
+			self.state["tracked_players"] = []
+		if not "chats_data" in self.state:
+			self.state["chats_data"] = {}
 	
 	def save_state(self):
 		def _serialize(item):
