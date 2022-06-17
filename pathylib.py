@@ -112,6 +112,7 @@ class TrackedPlayer():
 				msg_to_del = chat_state.get("sess_end_msg_id")
 				if msg_to_del:
 					util.delete_tg_msg(chat_id, msg_to_del)
+					chat_state["sess_end_msg_id"] = None
 			return
 		
 		self.gen_new_moniker()
