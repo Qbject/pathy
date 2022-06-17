@@ -198,9 +198,12 @@ def dl_file_through_tg(url, dest):
 def reverse_readline(filename, buf_size=8192):
 	"""
 	A generator that returns the lines of a file in reverse order
-	from https://stackoverflow.com/a/23646049
+	from https://stackoverflow.com/a/23646049 modified for binary reading
 	"""
-	with open(filename) as fh:
+	def _line(line):
+		return line.decode("utf-8").strip("\r") + "\n"
+	
+	with open(filename, "rb") as fh:
 		segment = None
 		offset = 0
 		fh.seek(0, os.SEEK_END)
@@ -211,7 +214,7 @@ def reverse_readline(filename, buf_size=8192):
 			fh.seek(file_size - offset)
 			buffer = fh.read(min(remaining_size, buf_size))
 			remaining_size -= buf_size
-			lines = buffer.split('\n')
+			lines = buffer.split(b"\n")
 			
 			# The first line of the buffer is probably not a complete line so
 			# we'll save it and append it to the last line of the next buffer
@@ -221,19 +224,19 @@ def reverse_readline(filename, buf_size=8192):
 				# do not concat the segment to the last line of new chunk.
 				# Instead, yield the segment first
 				
-				if buffer[-1] != '\n':
+				if buffer[-1] != b"\n":
 					lines[-1] += segment
 				else:
-					yield segment
+					yield _line(segment)
 			segment = lines[0]
 			
 			for index in range(len(lines) - 1, 0, -1):
 				if lines[index]:
-					yield lines[index]
+					yield _line(lines[index])
 		
 		# Don't yield None if the file was empty
 		if segment is not None:
-			yield segment
+			yield _line(segment)
 
 def get_legend_img(legend):
 	default_img = IMGDATA_DIR / "legend/default.jpg"
