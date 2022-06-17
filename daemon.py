@@ -90,8 +90,8 @@ class PathyDaemon():
 		elif msg == "setdelay":
 			self.state["player_fetch_delay"] = int(args.get("delay", 1))
 		elif msg == "tgupd":
-			self.handle_tg_upd(args.get("upd_body"))
-			# self.as_worker(self.handle_tg_upd, args.get("upd_body"))
+			# self.handle_tg_upd(args.get("upd_body"))
+			self.as_worker(self.handle_tg_upd, args.get("upd_body"))
 			return "DONE"
 		else:
 			return "UNKNOWN_MSG"
