@@ -109,8 +109,9 @@ class PathyDaemon():
 				player_idx = int((i / 2) % players_count)
 				player = self.state["tracked_players"][player_idx]
 				#player.update(verbose=(str(player.uid) == "1007161381428"))
-				player.update(verbose=False)
-				self.handle_party_events(player)
+				upd_resp = player.update(verbose=False)
+				if upd_resp["went_online"]:
+					self.handle_party_events(player)
 					
 			time.sleep(self.state.get("player_fetch_delay", 1))
 		elif (i % 2) == 1:

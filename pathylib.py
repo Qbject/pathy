@@ -71,6 +71,8 @@ class TrackedPlayer():
 		self.timeline.add_entry(moniker_entry)
 	
 	def update(self, verbose=False):
+		upd_resp = {}
+		
 		self.handle_goodnights()
 		
 		stat = alsapi.get_player_stat(self.uid)
@@ -85,17 +87,19 @@ class TrackedPlayer():
 				msg += f"{stat_name}: {before} -> {after}\n"
 			log(msg, send_tg=True)
 		
-		went_online = went_offline = False
+		upd_resp["went_online"] = upd_resp["went_offline"] = False
 		if diff.get(("_", "is_online")):
 			if diff[("_", "is_online")][1] == "1":
-				went_online = True
+				upd_resp["went_online"] = True
 			else:
-				went_offline = True
+				upd_resp["went_offline"] = True
 		
-		if went_online:
+		if upd_resp["went_online"]:
 			self.on_online()
-		elif went_offline:
+		elif upd_resp["went_offline"]:
 			self.on_offline()
+		
+		return upd_resp
 	
 	def on_online(self):
 		self.state["goodnight_at"] = None
