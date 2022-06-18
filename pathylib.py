@@ -88,7 +88,7 @@ class TrackedPlayer():
 			log(msg, send_tg=True)
 		
 		upd_resp["went_online"] = upd_resp["went_offline"] = False
-		if diff.get(("_", "is_online")):
+		if diff.get(("_", "is_online")) and diff[("_", "is_online")][0]:
 			if diff[("_", "is_online")][1] == "1":
 				upd_resp["went_online"] = True
 			else:
