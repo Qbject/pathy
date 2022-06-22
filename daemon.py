@@ -247,6 +247,11 @@ class PathyDaemon():
 				continue
 			yield player
 	
+	def get_player_by_uid(self, uid):
+		for player in self.iter_players():
+			if str(player.uid) == uid:
+				return player
+	
 	def handle_tg_upd(self, body_raw):
 		update = util.TgUpdate.from_raw_body(body_raw)
 		if not update.is_msg():
