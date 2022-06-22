@@ -568,7 +568,7 @@ class StoredTimeline(Timeline):
 		else:
 			iterable = self.path.open("r", encoding="utf-8")
 		
-		with iterable:
+		try:
 			for line in iterable:
 				try:
 					entry = TimelineEntry.parse(line)
@@ -580,6 +580,9 @@ class StoredTimeline(Timeline):
 					continue
 				
 				yield entry
+		finally:
+			if getattr(iterable, "close"):
+				iterable.close()
 	
 	def close(self):
 		self.file.close()
