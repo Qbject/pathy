@@ -83,9 +83,9 @@ class PathyDaemon():
 			self.as_worker(self.handle_tg_upd, args.get("upd_body"))
 			return "DONE"
 		elif msg == "matches":
-			player = self.get_player_by_uid(args.get("uid", "1007161381428"))
+			player = self.get_player_by_uid(args.get("uid"))
 			result = ""
-			for match in player.timeline.get_matches():
+			for match in player.get_last_sess().get_matches():
 				result += f"{match.get_duration()}s on {match.get_legend()}\n"
 			return result
 		else:

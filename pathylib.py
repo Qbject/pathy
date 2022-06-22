@@ -34,6 +34,14 @@ class TrackedPlayer():
 	def get_stat(self, *args):
 		return self.timeline.get_stat(*args)
 	
+	def get_last_sess(self):
+		now = int(time.time())
+		sess_start = self.get_sess_start(now)
+		if sess_start == None:
+			return
+		sess = self.timeline.get_sub_timeline(sess_start, now)
+		return sess
+	
 	def format_status(self):
 		result = f"<b>{self.name}</b>"
 		if self.is_online:
@@ -42,12 +50,9 @@ class TrackedPlayer():
 		result += "\n"
 		
 		if self.is_online:
-			now = int(time.time())
-			sess_start = self.get_sess_start(now)
-			if sess_start == None:
-				return
-			sess = self.timeline.get_sub_timeline(sess_start, now)
-			result += f"<pre>{sess.format(easter300=True)}</pre>"
+			sess = self.get_last_sess()
+			if sess:
+				result += f"<pre>{sess.format(easter300=True)}</pre>"
 		
 		else:
 			last_online = self.get_last_online(time.time())
@@ -139,11 +144,9 @@ class TrackedPlayer():
 		if hour_local >= 23 or hour_local < 6:
 			self.state["goodnight_at"] = int(time.time()) + (60 * 15)
 		
-		sess_end = int(time.time())
-		sess_start = self.get_sess_start(sess_end)
-		if sess_start == None:
+		sess = self.get_last_sess()
+		if not sess:
 			return
-		sess = self.timeline.get_sub_timeline(sess_start, sess_end)
 		
 		sess_end_msg = ""
 		sess_end_msg += f"🔴 <b>{self.name}</b> більше не " \
