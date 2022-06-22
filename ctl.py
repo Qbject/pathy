@@ -141,7 +141,7 @@ def handle_tg_upd(body_raw):
 	
 	debug_cmd, debug_cmd_args = update.parse_debug_cmd()
 	if debug_cmd:
-		cmd_resp = entry(debug_cmd, debug_cmd_args)  or "<empty>"
+		cmd_resp = entry(debug_cmd, debug_cmd_args) or "<empty>"
 		update.reply(util.html_sanitize(cmd_resp), as_html=True)
 		return
 	

@@ -195,24 +195,24 @@ def dl_file_through_tg(url, dest):
 	resp = requests.get(tg_url, allow_redirects=True)
 	open(dest, 'wb').write(resp.content)
 
-def reverse_readline(filename, buf_size=8192):
+def reverse_readline(path, buf_size=8192):
 	"""
 	A generator that returns the lines of a file in reverse order
-	from https://stackoverflow.com/a/23646049 modified for binary reading
+	modified from from https://stackoverflow.com/a/23646049
 	"""
 	def _line(line):
-		return line.decode("utf-8").strip("\r") + "\n"
+		return line.decode("utf-8").strip("\r\n") + "\n"
 	
-	with open(filename, "rb") as fh:
+	with open(path, "rb") as file:
 		segment = None
 		offset = 0
-		fh.seek(0, os.SEEK_END)
-		file_size = remaining_size = fh.tell()
+		file.seek(0, os.SEEK_END)
+		file_size = remaining_size = file.tell()
 		
 		while remaining_size > 0:
 			offset = min(file_size, offset + buf_size)
-			fh.seek(file_size - offset)
-			buffer = fh.read(min(remaining_size, buf_size))
+			file.seek(file_size - offset)
+			buffer = file.read(min(remaining_size, buf_size))
 			remaining_size -= buf_size
 			lines = buffer.split(b"\n")
 			
