@@ -513,7 +513,7 @@ class Timeline():
 		matches = self._cache["matches"]
 		
 		if only_lvlup:
-			return [m for m in matches if m.get_diff().get("level")]
+			return [m for m in matches if m.get_diff().get(("_", "level"))]
 		
 		return matches
 
@@ -521,13 +521,36 @@ class MatchTimeline(Timeline):
 	def __init__(self, *args, **kwargs):
 		super().__init__(*args, **kwargs)
 	
+	def get_start(self):
+		if self._cache.get("start") != None:
+			return self._cache["start"]
+		
+		for ts in self.iter_timestamps():
+			if ts.get_value("cur_state") == "inMatch":
+				self._cache["start"] = ts.timestamp
+				break # considering only first match in timeline
+		
+		return self._cache.get("start")
+	
+	def get_end(self):
+		if self._cache.get("end") != None:
+			return self._cache["end"]
+		
+		for ts in self.iter_timestamps():
+			cur_state = ts.get_value("cur_state")
+			if cur_state and cur_state != "inMatch":
+				self._cache["end"] = ts.timestamp
+				break # considering only first match in timeline
+		
+		return self._cache.get("end")
+	
 	def get_legend(self):
-		legend = self.start_stat.get("legend")
+		legend = self.start_stat.get(("_", "legend"))
 		for ts in self.iter_timestamps():
 			new_state = ts.get_value("cur_state")
 			if new_state and new_state != "inMatch":
 				break
-			legend = ts.get_value("legend")
+			legend = ts.get_value("legend") or legend
 		
 		return legend
 	
@@ -647,6 +670,9 @@ class TimelineEntry():
 			util.semiurlencode(str(self.stat_name)),
 			util.semiurlencode(str(self.stat_value))
 		))
+	
+	def __str__(self):
+		return self.serialize()
 
 class TimelineEntryError(ValueError):
 	pass
@@ -690,6 +716,9 @@ class PlayerRank():
 		next_percentage = util.calc_mid_percentage(
 			self.score, rank_div_scores[self.mode])
 		return f"{trans(self.rank_name)} {self.div} ({next_percentage}%)"
+	
+	def __str__(self):
+		return self.format()
 	
 	@classmethod
 	def from_stat(cls, stat, mode):
