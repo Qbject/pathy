@@ -55,8 +55,7 @@ def entry(action, args={}, body_raw=b"", from_web=False):
 		
 		elif action == "matches":
 			ensure_running()
-			send("matches", uid=args.get("uid", "1007161381428"))
-			return
+			return send("matches", uid=args.get("uid", "1007161381428"))
 		
 		else:
 			raise ValueError(f"Unknown Pathy ctl action: {action}")
