@@ -85,8 +85,9 @@ class PathyDaemon():
 		elif msg == "matches":
 			player = self.get_player_by_uid(args.get("uid"))
 			result = ""
-			for match in player.get_last_sess().get_matches(only_lvlup=False):
-				result += f"{match.get_duration()}s on {match.get_legend()}\n"
+			for match in player.get_last_sess().get_matches():
+				result += f"{util.format_time(match.get_duration())}s on " \
+				f"{match.get_legend()}\n"
 			return result
 		else:
 			return "UNKNOWN_MSG"
