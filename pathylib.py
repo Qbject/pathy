@@ -390,6 +390,7 @@ class Timeline():
 		
 		for entry in self.iter():
 			self._cache["start"] = entry.timestamp
+			break
 		
 		return self._cache.get("start")
 	
@@ -399,6 +400,7 @@ class Timeline():
 		
 		for entry in self.iter(reverse=True):
 			self._cache["end"] = entry.timestamp
+			break
 		
 		return self._cache.get("end")
 	
