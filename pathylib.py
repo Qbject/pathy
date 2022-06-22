@@ -608,7 +608,9 @@ class TimestampStat():
 	
 	def get_value(self, *args):
 		key = parse_timeline_key(*args)
-		return self.data.get(key).stat_value
+		entry = self.data.get(key)
+		if entry:
+			return entry.stat_value
 
 
 class TimelineEntry():
