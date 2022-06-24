@@ -258,7 +258,9 @@ class Timeline():
 			diff[key] = (diff[key][0], entry.stat_value)
 		
 		# filtering out equal start-end values
-		diff = {k: v for k, v in diff.items() if v[0] != v[1]}
+		keys_to_remove = [k for k, v in diff.items() if v[0] == v[1]]
+		for key in keys_to_remove:
+			diff.pop(key)
 		
 		return diff
 	
