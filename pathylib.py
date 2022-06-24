@@ -518,6 +518,9 @@ class Timeline():
 			return [m for m in matches if m.get_diff().get(("_", "level"))]
 		
 		return matches
+	
+	def __str__(self):
+		return "".join([str(e)+"\n" for e in self.iter()])
 
 class MatchTimeline(Timeline):
 	def __init__(self, *args, **kwargs):
