@@ -70,10 +70,12 @@ def _get_base_gr(plural=False):
 	else:
 		return (prefix + gr, "ий")
 
+goodnight_emoji = ["🥱", "🛌", "😴", "💤"]
+
 def get_goodnight_wish(player_name):
 	wish = f"Гуд найт, <b>{player_name}</b>\n"
 	wish += f"{get_adjectives(ending='их')} снів "
-	wish += random.choice(["🥱", "🛌", "😴", "💤"])
+	wish += random.choice(goodnight_emoji)
 	return wish
 
 translations = {
