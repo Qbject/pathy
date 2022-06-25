@@ -264,6 +264,32 @@ class Timeline():
 		
 		return diff
 	
+	def get_states_duration(self):
+		if self._cache.get("states_duration"):
+			return self._cache["states_duration"]
+		states = self._cache["states_duration"] = {}
+		if not self.get_duration():
+			return states
+		
+		def _add_time(state_name, time):
+			if not state_name in states:
+				states[state_name] = 0
+			states[state_name] += time
+		
+		state = self.start_stat.get(("_", "cur_state"))
+		state_since = self.get_start()
+		for entry in self.iter():
+			if entry.stat_name == "cur_state":
+				_add_time(state, entry.timestamp - state_since)
+				state = entry.stat_value
+				state_since = entry.timestamp
+		
+		_add_time(state, self.get_end() - state_since)
+		
+		if None in states:
+			states.pop(None)
+		return states
+	
 	def iter(self, reverse=False):
 		iterable = self._entries
 		if reverse:
@@ -419,9 +445,11 @@ class Timeline():
 		matches = self.get_matches()
 		
 		text = ""
-		text += f"Зіграно часу: {format_time(self.get_duration())}\n"
+		text += f"Час: {format_time(self.get_duration())}\n"
+		for state, duration in self.get_states_duration().items():
+			text += f"  {trans(state)}: {format_time(duration)}\n"
 		if matches:
-			text += f"Зіграно матчів: {len(matches)}\n"
+			text += f"Матчі: {len(matches)}\n"
 		
 		lvl_diff = diff.get(("_", "level"))
 		if lvl_diff:
@@ -567,6 +595,9 @@ class MatchTimeline(Timeline):
 			entry.stat_value != "inMatch":
 				return True
 		return False
+	
+	def get_states_duration(self, *args, **kwargs):
+		raise AttributeError
 
 class StoredTimeline(Timeline):
 	def __init__(self, path, *args, **kwargs):
