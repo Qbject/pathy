@@ -178,7 +178,7 @@ class PathyDaemon():
 		result += f"{'Живий' if True else '😵'}\n"
 		result += f"Робочий потік: "
 		result += f"{'Живий' if self.worker_thread.is_alive() else '😵'}"
-		result += f" ({self.worker_cycle} циклів)\n"
+		result += f" (циклів: {self.worker_cycle})\n"
 		result += f"Потік планувальника: "
 		result += f"{'Живий' if self.scheduler_thread.is_alive() else '😵'}\n"
 		
@@ -300,6 +300,8 @@ class PathyDaemon():
 				targ_msg = update.data["message"]["reply_to_message"]
 				if targ_msg.get("text"):
 					targ_txt = targ_msg["text"]
+				if targ_msg.get("caption"):
+					targ_txt = targ_msg["caption"]
 			else:
 				targ_txt = bot_cmd_args
 			
