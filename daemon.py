@@ -14,6 +14,8 @@ class PathyDaemon():
 		self.stopping = False
 		self.worker_tasks = queue.Queue()
 		self.players_online_count = None
+		self.last_player_upd = 0
+		self.worker_cycle = 0
 		
 		self.worker_thread = threading.Thread(
 			target=self.run_worker, daemon=True)
@@ -93,10 +95,12 @@ class PathyDaemon():
 			return "UNKNOWN_MSG"
 	
 	def run_worker(self):
-		i = 0
 		while True:
 			try:
-				self.do_worker_step(i)
+				if (self.worker_cycle % 2) == 0:
+					self.do_player_upd(self.worker_cycle / 2)
+				elif (self.worker_cycle % 2) == 1:
+					self.handle_cmds()
 				self.save_state()
 			except Exception:
 				log(f"Daemon worker error:\n{traceback.format_exc()}",
@@ -105,24 +109,29 @@ class PathyDaemon():
 			if self.stopping:
 				break
 			
-			i += 1
+			self.worker_cycle += 1
 	
-	def do_worker_step(self, i):
-		if (i % 2) == 0:
-			# this approach is inconsistent if
-			# player list is updated in runtime
-			players_count = len(self.state["tracked_players"])
-			if players_count:
-				player_idx = int((i / 2) % players_count)
-				player = self.state["tracked_players"][player_idx]
-				#player.update(verbose=(str(player.uid) == "1007161381428"))
-				upd_resp = player.update(verbose=False)
-				if upd_resp["went_online"]:
-					self.handle_party_events(player)
-					
-			time.sleep(self.state.get("player_fetch_delay", 1))
-		elif (i % 2) == 1:
-			self.handle_cmds()
+	def do_player_upd(self, i):
+		self.wait_update_interval()
+		
+		# this approach is inconsistent if
+		# player list is updated in runtime
+		players_count = len(self.state["tracked_players"])
+		
+		if players_count:
+			player_idx = int((i / 2) % players_count)
+			player = self.state["tracked_players"][player_idx]
+			upd_resp = player.update()
+			if upd_resp["went_online"]:
+				self.handle_party_events(player)
+			self.last_player_upd = time.time()
+	
+	def wait_update_interval(self):
+		interval = self.state.get("player_fetch_delay", 1)
+		time_since_prev_upd = time.time() - self.last_player_upd
+		time_to_wait = interval - time_since_prev_upd
+		if time_to_wait > 0:
+			time.sleep(time_to_wait)
 	
 	def handle_party_events(self, player):
 		for chat_id in player.state["chats"]:

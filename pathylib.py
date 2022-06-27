@@ -52,7 +52,7 @@ class TrackedPlayer():
 		if self.is_online:
 			sess = self.get_last_sess()
 			if sess:
-				result += f"<pre>{sess.format(easter300=True)}</pre>"
+				result += f"<pre>{sess.format(easter_eggs=True)}</pre>"
 		
 		else:
 			last_online = self.get_last_online(time.time())
@@ -76,7 +76,7 @@ class TrackedPlayer():
 			int(time.time()), "_", "moniker", self.moniker)
 		self.timeline.add_entry(moniker_entry)
 	
-	def update(self, verbose=False):
+	def update(self):
 		upd_resp = {}
 		
 		self.handle_goodnights()
@@ -84,14 +84,6 @@ class TrackedPlayer():
 		stat = alsapi.get_player_stat(self.uid)
 		diff = self.timeline.consume_als_stat(stat)
 		self.read_timeline()
-		
-		if verbose and diff:
-			msg = f"{self.name}:\n"
-			for (legend, stat_name), (before, after) in diff.items():
-				if legend != "_":
-					msg += f"({legend}) "
-				msg += f"{stat_name}: {before} -> {after}\n"
-			log(msg, send_tg=True)
 		
 		upd_resp["went_online"] = upd_resp["went_offline"] = False
 		if diff.get(("_", "is_online")) and diff[("_", "is_online")][0]:
@@ -151,7 +143,7 @@ class TrackedPlayer():
 		sess_end_msg = ""
 		sess_end_msg += f"🔴 <b>{self.name}</b> більше не " \
 			f"<i>{self.moniker}</i> :(\n"
-		sess_end_msg += f"<pre>{sess.format(easter300=True)}</pre>"
+		sess_end_msg += f"<pre>{sess.format(easter_eggs=True)}</pre>"
 		
 		for chat_id, chat_state in self.state["chats"].items():
 			msg_id = self.notify_chat(chat_id, sess_end_msg,
@@ -439,14 +431,14 @@ class Timeline():
 			return 0
 		return end - start
 	
-	def format(self, easter300=False):
-		# TODO: format_legend_stat into separate method
+	def format(self, easter_eggs=False):
 		diff = self.get_diff()
 		matches = self.get_matches()
 		
 		text = ""
 		text += f"Час: {format_time(self.get_duration())}\n"
 		for state, duration in self.get_states_duration().items():
+			if not duration: continue
 			text += f"  {trans(state)}: {format_time(duration)}\n"
 		if matches:
 			text += f"Матчі: {len(matches)}\n"
@@ -455,19 +447,16 @@ class Timeline():
 		if lvl_diff:
 			text += f"Левел: {lvl_diff[0]} → {lvl_diff[1]}\n"
 		
-		if diff.get(("_", "br_rank_score")):
-			before = PlayerRank.from_stat(self.start_stat, mode="br")
-			after  = PlayerRank.from_stat(self.get_end_stat(), mode="br")
+		def _format_rank_diff(mode, caption):
+			if not diff.get(("_", f"{mode}_rank_score")):
+				return
+			before = PlayerRank.from_stat(self.start_stat, mode=mode)
+			after  = PlayerRank.from_stat(self.get_end_stat(), mode=mode)
 			if before and after:
-				text += f"Ранг в БР: {before.format()} " \
-					f"→ {after.format()}\n"
+				text += f"{caption}: {before.format()} → {after.format()}\n"
 		
-		if diff.get(("_", "ar_rank_score")):
-			before = PlayerRank.from_stat(self.start_stat, mode="ar")
-			after  = PlayerRank.from_stat(self.get_end_stat(), mode="ar")
-			if before and after:
-				text += f"Ранг на Аренах: {before.format()} " \
-					f"→ {after.format()}\n"
+		_format_rank_diff("br", "Ранг в БР")
+		_format_rank_diff("ar", "Ранг на Аренах")
 		
 		legends = {}
 		
@@ -503,13 +492,12 @@ class Timeline():
 				stat_diff = val_after - val_before
 			legends[legend][stat_name[8:]] = stat_diff
 		
-		
 		for legend, trackers in legends.items():
 			text += f"На {trans('on_'+legend)}:\n"
 			for tracker, tracker_diff in trackers.items():
 				text += f"  {trans(tracker)}: {tracker_diff}"
 				
-				if easter300 and str(tracker_diff).endswith("300"):
+				if easter_eggs and str(tracker_diff).endswith("300"):
 					text += "  </pre><span class='tg-spoiler'>" \
 						"ВІДСОСИ У КРАБЕРИСТА</span><pre>"
 				else:
