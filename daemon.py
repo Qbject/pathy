@@ -14,7 +14,6 @@ class PathyDaemon():
 		self.stopping = False
 		self.worker_tasks = queue.Queue()
 		self.players_online_count = None
-		self.last_player_upd = 0
 		self.worker_cycle = 0
 		
 		self.worker_thread = threading.Thread(
@@ -80,7 +79,7 @@ class PathyDaemon():
 		if msg == "status":
 			return self.get_status()
 		elif msg == "setdelay":
-			self.state["player_fetch_delay"] = int(args.get("delay", 1))
+			self.state["player_fetch_delay"] = int(args.get("delay", 2))
 		elif msg == "tgupd":
 			self.as_worker(self.handle_tg_upd, args.get("upd_body"))
 			return "DONE"
@@ -109,10 +108,11 @@ class PathyDaemon():
 			if self.stopping:
 				break
 			
+			util.throttle("worker_cycle", 0.1)
 			self.worker_cycle += 1
 	
 	def do_player_upd(self, i):
-		self.wait_update_interval()
+		util.throttle("player_upd", self.state.get("player_fetch_delay", 2))
 		
 		try:
 			# this approach is inconsistent if
@@ -129,15 +129,6 @@ class PathyDaemon():
 			log(f"Player '{player.name}' update error, throttling\n" +
 				traceback.format_exc(), err=True, send_tg=True)
 			time.sleep(10)
-		finally:
-			self.last_player_upd = time.time()
-	
-	def wait_update_interval(self):
-		interval = self.state.get("player_fetch_delay", 1)
-		time_since_prev_upd = time.time() - self.last_player_upd
-		time_to_wait = interval - time_since_prev_upd
-		if time_to_wait > 0:
-			time.sleep(time_to_wait)
 	
 	def handle_party_events(self, player):
 		for chat_id in player.state["chats"]:

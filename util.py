@@ -258,6 +258,17 @@ def get_party_img(party_count):
 	party_dir = IMGDATA_DIR / f"party/{dirname}"
 	return random.choice(list(party_dir.iterdir()))
 
+_interval_data = {}
+def throttle(tag, min_interval):
+	if not tag in _interval_data:
+		_interval_data[tag] = time.time()
+		return
+	
+	time_to_wait = min_interval - (time.time() - _interval_data[tag])
+	if time_to_wait > 0:
+		time.sleep(time_to_wait)
+	_interval_data[tag] = time.time()
+
 class TgUpdate():
 	def __init__(self, update_data):
 		self.data = update_data
