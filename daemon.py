@@ -114,16 +114,18 @@ class PathyDaemon():
 	def do_player_upd(self, i):
 		self.wait_update_interval()
 		
-		# this approach is inconsistent if
-		# player list is updated in runtime
-		players_count = len(self.state["tracked_players"])
-		
-		if players_count:
-			player_idx = int((i / 2) % players_count)
-			player = self.state["tracked_players"][player_idx]
-			upd_resp = player.update()
-			if upd_resp["went_online"]:
-				self.handle_party_events(player)
+		try:
+			# this approach is inconsistent if
+			# player list is updated in runtime
+			players_count = len(self.state["tracked_players"])
+			
+			if players_count:
+				player_idx = int((i / 2) % players_count)
+				player = self.state["tracked_players"][player_idx]
+				upd_resp = player.update()
+				if upd_resp["went_online"]:
+					self.handle_party_events(player)
+		finally:
 			self.last_player_upd = time.time()
 	
 	def wait_update_interval(self):
@@ -168,13 +170,13 @@ class PathyDaemon():
 	
 	def get_status(self):
 		result = ""
-		
-		result += f"Головний потік: " \
-			f"{'Живий' if True else '😵'}\n"
-		result += f"Робочий потік: " \
-			f"{'Живий' if self.worker_thread.is_alive() else '😵'}\n"
-		result += f"Потік планувальника: " \
-			f"{'Живий' if self.scheduler_thread.is_alive() else '😵'}\n"
+		result += f"Головний потік: "
+		result += f"{'Живий' if True else '😵'}\n"
+		result += f"Робочий потік: "
+		result += f"{'Живий' if self.worker_thread.is_alive() else '😵'}"
+		result += f" ({self.worker_cycle} циклів)\n"
+		result += f"Потік планувальника: "
+		result += f"{'Живий' if self.scheduler_thread.is_alive() else '😵'}\n"
 		
 		return result.strip()
 	
