@@ -126,7 +126,7 @@ class PathyDaemon():
 				if upd_resp["went_online"]:
 					self.handle_party_events(player)
 		except Exception as e:
-			log(f"Player '{player.name}' update error, throttling\n"
+			log(f"Player '{player.name}' update error, throttling\n" +
 				traceback.format_exc(), err=True, send_tg=True)
 			time.sleep(10)
 		finally:
