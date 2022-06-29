@@ -354,7 +354,9 @@ class Timeline():
 		is_online = bool(
 			_realtime["isOnline"] and (
 				_realtime["currentState"] != "offline" or \
-				_realtime["currentStateSinceTimestamp"] != -1
+				_realtime["currentStateSinceTimestamp"] != -1 or \
+				_realtime["lobbyState"] == "invite"
+				
 			)
 		)
 		_add("is_online", int(is_online))
