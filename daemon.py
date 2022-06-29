@@ -395,7 +395,7 @@ class PathyDaemon():
 			if chat_state["delplayer_initiator"] != upd.from_id:
 				return
 			
-			player = get_player_by_name(upd.msg_text)
+			player = self.get_player_by_name(upd.msg_text)
 			if not player: return
 			self.del_tracked_player(player.uid, upd.chat_id)
 			upd.reply(f"Ок, не знаю більше ніякого " \
