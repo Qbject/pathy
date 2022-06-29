@@ -97,6 +97,18 @@ class TrackedPlayer():
 		elif upd_resp["went_offline"]:
 			self.on_offline()
 		
+		upd_resp["got_banned"] = upd_resp["got_unbanned"] = False
+		if diff.get(("_", "is_banned")) and diff[("_", "is_banned")][0]:
+			if diff[("_", "is_banned")][1] == "1":
+				upd_resp["got_banned"] = True
+			else:
+				upd_resp["got_unbanned"] = True
+		
+		if upd_resp["got_banned"]:
+			self.on_banned()
+		elif upd_resp["got_unbanned"]:
+			self.on_unbanned()
+		
 		return upd_resp
 	
 	def on_online(self):
@@ -149,6 +161,23 @@ class TrackedPlayer():
 			msg_id = self.notify_chat(chat_id, sess_end_msg,
 				as_html=True, silent=True)
 			chat_state["sess_end_msg_id"] = msg_id
+	
+	def on_banned(self):
+		adj = get_adjectives()
+		ban_reason = self.get_stat("ban_reason") or "🤷‍♂️"
+		sec_to_unban = util.to_num(self.get_stat("ban_time_left"))
+		unban_after = "🤷‍♂️"
+		if sec_to_unban != None:
+			unban_after = format_time(sec_to_unban)
+		
+		notification = f"<b>{self.name}</b> отримав <i>{adj}</i> банан :/\n" \
+			f"<i>Причина: {ban_reason}</i>\n" \
+			f"<i>Закінчиться через: {unban_after}</i>"
+		self.notify_all_chats(notification, as_html=True)
+	
+	def on_unbanned(self):
+		notification = f"У <b>{self.name}</b> нарешті спав банан :)"
+		self.notify_all_chats(notification, as_html=True)
 	
 	def handle_goodnights(self):
 		wish_at = self.state.get("goodnight_at")
@@ -365,6 +394,8 @@ class Timeline():
 		)
 		_add("is_online", int(is_online))
 		_add("is_banned", int(_global["bans"]["isActive"]))
+		_add("ban_reason",    _global["bans"]["last_banReason"])
+		_add("ban_time_left", _global["bans"]["remainingSeconds"])
 		
 		# a bit of logic to handle state_since deviation
 		state_changed = _add("cur_state", _realtime["currentState"])
