@@ -285,7 +285,10 @@ class PathyDaemon():
 		from_id = update.data["message"]["from"]["id"]
 		msg_text = update.data["message"].get("text")
 		reply_to_msg = update.data["message"].get("reply_to_message")
-		reply_to_msg_id = reply_to_msg.get("message_id")
+		if reply_to_msg:
+			reply_to_msg_id = reply_to_msg.get("message_id")
+		else:
+			reply_to_msg_id = None
 		bot_cmd, bot_cmd_args = update.parse_bot_command()
 		
 		if (not bot_cmd) and chat_id == DEBUG_CHAT_ID:
