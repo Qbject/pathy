@@ -362,12 +362,12 @@ class PathyDaemon():
 			return
 		
 		if bot_cmd == "/delplayer":
-			keyboard = [[p] for p in self.iter_players(in_chat=upd.chat_id)]
+			kbrd = [[p.name] for p in self.iter_players(in_chat=upd.chat_id)]
 			sent_msg = upd.reply(
 				"Ок, кому тут більше не місце?",
 				reply_to_message_id=upd.msg_id,
 				reply_markup=json.dumps({
-					"keyboard": keyboard,
+					"keyboard": kbrd,
 					"one_time_keyboard": True,
 					"selective": True
 				})
