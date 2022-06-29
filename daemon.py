@@ -285,6 +285,7 @@ class PathyDaemon():
 		from_id = update.data["message"]["from"]["id"]
 		msg_text = update.data["message"].get("text")
 		reply_to_msg = update.data["message"].get("reply_to_message")
+		reply_to_msg_id = reply_to_msg.get("message_id")
 		bot_cmd, bot_cmd_args = update.parse_bot_command()
 		
 		if (not bot_cmd) and chat_id == DEBUG_CHAT_ID:
@@ -361,7 +362,7 @@ class PathyDaemon():
 			chat_state["addplayer_initiator"] = from_id
 		
 		addplayer_msg_id = self.get_chat_state(chat_id).get("addplayer_msg_id")
-		if reply_to_msg and (reply_to_msg == addplayer_msg_id):
+		if reply_to_msg_id and (reply_to_msg_id == addplayer_msg_id):
 			try:
 				# adding a new_player
 				player_name = msg_text
