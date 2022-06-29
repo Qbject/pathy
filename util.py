@@ -259,7 +259,7 @@ def get_party_img(party_count):
 	return random.choice(list(party_dir.iterdir()))
 
 _interval_data = {}
-def throttle(tag, min_interval):
+def cap_freq(tag, min_interval):
 	if not tag in _interval_data:
 		_interval_data[tag] = time.time()
 		return

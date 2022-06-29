@@ -108,11 +108,11 @@ class PathyDaemon():
 			if self.stopping:
 				break
 			
-			util.throttle("worker_cycle", 0.1)
+			util.cap_freq("worker_cycle", 0.1)
 			self.worker_cycle += 1
 	
 	def do_player_upd(self, i):
-		util.throttle("player_upd", self.state.get("player_fetch_delay", 2))
+		util.cap_freq("player_upd", self.state.get("player_fetch_delay", 2))
 		
 		try:
 			# this approach is inconsistent if
