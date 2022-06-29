@@ -382,7 +382,7 @@ class PathyDaemon():
 			if chat_state["addplayer_initiator"] != upd.from_id:
 				return
 			
-			player_name = upd.msg_text
+			player_name = upd.text
 			player_uid = alsapi.name_to_uid(player_name)
 			self.add_tracked_player(player_uid, upd.chat_id)
 			upd.reply(f"Ок, <b>{util.sanitize_html(player_name)}" \
@@ -395,7 +395,7 @@ class PathyDaemon():
 			if chat_state["delplayer_initiator"] != upd.from_id:
 				return
 			
-			player = self.get_player_by_name(upd.msg_text)
+			player = self.get_player_by_name(upd.text)
 			if not player: return
 			self.del_tracked_player(player.uid, upd.chat_id)
 			upd.reply(f"Ок, не знаю більше ніякого " \
