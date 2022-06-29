@@ -34,4 +34,4 @@ TEXT_PREFIXES_DICT = PATHY_DIR / "textdata/prefixes.txt"
 
 SESS_MAX_BREAK = 30 * 60 # 30 min
 
-ALLOWED_CHATS = (***REMOVED***, ***REMOVED***)
+ALLOWED_CHATS = (***REMOVED***, ***REMOVED***, ***REMOVED***)
