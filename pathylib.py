@@ -135,8 +135,8 @@ class TrackedPlayer():
 		
 		sess_start_msg = f"🟢 <b>{self.name}</b> тепер " \
 			f"<i>{self.moniker}</i>" \
-			f" після {offline_duraion} відпочинку\n"
-		sess_start_msg += f"<i>{get_wish()}</i>"
+			f" після {offline_duraion} відпочинку\n" \
+			f"<i>{get_wish()}</i>"
 		
 		for chat_id, chat_state in self.state["chats"].items():
 			msg_id = self.notify_chat(
