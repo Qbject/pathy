@@ -27,7 +27,7 @@ def _send_request(url, validate_fn=None, retries=3):
 
 def get_player_stat(player_uid):
 	url = f"https://api.mozambiquehe.re/bridge?version=5&platform=PC" \
-	f"&uid={player_uid}&merge=true&removeMerged=true"
+		f"&uid={player_uid}&merge=true&removeMerged=true"
 	return _send_request(url, lambda r: "global" in r and "realtime" in r)
 
 def get_map_rotation():
@@ -36,6 +36,11 @@ def get_map_rotation():
 
 def get_craft_rotation():
 	url = f"https://api.mozambiquehe.re/crafting"
+	return _send_request(url)
+
+def name_to_uid(player_name):
+	url = f"https://api.mozambiquehe.re/nametouid" \
+		f"?player={player_name}&platform=PC"
 	return _send_request(url)
 
 class AlsApiError(Exception):

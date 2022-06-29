@@ -202,6 +202,10 @@ class TrackedPlayer():
 					sess_start = None
 		
 		return sess_start
+	
+	def add_to_chat(self, chat_id):
+		if str(chat_id) not in self.state["chats"]:
+			self.state["chats"][str(chat_id)] = {}
 
 class Timeline():
 	def __init__(self, start_stat=None):

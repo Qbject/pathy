@@ -18,7 +18,7 @@ def log(text, err=False, send_tg=False):
 		print("(failed to log) " + log_entry)
 	
 	if send_tg:
-		msg_text = html_sanitize(log_entry)
+		msg_text = sanitize_html(log_entry)
 		try:
 			call_tg_api("sendMessage", {
 				"chat_id": DEBUG_CHAT_ID,
@@ -87,7 +87,7 @@ def delete_tg_msg(chat_id, msg_id):
 		log(f"Failed to delete msg {chat_id}/{msg_id}", err=True, send_tg=True)
 		return False
 
-def html_sanitize(text):
+def sanitize_html(text):
 	text = text.replace("&", "&amp;")
 	text = text.replace("<", "&lt;")
 	text = text.replace(">", "&gt;")
@@ -239,8 +239,8 @@ def reverse_readline(path, buf_size=8192):
 			yield _line(segment)
 
 def get_legend_img(legend):
-	default_img = IMGDATA_DIR / "legend/default.jpg"
-	legend_dir = IMGDATA_DIR / f"legend/{legend}"
+	default_img = ASSETS_DIR / "legend/default.jpg"
+	legend_dir = ASSETS_DIR / f"legend/{legend}"
 	if not (legend_dir.exists() and legend_dir.is_dir()):
 		return default_img
 	
@@ -255,7 +255,7 @@ def get_party_img(party_count):
 		return None
 	dirname = str(int(party_count)) if party_count < 5 else "5"
 	
-	party_dir = IMGDATA_DIR / f"party/{dirname}"
+	party_dir = ASSETS_DIR / f"party/{dirname}"
 	return random.choice(list(party_dir.iterdir()))
 
 _interval_data = {}
@@ -289,13 +289,46 @@ class TgUpdate():
 	def is_whitelisted(self):
 		return self.data["message"]["chat"]["id"] in ALLOWED_CHATS
 	
-	def reply(self, text, as_html=False):
+	def reply(self, text, as_html=False, **kwargs):
 		return call_tg_api(
 			"sendMessage",
 			{
 				"chat_id": self.data["message"]["chat"]["id"],
 				"text": text,
-				"parse_mode": "HTML" if as_html else None
+				"parse_mode": "HTML" if as_html else None,
+				**kwargs
+			}
+		)
+	
+	def reply_img(self, img_path, caption, as_html=False, **kwargs):
+		img_path = Path(img_path)
+		return call_tg_api(
+			"sendPhoto",
+			{
+				"chat_id": self.data["message"]["chat"]["id"],
+				"photo": "attach://file",
+				"caption": caption,
+				"parse_mode": "HTML" if as_html else None,
+				**kwargs
+			},
+			files={
+				"file": img_path.open("rb")
+			}
+		)
+	
+	def reply_vid(self, vid_path, caption, as_html=False, **kwargs):
+		vid_path = Path(vid_path)
+		return call_tg_api(
+			"sendVideo",
+			{
+				"chat_id": self.data["message"]["chat"]["id"],
+				"video": "attach://file",
+				"caption": caption,
+				"parse_mode": "HTML" if as_html else None,
+				**kwargs
+			},
+			files={
+				"file": vid_path.open("rb")
 			}
 		)
 	
@@ -339,4 +372,4 @@ class TgUpdate():
 		return (command, params)
 	
 	def format(self):
-		return html_sanitize(json.dumps(self.data, indent="\t"))
+		return sanitize_html(json.dumps(self.data, indent="\t"))
