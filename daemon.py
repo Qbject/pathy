@@ -366,9 +366,11 @@ class PathyDaemon():
 				# adding a new_player
 				player_name = msg_text
 				player_uid = alsapi.name_to_uid(player_name).get("uid")
+				if not player_uid:
+					raise ValueError("ALS Api didn't return player uid")
 				self.add_tracked_player(player_uid, chat_id)
-				update.reply(f"Ок, <b>{util.sanitize_html(player_name)}</b>" \
-					f", я за тобою слідкую 👀")
+				update.reply(f"Ок, <b>{util.sanitize_html(player_name)}" \
+					f"</b>, я за тобою слідкую 👀", as_html=True)
 			except Exception as e:
 				update.reply(f"Щось не так, не можу додати груна " \
 					f"<b>{util.sanitize_html(player_name)}</b> :(",
