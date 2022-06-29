@@ -351,10 +351,10 @@ class PathyDaemon():
 			sent_msg = update.reply(
 				"Юзернейм груна (Origin):",
 				reply_to_message_id=msg_id,
-				reply_markup={
+				reply_markup=json.dumps({
 					"force_reply": True,
 					"selective": True
-				}
+				})
 			)
 			
 			chat_state["addplayer_msg_id"] = sent_msg.get("message_id")
