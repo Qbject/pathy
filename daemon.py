@@ -367,7 +367,7 @@ class PathyDaemon():
 				"Ок, кому тут більше не місце?",
 				reply_to_message_id=upd.msg_id,
 				reply_markup=json.dumps({
-					"keyboard": kbrd,
+					"keyboard": ["Забий, не треба нікого видаляти"] + kbrd,
 					"one_time_keyboard": True,
 					"selective": True
 				})
@@ -393,6 +393,11 @@ class PathyDaemon():
 		
 		if reply_to_id and (reply_to_id == chat_state.get("delplayer_msg_id")):
 			if chat_state["delplayer_initiator"] != upd.from_id:
+				return
+			
+			if upd.text == "Забий, не треба нікого видаляти":
+				upd.reply(f"Ну не треба так не треба 🤷‍♂️", \
+					reply_markup='{"remove_keyboard": true}')
 				return
 			
 			player = self.get_player_by_name(upd.text)
