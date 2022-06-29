@@ -360,7 +360,8 @@ class PathyDaemon():
 			chat_state["addplayer_msg_id"] = sent_msg.get("message_id")
 			chat_state["addplayer_initiator"] = from_id
 		
-		if reply_to_msg == self.get_chat_state(chat_id)["addplayer_msg_id"]:
+		addplayer_msg_id = self.get_chat_state(chat_id).get("addplayer_msg_id")
+		if reply_to_msg == addplayer_msg_id:
 			try:
 				# adding a new_player
 				player_name = msg_text
