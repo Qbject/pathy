@@ -136,6 +136,9 @@ def handle_tg_upd(body_raw):
 	update = util.TgUpdate.from_raw_body(body_raw)
 	
 	if not update.is_msg():
+		_tab = "\t"
+		log(f"Unrecognized TG update:\n" \
+			f"{json.dumps(update.data, indent=_tab)}", send_tg=True)
 		return
 	if not update.is_whitelisted():
 		_tab = "\t"
