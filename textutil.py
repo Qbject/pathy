@@ -31,7 +31,7 @@ def get_adjectives(ending=None, max_count=3):
 	# randomly calculating the number of adjectives
 	adj_count = 1
 	for i in range(max_count-1):
-		if not random.randint(0, 5):
+		if util.chance(0.1):
 			adj_count += 1
 	
 	result = []

@@ -133,33 +133,24 @@ def get_downtime():
 	return time.time() - (get_last_state_save() or 0.0)
 
 def handle_tg_upd(body_raw):
+	"Handles commands that should not reach daemon"
 	update = util.TgUpdate.from_raw_body(body_raw)
 	
-	if not update.is_msg():
-		_tab = "\t"
-		log(f"Unrecognized TG update:\n" \
-			f"{json.dumps(update.data, indent=_tab)}", send_tg=True)
-		return
-	if not update.is_whitelisted():
-		_tab = "\t"
-		log(f"Msg from not whitelisted chat:\n" \
-			f"{json.dumps(update.data, indent=_tab)}", send_tg=True)
-		return
-	
-	debug_cmd, debug_cmd_args = update.parse_debug_cmd()
-	if debug_cmd:
-		cmd_resp = entry(debug_cmd, debug_cmd_args) or "<empty>"
-		update.reply(util.sanitize_html(cmd_resp), as_html=True)
-		return
-	
-	bot_cmd, bot_cmd_args = update.parse_bot_command()
-	if bot_cmd == "/alive":
-		try:
-			result = send("status")
-		except ConnectionRefusedError:
-			result = "😵"
-		update.reply(util.sanitize_html(result), as_html=True)
-		return
+	if update.is_msg() and update.is_whitelisted():
+		debug_cmd, debug_cmd_args = update.parse_debug_cmd()
+		if debug_cmd:
+			cmd_resp = entry(debug_cmd, debug_cmd_args) or "<empty>"
+			update.reply(util.sanitize_html(cmd_resp), as_html=True)
+			return
+		
+		bot_cmd, bot_cmd_args = update.parse_bot_command()
+		if bot_cmd == "/alive":
+			try:
+				result = send("status")
+			except ConnectionRefusedError:
+				result = "😵"
+			update.reply(util.sanitize_html(result), as_html=True)
+			return
 	
 	ensure_running()
 	send("tgupd", upd_body=body_raw)

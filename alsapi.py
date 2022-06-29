@@ -41,7 +41,8 @@ def get_craft_rotation():
 def name_to_uid(player_name):
 	url = f"https://api.mozambiquehe.re/nametouid" \
 		f"?player={player_name}&platform=PC"
-	return _send_request(url)
+	resp = _send_request(url, lambda r: r.get("uid"))
+	return resp["uid"]
 
 class AlsApiError(Exception):
 	pass

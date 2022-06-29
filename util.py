@@ -272,6 +272,19 @@ def cap_freq(tag, min_interval):
 class TgUpdate():
 	def __init__(self, update_data):
 		self.data = update_data
+		self.chat_id = None
+		self.from_id = None
+		self.msg_id = None
+		self.text = None
+		self.reply_to = None
+		
+		if self.is_msg():
+			self.chat_id = self.data["message"]["chat"]["id"]
+			self.from_id = self.data["message"]["from"]["id"]
+			self.msg_id = self.data["message"]["message_id"]
+			self.text = self.data["message"].get("text") or \
+				self.data["message"].get("caption")
+			self.reply_to = self.data["message"].get("reply_to_message")
 	
 	@classmethod
 	def from_raw_body(cls, body_raw):
@@ -371,5 +384,10 @@ class TgUpdate():
 		
 		return (command, params)
 	
-	def format(self):
-		return sanitize_html(json.dumps(self.data, indent="\t"))
+	def format(self, as_html=False):
+		_json = json.dumps(self.data, indent="\t")
+		if as_html:
+			resp = f"<pre>{sanitize_html(_json)}</pre>"
+		else:
+			resp = _json
+		return resp

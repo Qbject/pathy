@@ -259,6 +259,11 @@ class PathyDaemon():
 			if str(player.uid) == uid:
 				return player
 	
+	def get_player_by_name(self, name):
+		for player in self.iter_players():
+			if player.name == name:
+				return player
+	
 	def add_tracked_player(self, player_uid, chat_id):
 		player = self.get_player_by_uid(player_uid)
 		if player:
@@ -273,49 +278,55 @@ class PathyDaemon():
 		})
 		self.state["tracked_players"].append(player)
 	
+	def del_tracked_player(self, player_uid, chat_id):
+		player = self.get_player_by_uid(player_uid)
+		if not player:
+			return
+		
+		player.del_from_chat(chat_id)
+		if not player.state["chats"]:
+			self.state["tracked_players"].remove(player)
+	
 	def handle_tg_upd(self, body_raw):
-		update = util.TgUpdate.from_raw_body(body_raw)
-		if not update.is_msg():
-			return
-		if not update.is_whitelisted():
-			return
+		upd = util.TgUpdate.from_raw_body(body_raw)
 		
-		delim = "\n--- --- ---\n"
-		chat_id = update.data["message"]["chat"]["id"]
-		from_id = update.data["message"]["from"]["id"]
-		msg_text = update.data["message"].get("text")
-		reply_to_msg = update.data["message"].get("reply_to_message")
-		if reply_to_msg:
-			reply_to_msg_id = reply_to_msg.get("message_id")
+		if upd.is_msg():
+			if not upd.is_whitelisted():
+				log(f"Non-whitelisted TG msg:\n{upd.format()}", send_tg=True)
+				return
+			try:
+				self.handle_tg_msg(upd)
+			except Exception as e:
+				upd.reply("Тут якась діч, хз що з цим робити :(")
+				raise e
 		else:
-			reply_to_msg_id = None
-		bot_cmd, bot_cmd_args = update.parse_bot_command()
+			log(f"Unrecognized TG update:\n{upd.format()}", send_tg=True)
+	
+	def handle_tg_msg(self, upd):
+		chat_state = self.get_chat_state(upd.chat_id)
+		bot_cmd, bot_cmd_args = upd.parse_bot_command()
 		
-		if (not bot_cmd) and chat_id == DEBUG_CHAT_ID:
-			update.reply(f"<pre>{update.format()}</pre>", as_html=True)
+		if (not bot_cmd) and upd.chat_id == DEBUG_CHAT_ID:
+			upd.reply(upd.format(as_html=True), as_html=True)
 		
 		if bot_cmd == "/status":
-			resp = ""
-			for player in self.iter_players(in_chat=chat_id):
-				resp += player.format_status() + delim
-			
-			if resp.endswith(delim):
-				resp = resp[:-len(delim)]
-			update.reply(resp.strip(), as_html=True)
+			statuses = [player.format_status() for \
+				player in self.iter_players(in_chat=upd.chat_id)]
+			delim = "\n--- --- ---\n"
+			upd.reply(delim.join(statuses), as_html=True)
+			return
 		
-		elif bot_cmd == "/maps":
-			update.reply(format_map_rotation(), as_html=True)
+		if bot_cmd == "/maps":
+			upd.reply(format_map_rotation(), as_html=True)
+			return
 		
-		elif bot_cmd == "/fuck":
-			targ_txt = ""
-			if update.data["message"].get("reply_to_message"):
-				targ_msg = update.data["message"]["reply_to_message"]
-				if targ_msg.get("text"):
-					targ_txt = targ_msg["text"]
-				if targ_msg.get("caption"):
-					targ_txt = targ_msg["caption"]
-			else:
-				targ_txt = bot_cmd_args
+		if bot_cmd == "/fuck":
+			targ_txt = bot_cmd_args
+			if upd.reply_to:
+				if upd.reply_to.get("text"):
+					targ_txt = upd.reply_to["text"]
+				if upd.reply_to.get("caption"):
+					targ_txt = upd.reply_to["caption"]
 			
 			if targ_txt.strip():
 				result = util.sanitize_html(fix_text_layout(targ_txt))
@@ -324,62 +335,75 @@ class PathyDaemon():
 				resp = "Потрібно писати з реплаєм на повідомлення " \
 					"або типу:\n<b>/fuck Afr wtq vfhcsfycmrbq</b>"
 			
-			update.reply(resp, as_html=True)
-			update.reply(format_map_rotation(), as_html=True)
+			upd.reply(resp, as_html=True)
+			return
 		
-		elif bot_cmd == "/online":
+		if bot_cmd == "/online":
 			online_in_chat = 0
-			for player in self.iter_players(online=True, in_chat=chat_id):
+			for player in self.iter_players(online=True, in_chat=upd.chat_id):
 				online_in_chat += 1
-				util.call_tg_api(
-					"sendPhoto",
-					{
-						"chat_id": chat_id,
-						"photo": "attach://file",
-						"parse_mode": "HTML",
-						"caption": player.format_status()
-					},
-					files={
-						"file": util.get_legend_img(player.legend).open("rb")
-					}
-				)
+				upd.reply_img(util.get_legend_img(player.legend), \
+					player.format_status())
 			
 			if not online_in_chat:
 				tumbleweed_vid = ASSETS_DIR / "tumbleweed.mkv"
-				update.reply_vid(tumbleweed_vid, "Немає грунів :(")
+				upd.reply_vid(tumbleweed_vid, "Немає грунів :(")
+			return
 		
-		elif bot_cmd == "/addplayer":
-			chat_state = self.get_chat_state(chat_id)
-			msg_id = update.data["message"]["message_id"]
-			
-			sent_msg = update.reply(
+		if bot_cmd == "/addplayer":
+			sent_msg = upd.reply(
 				"Юзернейм груна (Origin):",
-				reply_to_message_id=msg_id,
+				reply_to_message_id=upd.msg_id,
+				reply_markup='{"force_reply": true, "selective": true}'
+			)
+			
+			chat_state["addplayer_msg_id"] = sent_msg.get("message_id")
+			chat_state["addplayer_initiator"] = upd.from_id
+			return
+		
+		if bot_cmd == "/delplayer":
+			keyboard = [[p] for p in self.iter_players(in_chat=upd.chat_id)]
+			sent_msg = upd.reply(
+				"Ок, кому тут більше не місце?",
+				reply_to_message_id=upd.msg_id,
 				reply_markup=json.dumps({
-					"force_reply": True,
+					"keyboard": keyboard,
+					"one_time_keyboard": True,
 					"selective": True
 				})
 			)
 			
-			chat_state["addplayer_msg_id"] = sent_msg.get("message_id")
-			chat_state["addplayer_initiator"] = from_id
+			chat_state["delplayer_msg_id"] = sent_msg.get("message_id")
+			chat_state["delplayer_initiator"] = upd.from_id
+			return
 		
-		addplayer_msg_id = self.get_chat_state(chat_id).get("addplayer_msg_id")
-		if reply_to_msg_id and (reply_to_msg_id == addplayer_msg_id):
-			try:
-				# adding a new_player
-				player_name = msg_text
-				player_uid = alsapi.name_to_uid(player_name).get("uid")
-				if not player_uid:
-					raise ValueError("ALS Api didn't return player uid")
-				self.add_tracked_player(player_uid, chat_id)
-				update.reply(f"Ок, <b>{util.sanitize_html(player_name)}" \
-					f"</b>, я за тобою слідкую 👀", as_html=True)
-			except Exception as e:
-				update.reply(f"Щось не так, не можу додати груна " \
-					f"<b>{util.sanitize_html(player_name)}</b> :(",
-					as_html=True)
-				raise e
+		reply_to_id = upd.reply_to["message_id"] if upd.reply_to else None
+		if reply_to_id and (reply_to_id == chat_state.get("addplayer_msg_id")):
+			if chat_state["addplayer_initiator"] != upd.from_id:
+				return
+			
+			player_name = upd.msg_text
+			player_uid = alsapi.name_to_uid(player_name)
+			self.add_tracked_player(player_uid, upd.chat_id)
+			upd.reply(f"Ок, <b>{util.sanitize_html(player_name)}" \
+				f"</b>, я за тобою слідкую 👀", as_html=True)
+			chat_state["addplayer_msg_id"] = None
+			chat_state["addplayer_initiator"] = None
+			return
+		
+		if reply_to_id and (reply_to_id == chat_state.get("delplayer_msg_id")):
+			if chat_state["delplayer_initiator"] != upd.from_id:
+				return
+			
+			player = get_player_by_name(upd.msg_text)
+			if not player: return
+			self.del_tracked_player(player.uid, upd.chat_id)
+			upd.reply(f"Ок, не знаю більше ніякого " \
+				f"<b>{util.sanitize_html(player.name)}</b>", \
+				as_html=True, reply_markup='{"remove_keyboard": true}')
+			chat_state["delplayer_msg_id"] = None
+			chat_state["delplayer_initiator"] = None
+			return
 	
 	def send_hate_monday_pic(self):
 		monday_img_id = "AgACAgIAAx0CTJBx5QADHWEiP2LrqUGngEIIOJ4BNUHmVk_" \

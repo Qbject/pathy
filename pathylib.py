@@ -206,6 +206,10 @@ class TrackedPlayer():
 	def add_to_chat(self, chat_id):
 		if str(chat_id) not in self.state["chats"]:
 			self.state["chats"][str(chat_id)] = {}
+	
+	def del_from_chat(self, chat_id):
+		if str(chat_id) in self.state["chats"]:
+			self.state["chats"].pop(str(chat_id))
 
 class Timeline():
 	def __init__(self, start_stat=None):
