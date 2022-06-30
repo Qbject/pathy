@@ -343,7 +343,7 @@ class PathyDaemon():
 			for player in self.iter_players(online=True, in_chat=upd.chat_id):
 				online_in_chat += 1
 				upd.reply_img(util.get_legend_img(player.legend), \
-					player.format_status())
+					player.format_status(), as_html=True)
 			
 			if not online_in_chat:
 				tumbleweed_vid = ASSETS_DIR / "tumbleweed.mkv"
