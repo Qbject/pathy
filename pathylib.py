@@ -256,7 +256,7 @@ class Timeline():
 	def get_end_stat(self):
 		if self._cache.get("end_stat"):
 			return self._cache["end_stat"]
-		self._cache["end_stat"] = {}
+		self._cache["end_stat"] = self.start_stat.copy()
 		
 		for entry in self.iter():
 			key = (entry.legend, entry.stat_name)
