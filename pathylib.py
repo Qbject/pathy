@@ -496,8 +496,8 @@ class Timeline():
 			if before and after:
 				return f"{caption}: {before.format()} → {after.format()}\n"
 		
-		text += _format_rank_diff("br", "Ранг в БР")
-		text += _format_rank_diff("ar", "Ранг на Аренах")
+		text += _format_rank_diff("br", "Ранг в БР") or ""
+		text += _format_rank_diff("ar", "Ранг на Аренах") or ""
 		
 		legends = {}
 		
