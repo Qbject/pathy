@@ -494,10 +494,10 @@ class Timeline():
 			before = PlayerRank.from_stat(self.start_stat, mode=mode)
 			after  = PlayerRank.from_stat(self.get_end_stat(), mode=mode)
 			if before and after:
-				text += f"{caption}: {before.format()} → {after.format()}\n"
+				return f"{caption}: {before.format()} → {after.format()}\n"
 		
-		_format_rank_diff("br", "Ранг в БР")
-		_format_rank_diff("ar", "Ранг на Аренах")
+		text += _format_rank_diff("br", "Ранг в БР")
+		text += _format_rank_diff("ar", "Ранг на Аренах")
 		
 		legends = {}
 		
