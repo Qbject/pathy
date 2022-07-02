@@ -581,7 +581,9 @@ class MatchTimeline(ConstantStateTimeline):
 		self.result_stamp = None
 	
 	def get_state(self):
-		return "inMatch" if self.is_real() else "inFiringRange"
+		if self.is_ended() and not self.is_real():
+			return "inFiringRange"
+		return "inMatch"
 	
 	def get_end_stat(self, *args, **kwargs):
 		end_stat = super().get_end_stat(*args, **kwargs)
