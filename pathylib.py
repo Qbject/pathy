@@ -72,7 +72,7 @@ class TrackedPlayer():
 		
 		result = f"{state} на {legend}"
 		if state_duration:
-			result += f" ({state_duration})"
+			result += f" ({format_time(state_duration)})"
 		return result
 	
 	def gen_new_moniker(self):
