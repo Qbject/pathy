@@ -305,9 +305,9 @@ class Timeline():
 	def get_states_duration(self):
 		def get_segment_state(seg):
 			if isinstance(seg, MatchTimeline):
-				if seg.result_stamp:
-					return "inFiringRange"
-				return "inMatch"
+				if seg.is_real():
+					return "inMatch"
+				return "inFiringRange"
 			
 			for ts in seg.iter_timestamps():
 				if ts.get_value("is_online") == "0":
@@ -554,15 +554,11 @@ class Timeline():
 		
 		return segs
 	
-	def get_matches(self, only_lvlup=True):
-		# TODO: generator
+	def get_matches(self):
 		matches = []
 		for seg in self.split_by_states():
-			if not isinstance(seg, MatchTimeline):
-				continue
-			if only_lvlup and not seg.get_diff().get(("_", "level")):
-				continue
-			matches.append(seg)
+			if isinstance(seg, MatchTimeline):
+				matches.append(seg)
 		return matches
 	
 	def __str__(self):
@@ -609,6 +605,10 @@ class MatchTimeline(Timeline):
 			entry.stat_value == "0":
 				return True
 		return False
+	
+	def is_real(self):
+		# False if match didn't increased level (usually firing range)
+		return bool(self.result_stamp)
 
 class StoredTimeline(Timeline):
 	def __init__(self, path, *args, **kwargs):
