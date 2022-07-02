@@ -588,11 +588,11 @@ class MatchTimeline(Timeline):
 		diff = super().get_diff(*args, **kwargs)
 		
 		if self.result_stamp:
-			for key, result_value in self.result_stamp.data.items():
-				if result_value == "$null":
+			for key, entry in self.result_stamp.data.items():
+				if entry.stat_value == "$null":
 					continue
 				if diff.get(key):
-					diff[key] = (diff[key][0], result_value)
+					diff[key] = (diff[key][0], entry.stat_value)
 		
 		return diff
 	
