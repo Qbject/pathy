@@ -86,7 +86,7 @@ class PathyDaemon():
 		elif msg == "segments":
 			player = self.get_player_by_uid(args.get("uid"))
 			sess_segs = player.get_last_sess().split_by_states()
-			return "\n--- --- ---\n".join([seg.format() for seg in segs])
+			return "\n--- --- ---\n".join([seg.format() for seg in sess_segs])
 		else:
 			return "UNKNOWN_MSG"
 	
