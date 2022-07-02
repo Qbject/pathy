@@ -238,6 +238,7 @@ translations = {
 	"offline": "Офлайн",
 	"inLobby": "В Лобі",
 	"inMatch": "В матчі",
+	"inFiringRange": "На стрільбищі",
 	"optic_hcog_ranger": "3x приціл",
 	"shatter_caps": "Розривні (пердаки)",
 	"knockdown_shield": "Нокдаун щит",

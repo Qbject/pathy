@@ -21,8 +21,8 @@ class TrackedPlayer():
 		self.name = self.get_stat("name") or "???"
 		self.moniker = self.get_stat("moniker") or "???"
 		self.legend = self.get_stat("legend") or "???"
-		self.cur_state = self.get_stat("cur_state") or "???"
 		self.is_online = bool(int(self.get_stat("is_online") or "0"))
+		self.is_in_match = bool(int(self.get_stat("is_in_match") or "0"))
 		self.is_banned = bool(int(self.get_stat("is_banned") or "0"))
 	
 	def serialize(self):
@@ -45,30 +45,35 @@ class TrackedPlayer():
 	def format_status(self):
 		result = f"<b>{self.name}</b>"
 		if self.is_online:
-			result += f" <i>{self.moniker}</i>\n"
-			result += f"<i>{self.format_state()}</i>"
-		result += "\n"
+			result += f" <i>{self.moniker}</i>"
+		result += f"\n<i>{self.format_state()}</i>"
 		
 		if self.is_online:
 			sess = self.get_last_sess()
 			if sess:
-				result += f"<pre>{sess.format(easter_eggs=True)}</pre>"
-		
-		else:
-			last_online = self.get_last_online(time.time())
-			offline_duraion = format_time(int(time.time()) - last_online)
-			result += f"<i>Вже {offline_duraion} як зайнятий " \
-				f"більш корисними справами, ніж Апекс</i>"
+				result += f"\n<pre>{sess.format(easter_eggs=True)}</pre>"
 		
 		return result
 		
 	def format_state(self):
-		state = trans(self.cur_state)
-		legend = trans("on_"+self.legend)
-		state_duration = format_time(
-			time.time() - int(self.get_stat("state_since") or "0"))
+		if not self.is_online:
+			last_online = self.get_last_online(time.time())
+			offline_duraion = format_time(int(time.time()) - last_online)
+			return f"Живе реальним життям вже {offline_duraion}"
 		
-		return f"{state} на {legend} ({state_duration})"
+		state = "В матчі" if self.is_in_match else "В Лобі"
+		legend = trans("on_"+self.legend)
+		
+		state_duration = None
+		for entry in self.timeline.iter(reverse=True):
+			if entry.stat_name == "is_in_match":
+				state_duration = time.time() - entry.timestamp
+				break
+		
+		result = f"{state} на {legend}"
+		if state_duration:
+			result += f" ({state_duration})"
+		return result
 	
 	def gen_new_moniker(self):
 		self.moniker = get_moniker()
@@ -253,6 +258,10 @@ class Timeline():
 		self._entries.append(entry)
 		self.clear_cache()
 	
+	def add_timestamp(self, ts):
+		for entry in ts.data.values():
+			self.add_entry(entry)
+	
 	def get_end_stat(self):
 		if self._cache.get("end_stat"):
 			return self._cache["end_stat"]
@@ -294,30 +303,24 @@ class Timeline():
 		return diff
 	
 	def get_states_duration(self):
-		if self._cache.get("states_duration"):
-			return self._cache["states_duration"]
-		states = self._cache["states_duration"] = {}
-		if not self.get_duration():
-			return states
+		def get_segment_state(seg):
+			if isinstance(seg, MatchTimeline):
+				if seg.result_stamp:
+					return "inFiringRange"
+				return "inMatch"
+			
+			for ts in seg.iter_timestamps:
+				if ts.get_value("is_online") == "0":
+					return "offline"
+				return "inLobby"
 		
-		def _add_time(state_name, time):
-			if not state_name in states:
-				states[state_name] = 0
-			states[state_name] += time
+		durations = {"offline": 0, "inLobby": 0, "inFiringRange": 0,
+			"inMatch": 0}
 		
-		state = self.start_stat.get(("_", "cur_state"))
-		state_since = self.get_start()
-		for entry in self.iter():
-			if entry.stat_name == "cur_state":
-				_add_time(state, entry.timestamp - state_since)
-				state = entry.stat_value
-				state_since = entry.timestamp
+		for seg in self.split_by_states():
+			durations[get_segment_state(seg)] += seg.get_duration()
 		
-		_add_time(state, self.get_end() - state_since)
-		
-		if None in states:
-			states.pop(None)
-		return states
+		return durations
 	
 	def iter(self, reverse=False):
 		iterable = self._entries
@@ -346,8 +349,8 @@ class Timeline():
 		key = parse_timeline_key(*args)
 		return self.get_end_stat().get(key)
 	
-	def get_sub_timeline(self, start, end, as_session=False, as_match=False):
-		start_stat = {}
+	def get_sub_timeline(self, start, end):
+		start_stat = self.start_stat.copy()
 		sub_timeline = None
 		
 		for entry in self.iter():
@@ -383,27 +386,11 @@ class Timeline():
 		_add("level",  _global["level"] + \
 			_global["toNextLevelPercent"] / 100)
 		
-		# weird complicated logic due to strange api responses sometimes
-		is_online = bool(
-			_realtime["isOnline"] and (
-				_realtime["currentState"] != "offline" or \
-				_realtime["currentStateSinceTimestamp"] != -1 or \
-				_realtime["lobbyState"] == "invite"
-				
-			)
-		)
-		_add("is_online", int(is_online))
+		_add("is_online", _realtime["isOnline"])
+		_add("is_in_match",  _realtime["isInGame"])
 		_add("is_banned", int(_global["bans"]["isActive"]))
 		_add("ban_reason",    _global["bans"]["last_banReason"])
 		_add("ban_time_left", _global["bans"]["remainingSeconds"])
-		
-		# a bit of logic to handle state_since deviation
-		state_changed = _add("cur_state", _realtime["currentState"])
-		state_since = _realtime["currentStateSinceTimestamp"]
-		prev_state_since = self.get_stat("state_since") or "0"
-		state_since_delta = abs(int(prev_state_since) - state_since)
-		if state_changed or (state_since_delta > 20):
-			_add("state_since", state_since)
 		
 		_add("br_rank_score",   _global["rank"]["rankScore"])
 		_add("br_rank_div",     _global["rank"]["rankDiv"])
@@ -419,31 +406,22 @@ class Timeline():
 		selected_legend = player_stat["legends"]["selected"]["LegendName"]
 		_add("legend", selected_legend)
 		
-		untouched_trackers = self.get_stored_legend_trackers(selected_legend)
+		legend_trackers = set()
 		for tracker in player_stat["legends"]["selected"]["data"]:
 			_add("tracker_" + tracker["key"],
 				tracker["value"], selected_legend)
-			
-			if tracker["key"] in untouched_trackers:
-				untouched_trackers.remove(tracker["key"])
+			legend_trackers.add("tracker_" + tracker["key"])
 		
 		# nullifying unavailable trackers (probably unequipped)
 		# $null is treated as a special value
-		for tracker_name in untouched_trackers:
-			_add(f"tracker_{tracker_name}", "$null", selected_legend)
+		for legend, stat_name in self.get_end_stat():
+			if legend != selected_legend: continue
+			if not stat_name.startswith("tracker_"): continue
+			if stat_name in legend_trackers: continue
+			
+			_add(stat_name, "$null", selected_legend)
 		
 		return diff_data
-	
-	def get_stored_legend_trackers(self, targ_legend):
-		"Returns all tracker names ever stored for targ_legend"
-		legend_trackers = []
-		for (legend, stat_name) in self.get_end_stat():
-			if legend != targ_legend:
-				continue
-			if not stat_name.startswith("tracker_"):
-				continue
-			legend_trackers.append(stat_name[8:])
-		return legend_trackers
 	
 	def get_start(self):
 		if self._cache.get("start") != None:
@@ -546,36 +524,45 @@ class Timeline():
 		
 		return text.strip()
 	
-	def _get_matches(self):
-		"gets all matches without cache"
-		
-		matches = []
+	def split_by_states(self):
+		if self._cache.get("state_segs") != None:
+			return self._cache["state_segs"]
+		segs = self._cache["state_segs"] = []
 		sweep_stat = self.start_stat.copy()
 		
+		def _append_seg(is_match):
+			seg_cls = MatchTimeline if is_match else Timeline
+			segs.append(seg_cls(sweep_stat.copy()))
+		
+		_append_seg(sweep_stat.get(("_", "is_in_match")) == "1")
+		
 		for ts in self.iter_timestamps():
-			if matches:
-				for entry in ts.data.values():
-					matches[-1].add_entry(entry)
+			segs[-1].add_timestamp(ts)
 			
-			if ts.get_value("cur_state") == "inMatch":
-				matches.append(MatchTimeline(sweep_stat.copy()))
-				for entry in ts.data.values():
-					matches[-1].add_entry(entry)
+			if ts.get_value("level"):
+				if isinstance(segs[-1], MatchTimeline):
+					segs[-1].result_stamp = segs[-1].result_stamp or ts
+				if len(segs) > 1 and isinstance(segs[-2], MatchTimeline):
+					segs[-2].result_stamp = segs[-2].result_stamp or ts
+			
+			if ts.get_value("is_online") or ts.get_value("is_in_match"):
+				_append_seg(ts.get_value("is_in_match") == "1")
+				segs[-1].add_timestamp(ts)
 			
 			for key, entry in ts.data.items():
 				sweep_stat[key] = entry.stat_value
 		
-		return matches
+		return segs
 	
 	def get_matches(self, only_lvlup=True):
-		if self._cache.get("matches") == None:
-			self._cache["matches"] = self._get_matches()
-		
-		matches = self._cache["matches"]
-		
-		if only_lvlup:
-			return [m for m in matches if m.get_diff().get(("_", "level"))]
-		
+		# TODO: generator
+		matches = []
+		for seg in self.split_by_states():
+			if not isinstance(seg, MatchTimeline):
+				continue
+			if only_lvlup and not seg.get_diff().get(("_", "level")):
+				continue
+			matches.append(seg)
 		return matches
 	
 	def __str__(self):
@@ -584,49 +571,42 @@ class Timeline():
 class MatchTimeline(Timeline):
 	def __init__(self, *args, **kwargs):
 		super().__init__(*args, **kwargs)
+		
+		# TimestampStat containing match result stat update
+		self.result_stamp = None
 	
-	def get_start(self):
-		if self._cache.get("start") != None:
-			return self._cache["start"]
+	def get_end_stat(self):
+		end_stat = super().get_end_stat(*args, **kwargs)
 		
-		for ts in self.iter_timestamps():
-			if ts.get_value("cur_state") == "inMatch":
-				self._cache["start"] = ts.timestamp
-				break # considering only first match in timeline
+		for key, result_value in (self.result_stamp or {}).items():
+			end_stat[key] = result_value
 		
-		return self._cache.get("start")
+		return end_stat
 	
-	def get_end(self):
-		if self._cache.get("end") != None:
-			return self._cache["end"]
+	def get_diff(self, *args, **kwargs):
+		diff = super().get_diff(*args, **kwargs)
 		
-		for ts in self.iter_timestamps():
-			cur_state = ts.get_value("cur_state")
-			if cur_state and cur_state != "inMatch":
-				self._cache["end"] = ts.timestamp
-				break # considering only first match in timeline
+		for key, result_value in (self.result_stamp or {}).items():
+			if result_value == "$null":
+				continue
+			if diff.get(key):
+				diff[key] = (diff[key][0], result_value)
 		
-		return self._cache.get("end")
+		return diff
 	
 	def get_legend(self):
 		legend = self.start_stat.get(("_", "legend"))
 		for ts in self.iter_timestamps():
-			new_state = ts.get_value("cur_state")
-			if new_state and new_state != "inMatch":
-				break
 			legend = ts.get_value("legend") or legend
 		
 		return legend
 	
 	def is_ended(self):
 		for entry in self.iter():
-			if entry.stat_name == "cur_state" and \
-			entry.stat_value != "inMatch":
+			if entry.stat_name == "is_in_match" and \
+			entry.stat_value == "0":
 				return True
 		return False
-	
-	def get_states_duration(self, *args, **kwargs):
-		raise AttributeError
 
 class StoredTimeline(Timeline):
 	def __init__(self, path, *args, **kwargs):
@@ -806,8 +786,13 @@ def format_map(mode_name, mapinfo):
 	cur_map_time  = format_time(mapinfo["current"]["remainingSecs"])
 	next_map_time = format_time(mapinfo["next"]["DurationInSecs"])
 	
-	return f"<b>{mode_name}</b> зараз на карті <b>{cur_map}</b>\n<i>Через " \
-	f"{cur_map_time} перейде на <b>{next_map}</b>, де буде {next_map_time}</i>"
+	result = f"<b>{mode_name}</b> зараз на карті <b>{cur_map}</b>\n"
+	result += f"<i>Через {cur_map_time} перейде на "
+	if mapinfo["next"]["map"] == "Unknown":
+		result += f"іншу карту</i>"
+	else:
+		result += f"<b>{next_map}</b>, де буде {next_map_time}</i>"
+	return result
 
 def format_map_rotation():
 	maps = alsapi.get_map_rotation()
@@ -816,8 +801,8 @@ def format_map_rotation():
 	return delim.join((
 		format_map("БР",           maps["battle_royale"]),
 		format_map("Ранкед БР",    maps["ranked"]),
-		format_map("Арени",        maps["arenas"]),
-		format_map("Ранкед арени", maps["arenasRanked"])
+		format_map("Арена",        maps["arenas"]),
+		format_map("Ранкед арена", maps["arenasRanked"])
 	))
 
 def parse_timeline_key(*args):
