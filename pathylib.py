@@ -618,6 +618,9 @@ class MatchTimeline(ConstantStateTimeline):
 			if entry.stat_name == "is_in_match" and \
 			entry.stat_value == "0":
 				return True
+			if entry.stat_name == "is_online" and \
+			entry.stat_value == "0":
+				return True
 		return False
 	
 	def get_duration(self):
