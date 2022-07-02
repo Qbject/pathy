@@ -83,13 +83,10 @@ class PathyDaemon():
 		elif msg == "tgupd":
 			self.as_worker(self.handle_tg_upd, args.get("upd_body"))
 			return "DONE"
-		elif msg == "matches":
+		elif msg == "segments":
 			player = self.get_player_by_uid(args.get("uid"))
-			result = ""
-			for match in player.get_last_sess().get_matches():
-				result += f"{util.format_time(match.get_duration())} on " \
-				f"{match.get_legend()}\n"
-			return result
+			sess_segs = player.get_last_sess().split_by_segments()
+			return "\n--- --- ---\n".join([seg.format() for seg in segs])
 		else:
 			return "UNKNOWN_MSG"
 	

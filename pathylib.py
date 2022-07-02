@@ -303,22 +303,11 @@ class Timeline():
 		return diff
 	
 	def get_states_duration(self):
-		def get_segment_state(seg):
-			if isinstance(seg, MatchTimeline):
-				if seg.is_real():
-					return "inMatch"
-				return "inFiringRange"
-			
-			for ts in seg.iter_timestamps():
-				if ts.get_value("is_online") == "0":
-					return "offline"
-				return "inLobby"
-		
 		durations = {"offline": 0, "inLobby": 0, "inFiringRange": 0,
 			"inMatch": 0}
 		
 		for seg in self.split_by_states():
-			durations[get_segment_state(seg)] += seg.get_duration()
+			durations[seg.get_state()] += seg.get_duration()
 		
 		return durations
 	
@@ -531,7 +520,7 @@ class Timeline():
 		sweep_stat = self.start_stat.copy()
 		
 		def _append_seg(is_match):
-			seg_cls = MatchTimeline if is_match else Timeline
+			seg_cls = MatchTimeline if is_match else ConstantStateTimeline
 			segs.append(seg_cls(sweep_stat.copy()))
 		
 		_append_seg(sweep_stat.get(("_", "is_in_match")) == "1")
@@ -564,14 +553,36 @@ class Timeline():
 	def __str__(self):
 		return "".join([str(e)+"\n" for e in self.iter()])
 
-class MatchTimeline(Timeline):
+class ConstantStateTimeline(Timeline):
+	def __init__(self, *args, **kwargs):
+		super().__init__(*args, **kwargs)
+	
+	def get_state(self):
+		sweep_stat = self.start_stat.copy()
+		for ts in self.iter_timestamps():
+			if ts.get_value("is_in_match") == "1":
+				return "inMatch"
+			if ts.get_value("is_online") == "0":
+				return "offline"
+			return "inLobby"
+	
+	def format(self):
+		state = trans(self.get_state())
+		legend = trans("on_" + self.get_end_stat().get(("_", "legend")))
+		duration = format_time(self.get_duration())
+		return f"{state} на {legend} ({duration})"
+
+class MatchTimeline(ConstantStateTimeline):
 	def __init__(self, *args, **kwargs):
 		super().__init__(*args, **kwargs)
 		
 		# TimestampStat containing match result stat update
 		self.result_stamp = None
 	
-	def get_end_stat(self):
+	def get_state(self):
+		return "inMatch" if self.is_real() else "inFiringRange"
+	
+	def get_end_stat(self, *args, **kwargs):
 		end_stat = super().get_end_stat(*args, **kwargs)
 		
 		if self.result_stamp:
@@ -609,6 +620,48 @@ class MatchTimeline(Timeline):
 	def is_real(self):
 		# False if match didn't increased level (usually firing range)
 		return bool(self.result_stamp)
+	
+	def format(self, *args, **kwargs):
+		text = super().format(*args, **kwargs) + "\n"
+		diff = self.get_diff()
+		
+		lvl_diff = diff.get(("_", "level"))
+		if lvl_diff:
+			text += f"Левел: {lvl_diff[0]} → {lvl_diff[1]}\n"
+		
+		def _format_rank_diff(mode, caption):
+			if not diff.get(("_", f"{mode}_rank_score")):
+				return
+			before = PlayerRank.from_stat(self.start_stat, mode=mode)
+			after  = PlayerRank.from_stat(self.get_end_stat(), mode=mode)
+			if before and after:
+				return f"{caption}: {before.format()} → {after.format()}\n"
+		
+		text += _format_rank_diff("br", "Ранг в БР") or ""
+		text += _format_rank_diff("ar", "Ранг на Аренах") or ""
+		
+		for legend, stat_name in diff:
+			skip_stats = [
+				"tracker_scout_of_action_targets_hit",
+				"tracker_jackson_bow_out_damage_done",
+				"tracker_smoke_show_damage_done"
+			]
+			
+			if stat_name in skip_stats or \
+			not legend == self.get_legend() or \
+			not stat_name.startswith("tracker_"):
+				continue
+			
+			val_before = util.to_num(diff[(legend, stat_name)][0])
+			val_after  = util.to_num(diff[(legend, stat_name)][1])
+			if None in (val_before, val_after):
+				stat_diff = "???"
+			else:
+				stat_diff = val_after - val_before
+			
+			text += f"{trans(stat_name[8:])}: {stat_diff}\n"
+		
+		return text.strip()
 
 class StoredTimeline(Timeline):
 	def __init__(self, path, *args, **kwargs):

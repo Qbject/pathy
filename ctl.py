@@ -53,9 +53,9 @@ def entry(action, args={}, body_raw=b"", from_web=False):
 			send("setdelay", delay=args.get("delay", 1))
 			return
 		
-		elif action == "matches":
+		elif action == "segments":
 			ensure_running()
-			return send("matches", uid=args.get("uid", "1007161381428"))
+			return send("segments", uid=args.get("uid", "1007161381428"))
 		
 		else:
 			raise ValueError(f"Unknown Pathy ctl action: {action}")
