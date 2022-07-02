@@ -578,7 +578,7 @@ class MatchTimeline(Timeline):
 	def get_end_stat(self):
 		end_stat = super().get_end_stat(*args, **kwargs)
 		
-		for key, result_value in (self.result_stamp or {}).items():
+		for key, result_value in (self.result_stamp.data or {}).items():
 			end_stat[key] = result_value
 		
 		return end_stat
@@ -586,7 +586,7 @@ class MatchTimeline(Timeline):
 	def get_diff(self, *args, **kwargs):
 		diff = super().get_diff(*args, **kwargs)
 		
-		for key, result_value in (self.result_stamp or {}).items():
+		for key, result_value in (self.result_stamp.data or {}).items():
 			if result_value == "$null":
 				continue
 			if diff.get(key):
