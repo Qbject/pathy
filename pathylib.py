@@ -432,9 +432,9 @@ class Timeline():
 		
 		return self._cache.get("end")
 	
-	def get_duration(self):
+	def get_duration(self, as_current=False):
 		start = self.get_start()
-		end = self.get_end()
+		end = int(time.time()) if as_current else self.get_end()
 		if None in [start, end]:
 			return 0
 		return end - start
@@ -444,7 +444,8 @@ class Timeline():
 		matches = [m for m in self.get_matches() if m.is_real()]
 		
 		text = ""
-		text += f"Час: {format_time(self.get_duration())}\n"
+		is_current = bool(int(self.get_stat("is_online")))
+		text += f"Час: {format_time(self.get_duration(is_current))}\n"
 		for state, duration in self.get_states_duration().items():
 			if not duration: continue
 			text += f"  {trans(state)}: {format_time(duration)}\n"
@@ -616,6 +617,13 @@ class MatchTimeline(ConstantStateTimeline):
 			entry.stat_value == "0":
 				return True
 		return False
+	
+	def get_duration(self):
+		start = self.get_start()
+		end = self.get_end() if self.is_ended() else int(time.time())
+		if None in [start, end]:
+			return 0
+		return end - start
 	
 	def is_real(self):
 		# False if match didn't increased level (usually firing range)
