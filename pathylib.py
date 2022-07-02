@@ -452,7 +452,7 @@ class Timeline():
 	
 	def format(self, easter_eggs=False):
 		diff = self.get_diff()
-		matches = self.get_matches()
+		matches = [m for m in self.get_matches() if m.is_real()]
 		
 		text = ""
 		text += f"Час: {format_time(self.get_duration())}\n"
