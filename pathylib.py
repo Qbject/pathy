@@ -309,7 +309,7 @@ class Timeline():
 					return "inFiringRange"
 				return "inMatch"
 			
-			for ts in seg.iter_timestamps:
+			for ts in seg.iter_timestamps():
 				if ts.get_value("is_online") == "0":
 					return "offline"
 				return "inLobby"
