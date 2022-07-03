@@ -1,5 +1,5 @@
 import time, traceback, sys, json, threading, queue, random, schedule
-import util, alsapi
+import util, alsapi, tgapi
 from pathlib import Path
 from multiprocessing.connection import Listener
 from util import log
@@ -132,7 +132,7 @@ class PathyDaemon():
 			chat_state = self.get_chat_state(chat_id)
 			msg_to_del = chat_state.get("last_party_msg_id")
 			if msg_to_del:
-				util.delete_tg_msg(chat_id, msg_to_del)
+				tgapi.delete_msg(chat_id, msg_to_del)
 				chat_state["last_party_msg_id"] = None
 			
 			players_online = len(list(self.iter_players(
@@ -285,7 +285,7 @@ class PathyDaemon():
 			self.state["tracked_players"].remove(player)
 	
 	def handle_tg_upd(self, body_raw):
-		upd = util.TgUpdate.from_raw_body(body_raw)
+		upd = tgapi.Update.from_raw_body(body_raw)
 		
 		if upd.is_msg():
 			if not upd.is_whitelisted():

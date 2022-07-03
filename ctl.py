@@ -1,5 +1,5 @@
 import time, traceback, sys, subprocess, json
-import util
+import util, tgapi
 from pathlib import Path
 from hashlib import md5
 from multiprocessing.connection import Client
@@ -134,7 +134,7 @@ def get_downtime():
 
 def handle_tg_upd(body_raw):
 	"Handles commands that should not reach daemon"
-	update = util.TgUpdate.from_raw_body(body_raw)
+	update = tgapi.Update.from_raw_body(body_raw)
 	
 	if update.is_msg() and update.is_whitelisted():
 		debug_cmd, debug_cmd_args = update.parse_debug_cmd()

@@ -1,5 +1,5 @@
 import time, datetime, traceback, os
-import util, textutil, alsapi
+import util, textutil, alsapi, tgapi
 from pathlib import Path
 from util import log, format_time
 from const import *
@@ -127,7 +127,7 @@ class TrackedPlayer():
 			for chat_id, chat_state in self.state["chats"].items():
 				msg_to_del = chat_state.get("sess_end_msg_id")
 				if msg_to_del:
-					util.delete_tg_msg(chat_id, msg_to_del)
+					tgapi.delete_msg(chat_id, msg_to_del)
 					chat_state["sess_end_msg_id"] = None
 			return
 		
