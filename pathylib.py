@@ -196,7 +196,7 @@ class TrackedPlayer():
 		self.state["goodnight_at"] = None
 	
 	def notify_chat(self, chat_id, msg, as_html=False, silent=False):
-		sent_msg = util.call_tg_api("sendMessage", {
+		sent_msg = tgapi.call("sendMessage", {
 			"chat_id": chat_id,
 			"text": msg,
 			"parse_mode": "HTML" if as_html else None,
