@@ -310,7 +310,7 @@ class PathyDaemon():
 			statuses = [player.format_status() for \
 				player in self.iter_players(in_chat=upd.chat_id)]
 			delim = "\n--- --- ---\n"
-			upd.reply(delim.join(statuses), as_html=True)
+			upd.reply(delim.join(statuses) or "Немає грунів :(", as_html=True)
 			return
 		
 		if bot_cmd == "/maps":
