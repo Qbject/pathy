@@ -120,7 +120,7 @@ class PathyDaemon():
 				player_idx = int((i / 2) % players_count)
 				player = self.state["tracked_players"][player_idx]
 				upd_resp = player.update()
-				if upd_resp["went_online"]:
+				if upd_resp["went_online"] or upd_resp["went_offline"]:
 					self.handle_party_events(player)
 		except Exception as e:
 			log(f"Player '{player.name}' update error, throttling\n" +
