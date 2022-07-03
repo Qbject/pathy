@@ -141,7 +141,7 @@ class PathyDaemon():
 			if not img: continue
 			caption = f"{players_online} <i>{get_moniker(plural=True)}</i>!"
 			
-			sent_msg = util.call_tg_api(
+			sent_msg = tgapi.call(
 				"sendPhoto",
 				{
 					"chat_id": chat_id,
@@ -411,7 +411,7 @@ class PathyDaemon():
 		monday_img_id = "AgACAgIAAx0CTJBx5QADHWEiP2LrqUGngEIIOJ4BNUHmVk_" \
 		"4AAJntTEboQ8RSVxQerfln3yYAQADAgADeQADIAQ"
 		
-		util.call_tg_api(
+		tgapi.call(
 			"sendPhoto",
 			{
 				"chat_id": ASL_CHAT_ID,
@@ -440,7 +440,7 @@ class PathyDaemon():
 		vids_to_notify.reverse()
 		vids_to_notify = vids_to_notify[-3:]
 		for link in vids_to_notify:
-			util.call_tg_api(
+			tgapi.call(
 				"sendMessage", {"chat_id": ASL_CHAT_ID, "text": link})
 		
 		util.log(f"YT videos check completed: {len(vids_to_notify)} found")
