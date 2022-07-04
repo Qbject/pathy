@@ -384,7 +384,7 @@ class PathyDaemon():
 			self.add_tracked_player(player_uid, upd.chat_id)
 			upd.reply(f"Ок, <b>{util.sanitize_html(player_name)}" \
 				f"</b>, я за тобою слідкую 👀", as_html=True,
-				reply_markup='{"force_reply": false, "selective": true}')
+				reply_markup='{"force_reply": false}')
 			chat_state["addplayer_msg_id"] = None
 			chat_state["addplayer_initiator"] = None
 			return
