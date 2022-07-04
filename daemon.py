@@ -87,6 +87,17 @@ class PathyDaemon():
 			player = self.get_player_by_uid(args.get("uid"))
 			sess_segs = player.get_last_sess().split_by_states()
 			return "\n--- --- ---\n".join([seg.format() for seg in sess_segs])
+		elif msg == "format_players":
+			result = ""
+			for player in self.iter_players():
+				result += f"<b>[{player.uid}]</b>: {player.name}\n"
+				result += "Chats:\n"
+				for chat_id in player.state["chats"]:
+					chat_state = self.get_chat_state(chat_id)
+					result += f"  <b>[{chat_id}]</b>: "\
+						f"{chat_state.get('title')}\n"
+				result += "\n"
+			return result.strip()
 		else:
 			return "UNKNOWN_MSG"
 	

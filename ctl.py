@@ -57,6 +57,10 @@ def entry(action, args={}, body_raw=b"", from_web=False):
 			ensure_running()
 			return send("segments", uid=args.get("uid", "1007161381428"))
 		
+		elif action == "players":
+			ensure_running()
+			return send("format_players")
+		
 		else:
 			raise ValueError(f"Unknown Pathy ctl action: {action}")
 		
