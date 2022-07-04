@@ -97,6 +97,18 @@ class PathyDaemon():
 					result += f"  [{chat_id}]: {chat_state.get('title')}\n"
 				result += "\n"
 			return f"<pre>{util.sanitize_html(result.strip())}</pre>"
+		elif msg == "whitelist":
+			whitelisted_chats = set(self.state.get("whitelisted_chats", []))
+			whitelisted_chats.add(str(args.get("chat_id")))
+			self.state["whitelisted_chats"] = list(whitelisted_chats)
+			return "Added"
+		elif msg == "unwhitelist":
+			whitelisted_chats = set(self.state.get("whitelisted_chats", []))
+			chat_id = str(args.get("chat_id"))
+			if chat_id in whitelisted_chats:
+				whitelisted_chats.remove(chat_id)
+			self.state["whitelisted_chats"] = list(whitelisted_chats)
+			return "Removed"
 		else:
 			return "UNKNOWN_MSG"
 	
@@ -215,16 +227,7 @@ class PathyDaemon():
 			time.sleep(1)
 	
 	def load_state(self):
-		def _try_read(path):
-			try:
-				state_raw = path.read_text(encoding="utf-8")
-				return json.loads(state_raw)
-			except (json.decoder.JSONDecodeError, FileNotFoundError):
-				log(f"Failed to read {path.name}:\n{traceback.format_exc()}",
-					err=True, sent_tg=True)
-		
-		self.state = _try_read(DAEMON_STATE) or \
-			_try_read(DAEMON_STATE_COPY) or {}
+		self.state = util.get_state()
 		
 		if not "tracked_players" in self.state:
 			self.state["tracked_players"] = []
@@ -300,7 +303,7 @@ class PathyDaemon():
 		upd = tgapi.Update.from_raw_body(body_raw)
 		
 		if upd.is_msg():
-			if not upd.is_whitelisted():
+			if not util.is_chat_whitelisted(upd.chat_id):
 				log(f"Non-whitelisted TG msg:\n{upd.format()}", send_tg=True)
 				return
 			try:

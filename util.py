@@ -219,3 +219,18 @@ def cap_freq(tag, min_interval):
 	if time_to_wait > 0:
 		time.sleep(time_to_wait)
 	_interval_data[tag] = time.time()
+
+def get_state():
+	def _try_read(path):
+		try:
+			state_raw = path.read_text(encoding="utf-8")
+			return json.loads(state_raw)
+		except (json.decoder.JSONDecodeError, FileNotFoundError):
+			log(f"Failed to read {path.name}:\n{traceback.format_exc()}",
+				err=True, send_tg=True)
+	
+	return _try_read(DAEMON_STATE) or _try_read(DAEMON_STATE_COPY) or {}
+
+def is_chat_whitelisted(chat_id):
+	whitelist = get_state().get("whitelisted_chats", [])
+	return str(chat_id) in whitelist

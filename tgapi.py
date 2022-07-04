@@ -77,9 +77,6 @@ class Update():
 			return False
 		return "text" in self.data["message"]
 	
-	def is_whitelisted(self):
-		return self.chat_id in ALLOWED_CHATS
-	
 	def reply(self, text, as_html=False, **kwargs):
 		return call(
 			"sendMessage",

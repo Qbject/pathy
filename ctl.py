@@ -61,6 +61,14 @@ def entry(action, args={}, body_raw=b"", from_web=False):
 			ensure_running()
 			return send("format_players")
 		
+		elif action == "whitelist":
+			ensure_running()
+			return send("whitelist")
+		
+		elif action == "unwhitelist":
+			ensure_running()
+			return send("unwhitelist")
+		
 		else:
 			raise ValueError(f"Unknown Pathy ctl action: {action}")
 		
@@ -125,35 +133,28 @@ def is_alive():
 	except ConnectionRefusedError:
 		return False
 
-def get_last_state_save():
-	if not DAEMON_STATE.exists():
-		return None
-	
-	state_raw = DAEMON_STATE.read_text(encoding="utf-8")
-	state = json.loads(state_raw)
-	return state.get("last_save") or None
-
 def get_downtime():
-	return time.time() - (get_last_state_save() or 0.0)
+	last_up = util.get_state().get("last_save", 0.0)
+	return time.time() - last_up
 
 def handle_tg_upd(body_raw):
 	"Handles commands that should not reach daemon"
-	update = tgapi.Update.from_raw_body(body_raw)
+	upd = tgapi.Update.from_raw_body(body_raw)
 	
-	if update.is_msg() and update.is_whitelisted():
-		debug_cmd, debug_cmd_args = update.parse_debug_cmd()
+	if upd.is_msg() and util.is_chat_whitelisted(upd.chat_id):
+		debug_cmd, debug_cmd_args = upd.parse_debug_cmd()
 		if debug_cmd:
 			cmd_resp = entry(debug_cmd, debug_cmd_args) or "(empty)"
-			update.reply(cmd_resp, as_html=True)
+			upd.reply(cmd_resp, as_html=True)
 			return
 		
-		bot_cmd, bot_cmd_args = update.parse_bot_command()
+		bot_cmd, bot_cmd_args = upd.parse_bot_command()
 		if bot_cmd == "/alive":
 			try:
 				result = send("status")
 			except ConnectionRefusedError:
 				result = "😵"
-			update.reply(util.sanitize_html(result), as_html=True)
+			upd.reply(util.sanitize_html(result), as_html=True)
 			return
 	
 	ensure_running()

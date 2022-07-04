@@ -34,10 +34,3 @@ TEXT_ADJECTIVES_DICT = PATHY_DIR / "textdata/adjectives.txt"
 TEXT_PREFIXES_DICT = PATHY_DIR / "textdata/prefixes.txt"
 
 SESS_MAX_BREAK = 30 * 60 # 30 min
-
-ALLOWED_CHATS = (
-	***REMOVED***, # debug
-	***REMOVED***, # asl
-	***REMOVED***, # vol
-	***REMOVED*** # vol chat
-)
