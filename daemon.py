@@ -309,6 +309,9 @@ class PathyDaemon():
 		if (not bot_cmd) and upd.chat_id == DEBUG_CHAT_ID:
 			upd.reply(upd.format(as_html=True), as_html=True)
 		
+		chat_state["title"] = upd.get_chat_title()
+		chat_state["type"] = upd.data["message"]["chat"]["type"]
+		
 		if bot_cmd == "/status":
 			statuses = [player.format_status() for \
 				player in self.iter_players(in_chat=upd.chat_id)]

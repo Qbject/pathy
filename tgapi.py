@@ -162,6 +162,13 @@ class Update():
 		
 		return (command, params)
 	
+	def get_chat_title(self):
+		if not self.is_text_msg():
+			return None
+		chat = self.data["message"]["chat"]
+		return chat.get("title") or \
+			f"{chat.get('first_name', '')} {chat.get('last_name', '')}"
+	
 	def format(self, as_html=False):
 		_json = json.dumps(self.data, indent="\t")
 		if as_html:
