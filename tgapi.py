@@ -78,13 +78,13 @@ class Update():
 		return "text" in self.data["message"]
 	
 	def is_whitelisted(self):
-		return self.data["message"]["chat"]["id"] in ALLOWED_CHATS
+		return self.chat_id in ALLOWED_CHATS
 	
 	def reply(self, text, as_html=False, **kwargs):
 		return call(
 			"sendMessage",
 			{
-				"chat_id": self.data["message"]["chat"]["id"],
+				"chat_id": self.chat_id,
 				"text": text,
 				"parse_mode": "HTML" if as_html else None,
 				**kwargs
@@ -96,7 +96,7 @@ class Update():
 		return call(
 			"sendPhoto",
 			{
-				"chat_id": self.data["message"]["chat"]["id"],
+				"chat_id": self.chat_id,
 				"photo": "attach://file",
 				"caption": caption,
 				"parse_mode": "HTML" if as_html else None,
@@ -112,7 +112,7 @@ class Update():
 		return call(
 			"sendVideo",
 			{
-				"chat_id": self.data["message"]["chat"]["id"],
+				"chat_id": self.chat_id,
 				"video": "attach://file",
 				"caption": caption,
 				"parse_mode": "HTML" if as_html else None,
@@ -126,14 +126,14 @@ class Update():
 	def is_debug_cmd(self):
 		if not self.is_text_msg():
 			return False
-		return self.data["message"]["chat"]["id"] == DEBUG_CHAT_ID and \
-		self.data["message"]["text"].startswith("ctl ")
+		return self.chat_id == DEBUG_CHAT_ID and \
+		self.text.startswith("ctl ")
 	
 	def parse_debug_cmd(self):
 		if not self.is_debug_cmd():
 			return (None, None)
 		
-		cmd_arr = self.data["message"]["text"].split(" ")
+		cmd_arr = self.text.split(" ")
 		cmd = cmd_arr[1]
 		args_raw = " ".join(cmd_arr[2:])
 		if args_raw:
@@ -146,7 +146,7 @@ class Update():
 	def parse_bot_command(self):
 		if not self.is_text_msg():
 			return (None, None)
-		msg_text = self.data["message"]["text"]
+		msg_text = self.text
 		command_search = re.findall(
 			"^(/[a-zA-Z0-9_]+)(@[a-zA-Z0-9_]+){0,1}", msg_text)
 		if not command_search:
