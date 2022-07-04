@@ -458,8 +458,6 @@ class PathyDaemon():
 		for link in vids_to_notify:
 			tgapi.call(
 				"sendMessage", {"chat_id": ASL_CHAT_ID, "text": link})
-		
-		util.log(f"YT videos check completed: {len(vids_to_notify)} found")
 
 
 if __name__ == "__main__":
