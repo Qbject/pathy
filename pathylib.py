@@ -678,24 +678,16 @@ class MatchTimeline(ConstantStateTimeline):
 
 class StoredTimeline(Timeline):
 	def __init__(self, path, *args, **kwargs):
+		kwargs["start_stat"] = {}
 		super().__init__(*args, **kwargs)
 		self.path = Path(path)
-		self.file = self.path.open("ab", buffering=0)
-		self.load_file()
 	
-	def load_file(self):
-		self.start_stat = {}
-		self.clear_cache()
-		
-		for entry in self.iter():
-			self.add_entry(entry, write_file=False)
-	
-	def add_entry(self, entry, write_file=True):
+	def add_entry(self, entry):
 		self.clear_cache()
 		
 		if write_file:
-			self.file.seek(0, os.SEEK_END)
-			self.file.write(entry.serialize().encode("utf-8") + b"\n")
+			with self.path.open("ab") as fh:
+				fh.write(entry.serialize().encode("utf-8") + b"\n")
 	
 	def iter(self, reverse=False):
 		if not self.path.exists():
@@ -721,12 +713,6 @@ class StoredTimeline(Timeline):
 		finally:
 			if getattr(iterable, "close"):
 				iterable.close()
-	
-	def close(self):
-		self.file.close()
-	
-	def __del__(self):
-		self.close()
 
 class TimestampStat():
 	def __init__(self, timestamp):
