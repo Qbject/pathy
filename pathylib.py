@@ -24,6 +24,7 @@ class TrackedPlayer():
 		self.is_online = bool(int(self.get_stat("is_online") or "0"))
 		self.is_in_match = bool(int(self.get_stat("is_in_match") or "0"))
 		self.is_banned = bool(int(self.get_stat("is_banned") or "0"))
+		self.is_party_full = bool(int(self.get_stat("is_party_full") or "0"))
 	
 	def serialize(self):
 		return self.state
@@ -72,7 +73,9 @@ class TrackedPlayer():
 		
 		result = f"{state} на {legend}"
 		if state_duration:
-			result += f" ({format_time(state_duration)})"
+			result += f" вже {format_time(state_duration)}"
+		if self.is_party_full:
+			result += f" (👨‍👦‍👦 фул паті)"
 		return result
 	
 	def gen_new_moniker(self):
@@ -375,8 +378,9 @@ class Timeline():
 		_add("level",  _global["level"] + \
 			_global["toNextLevelPercent"] / 100)
 		
-		_add("is_online", _realtime["isOnline"])
-		_add("is_in_match",  _realtime["isInGame"])
+		_add("is_online",     _realtime["isOnline"])
+		_add("is_in_match",   _realtime["isInGame"])
+		_add("is_party_full", _realtime["partyFull"])
 		_add("is_banned", int(_global["bans"]["isActive"]))
 		_add("ban_reason",    _global["bans"]["last_banReason"])
 		_add("ban_time_left", _global["bans"]["remainingSeconds"])
