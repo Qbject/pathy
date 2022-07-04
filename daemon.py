@@ -98,17 +98,11 @@ class PathyDaemon():
 				result += "\n"
 			return f"<pre>{util.sanitize_html(result.strip())}</pre>"
 		elif msg == "whitelist":
-			whitelisted_chats = set(self.state.get("whitelisted_chats", []))
-			whitelisted_chats.add(str(args.get("chat_id")))
-			self.state["whitelisted_chats"] = list(whitelisted_chats)
-			return "Added"
+			added = self.whitelist_chat(args.get("chat_id"))
+			return "Added" if added else "Already whitelisted"
 		elif msg == "unwhitelist":
-			whitelisted_chats = set(self.state.get("whitelisted_chats", []))
-			chat_id = str(args.get("chat_id"))
-			if chat_id in whitelisted_chats:
-				whitelisted_chats.remove(chat_id)
-			self.state["whitelisted_chats"] = list(whitelisted_chats)
-			return "Removed"
+			removed = self.unwhitelist_chat(args.get("chat_id"))
+			return "Removed" if removed else "Already unwhitelisted"
 		else:
 			return "UNKNOWN_MSG"
 	
@@ -233,6 +227,8 @@ class PathyDaemon():
 			self.state["tracked_players"] = []
 		if not "chats_data" in self.state:
 			self.state["chats_data"] = {}
+		if not "whitelisted_chats" in self.state:
+			self.state["whitelisted_chats"] = []
 		
 		for i, player_state in enumerate(self.state["tracked_players"]):
 			self.state["tracked_players"][i] = TrackedPlayer(player_state)
@@ -275,6 +271,20 @@ class PathyDaemon():
 		for player in self.iter_players():
 			if player.name == name:
 				return player
+	
+	def whitelist_chat(self, chat_id):
+		chat_id = str(chat_id)
+		if chat_id in self.state["whitelisted_chats"]:
+			return False
+		self.state["whitelisted_chats"].append(chat_id)
+		return True
+	
+	def unwhitelist_chat(self, chat_id):
+		chat_id = str(chat_id)
+		if chat_id not in self.state["whitelisted_chats"]:
+			return False
+		self.state["whitelisted_chats"].remove(chat_id)
+		return True
 	
 	def add_tracked_player(self, player_uid, chat_id):
 		player = self.get_player_by_uid(player_uid)
