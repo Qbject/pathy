@@ -13,7 +13,8 @@ DAEMON_ADDR = ("localhost", 6914)
 DAEMON_AUTHKEY = b"***REMOVED***"
 
 DAEMON_STATE = PATHY_DIR / "data/state.json"
-LOCKFILE = PATHY_DIR / "data/parent.lock"
+DAEMON_STATE_COPY = PATHY_DIR / "data/state.copy.json"
+DAEMON_LOCKFILE = PATHY_DIR / "data/parent.lock"
 
 
 BOT_TOKEN = "***REMOVED***"

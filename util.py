@@ -39,26 +39,20 @@ def git_pull():
 	)
 	return out
 
-def safe_file_write(file_path, data):
-	attempts = 6
-	interval = 0.5
-	
+def write_file_with_retries(file_path, data, attempts=6, interval=0.5):
 	if type(data) == str:
 		data = data.encode("utf-8")
 	
-	last_exc = None
-	for i in range(attempts):
+	for attempt in range(attempts):
 		try:
 			file_path.write_bytes(data)
-			last_exc = None
 			break
 		except Exception as exc:
-			log(f"Failed to write file {file_path} (attempt {i})", True)
-			last_exc = exc
+			log(f"Failed to write file {file_path} (attempt {attempt})",
+				err=True)
+			if attempt + 1 == attempts:
+				raise exc
 			time.sleep(interval)
-	
-	if last_exc:
-		raise last_exc
 
 def sanitize_html(text):
 	text = text.replace("&", "&amp;")

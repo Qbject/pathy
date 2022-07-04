@@ -174,12 +174,12 @@ class PathyDaemon():
 	
 	def lock(self):
 		try:
-			LOCKFILE.unlink(missing_ok=True)
+			DAEMON_LOCKFILE.unlink(missing_ok=True)
 		except Exception as e:
 			log("Failed to lock daemon, raising error")
 			raise e
 		
-		self.lock_handle = LOCKFILE.open("w+")
+		self.lock_handle = DAEMON_LOCKFILE.open("w+")
 	
 	def unlock(self):
 		self.lock_handle.close()
@@ -206,22 +206,24 @@ class PathyDaemon():
 			time.sleep(1)
 	
 	def load_state(self):
-		if DAEMON_STATE.exists():
-			state_raw = DAEMON_STATE.read_text(encoding="utf-8")
-			state = json.loads(state_raw)
-			
-			if state["tracked_players"]:
-				for i, player_state in enumerate(state["tracked_players"]):
-					state["tracked_players"][i] = TrackedPlayer(player_state)
-			
-			self.state = state
-		else:
-			self.state = {}
+		def _try_read(path):
+			try:
+				state_raw = path.read_text(encoding="utf-8")
+				return json.loads(state_raw)
+			except (json.decoder.JSONDecodeError, FileNotFoundError):
+				log(f"Failed to read {path.name}:\n{traceback.format_exc()}",
+					err=True, sent_tg=True)
+		
+		self.state = _try_read(DAEMON_STATE) or \
+			_try_read(DAEMON_STATE_COPY) or {}
 		
 		if not "tracked_players" in self.state:
 			self.state["tracked_players"] = []
 		if not "chats_data" in self.state:
 			self.state["chats_data"] = {}
+		
+		for i, player_state in enumerate(self.state["tracked_players"]):
+			self.state["tracked_players"][i] = TrackedPlayer(player_state)
 	
 	def save_state(self):
 		def _serialize(item):
@@ -231,7 +233,8 @@ class PathyDaemon():
 		self.state["last_save"] = time.time()
 		
 		state_raw = json.dumps(self.state, indent="\t", default=_serialize)
-		util.safe_file_write(DAEMON_STATE, state_raw)
+		util.write_file_with_retries(DAEMON_STATE,      state_raw)
+		util.write_file_with_retries(DAEMON_STATE_COPY, state_raw)
 	
 	def handle_cmds(self):
 		while self.worker_tasks.qsize():
