@@ -93,35 +93,33 @@ class Update():
 	
 	def reply_img(self, img_path, caption, as_html=False, **kwargs):
 		img_path = Path(img_path)
-		return call(
-			"sendPhoto",
-			{
-				"chat_id": self.chat_id,
-				"photo": "attach://file",
-				"caption": caption,
-				"parse_mode": "HTML" if as_html else None,
-				**kwargs
-			},
-			files={
-				"file": img_path.open("rb")
-			}
-		)
+		with img_path.open("rb") as imgfile:
+			return call(
+				"sendPhoto",
+				{
+					"chat_id": self.chat_id,
+					"photo": "attach://file",
+					"caption": caption,
+					"parse_mode": "HTML" if as_html else None,
+					**kwargs
+				},
+				files={"file": imgfile}
+			)
 	
 	def reply_vid(self, vid_path, caption, as_html=False, **kwargs):
 		vid_path = Path(vid_path)
-		return call(
-			"sendVideo",
-			{
-				"chat_id": self.chat_id,
-				"video": "attach://file",
-				"caption": caption,
-				"parse_mode": "HTML" if as_html else None,
-				**kwargs
-			},
-			files={
-				"file": vid_path.open("rb")
-			}
-		)
+		with vid_path.open("rb") as vidfile:
+			return call(
+				"sendVideo",
+				{
+					"chat_id": self.chat_id,
+					"video": "attach://file",
+					"caption": caption,
+					"parse_mode": "HTML" if as_html else None,
+					**kwargs
+				},
+				files={"file": vidfile}
+			)
 	
 	def is_debug_cmd(self):
 		if not self.is_text_msg():

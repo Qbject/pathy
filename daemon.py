@@ -151,18 +151,17 @@ class PathyDaemon():
 			if not img: continue
 			caption = f"{players_online} <i>{get_moniker(plural=True)}</i>!"
 			
-			sent_msg = tgapi.call(
-				"sendPhoto",
-				{
-					"chat_id": chat_id,
-					"photo": "attach://file",
-					"parse_mode": "HTML",
-					"caption": caption
-				},
-				files={
-					"file": img.open("rb")
-				}
-			)
+			with img.open("rb") as imgfile:
+				sent_msg = tgapi.call(
+					"sendPhoto",
+					{
+						"chat_id": chat_id,
+						"photo": "attach://file",
+						"parse_mode": "HTML",
+						"caption": caption
+					},
+					files={"file": imgfile}
+				)
 			chat_state["last_party_msg_id"] = sent_msg.get("message_id")
 	
 	def get_chat_state(self, chat_id):
