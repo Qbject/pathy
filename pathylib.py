@@ -677,9 +677,9 @@ class MatchTimeline(ConstantStateTimeline):
 		return text.strip()
 
 class StoredTimeline(Timeline):
-	def __init__(self, path, *args, **kwargs):
+	def __init__(self, path, **kwargs):
 		kwargs["start_stat"] = {}
-		super().__init__(*args, **kwargs)
+		super().__init__(**kwargs)
 		self.path = Path(path)
 	
 	def add_entry(self, entry):
