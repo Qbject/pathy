@@ -685,9 +685,8 @@ class StoredTimeline(Timeline):
 	def add_entry(self, entry):
 		self.clear_cache()
 		
-		if write_file:
-			with self.path.open("ab") as fh:
-				fh.write(entry.serialize().encode("utf-8") + b"\n")
+		with self.path.open("ab") as fh:
+			fh.write(entry.serialize().encode("utf-8") + b"\n")
 	
 	def iter(self, reverse=False):
 		if not self.path.exists():
