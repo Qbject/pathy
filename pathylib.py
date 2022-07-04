@@ -66,7 +66,7 @@ class TrackedPlayer():
 		
 		state_duration = None
 		for entry in self.timeline.iter(reverse=True):
-			if entry.stat_name == "is_in_match":
+			if entry.stat_name in ["is_in_match", "is_online"]:
 				state_duration = time.time() - entry.timestamp
 				break
 		
