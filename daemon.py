@@ -90,14 +90,13 @@ class PathyDaemon():
 		elif msg == "format_players":
 			result = ""
 			for player in self.iter_players():
-				result += f"<b>[{player.uid}]</b>: {player.name}\n"
+				result += f"[{player.uid}]: {player.name}\n"
 				result += "Chats:\n"
 				for chat_id in player.state["chats"]:
 					chat_state = self.get_chat_state(chat_id)
-					result += f"  <b>[{chat_id}]</b>: "\
-						f"{chat_state.get('title')}\n"
+					result += f"  [{chat_id}]: {chat_state.get('title')}\n"
 				result += "\n"
-			return result.strip()
+			return f"<pre>{util.sanitize_html(result.strip())}</pre>"
 		else:
 			return "UNKNOWN_MSG"
 	
