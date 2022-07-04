@@ -55,7 +55,7 @@ def entry(action, args={}, body_raw=b"", from_web=False):
 		
 		elif action == "segments":
 			ensure_running()
-			return send("segments", uid=args.get("uid", "1007161381428"))
+			return send("segments", **args)
 		
 		elif action == "players":
 			ensure_running()
@@ -63,11 +63,11 @@ def entry(action, args={}, body_raw=b"", from_web=False):
 		
 		elif action == "whitelist":
 			ensure_running()
-			return send("whitelist")
+			return send("whitelist", **args)
 		
 		elif action == "unwhitelist":
 			ensure_running()
-			return send("unwhitelist")
+			return send("unwhitelist", **args)
 		
 		else:
 			raise ValueError(f"Unknown Pathy ctl action: {action}")

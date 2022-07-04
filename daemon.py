@@ -84,7 +84,7 @@ class PathyDaemon():
 			self.as_worker(self.handle_tg_upd, args.get("upd_body"))
 			return "DONE"
 		elif msg == "segments":
-			player = self.get_player_by_uid(args.get("uid"))
+			player = self.get_player_by_uid(args.get("uid", "1007161381428"))
 			sess_segs = player.get_last_sess().split_by_states()
 			return "\n--- --- ---\n".join([seg.format() for seg in sess_segs])
 		elif msg == "format_players":
