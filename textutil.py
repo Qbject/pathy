@@ -3,31 +3,63 @@ import util
 from util import log
 from const import *
 
-_cached_textdata = {}
-
-def get_dict(dict_path):
-	if not _cached_textdata.get(dict_path.name):
-		with dict_path.open("r", encoding="utf-8") as fhandle:
-			lines = fhandle.readlines()
-		_cached_textdata[dict_path.name] = [s.strip() for s in lines]
-	
-	return _cached_textdata[dict_path.name]
-
-def get_moniker(plural=False):
+def get_moniker(noun_v_rod=False, noun_plur=False,
+	adj_v_rod=False):
 	is_doubled = util.chance(0.05)
 	
-	gr, adj_ending = _get_base_gr(plural=plural)
+	base, tags = _get_base_moniker(noun_v_rod, noun_plur)
+	adj_ending = get_adj_ending(tags, v_rod=adj_v_rod)
 	adjectives = get_adjectives(ending=adj_ending)
 	
 	if is_doubled:
-		suffix_gr, _ = _get_base_gr(plural=plural)
-		gr = f"{gr}-{suffix_gr}"
+		suffix, _ = _get_base_moniker(noun_v_rod, noun_plur)
+		base = f"{base}-{suffix}"
 	
-	return f"{adjectives} {gr}"
+	return f"{adjectives} {base}"
+
+# for repeating operations encapsulation purposes only
+# returns rnd noun with prefix and tags
+def _get_base_moniker(v_rod=False, plur=False):
+	is_prefixed = util.chance(0.15)
+	prefix = get_dict_rnd(DICT_PREFIXES) if is_prefixed else ""
+	noun, tags = get_noun(v_rod, plur)
+	return (prefix + noun, tags)
+
+def get_count_moniker(count):
+	adj_v_rod, adj_plur, noun_v_rod, noun_plur = get_count_props(count)
+	moniker = get_moniker(noun_v_rod, noun_plur, adj_v_rod)
+	return f"{count} {moniker}"
+
+def get_noun(v_rod=False, plur=False):
+	if not v_rod and not plur:
+		noun_line = get_dict_rnd(DICT_NOUN_V_NAZ)
+	elif v_rod and not plur:
+		noun_line = get_dict_rnd(DICT_NOUN_V_ROD)
+	if not v_rod and plur:
+		noun_line = get_dict_rnd(DICT_NOUN_V_NAZ_PLUR)
+	elif v_rod and plur:
+		noun_line = get_dict_rnd(DICT_NOUN_V_ROD_PLUR)
+	
+	noun, tags = parse_tags(noun_line)
+	if plur and not "p" in tags:
+		tags.append("p")
+	
+	return (noun, tags)
+
+def get_adj_ending(tags, v_rod=False):
+	is_fem = "f" in tags
+	is_neuter = "n" in tags
+	is_plur = "p" in tags
+	
+	if is_plur:
+		return "их" if v_rod else "i"
+	if is_fem:
+		return "ої" if v_rod else "а"
+	if is_neuter:
+		return "ого" if v_rod else "е"
+	return "ого" if v_rod else "ий"
 
 def get_adjectives(ending=None, max_count=3):
-	adjectives = get_dict(TEXT_ADJECTIVES_DICT)
-	
 	# randomly calculating the number of adjectives
 	adj_count = 1
 	for i in range(max_count-1):
@@ -36,39 +68,12 @@ def get_adjectives(ending=None, max_count=3):
 	
 	result = []
 	for _ in range(adj_count):
-		adj = random.choice(adjectives)
+		adj = get_dict_rnd(DICT_ADJ)
 		if ending:
 			adj = adj[:-2] + ending
 		result.append(adj)
 	
 	return " ".join(result)
-
-# for repeating operations encapsulation purposes only
-# returns rnd gr with prefix and ending for modifiers
-def _get_base_gr(plural=False):
-	prefixes = get_dict(TEXT_PREFIXES_DICT)
-	
-	if plural:
-		grs_plur = get_dict(TEXT_GRS_PLUR_DICT)
-	else:
-		grs = get_dict(TEXT_GRS_DICT)
-	
-	is_prefixed = util.chance(0.15)
-	prefix = ""
-	if is_prefixed:
-		prefix = random.choice(prefixes)
-	
-	gr = random.choice(grs_plur) if plural else random.choice(grs)
-	is_fem = gr.startswith("#")
-	is_plur = plural or gr.startswith("@")
-	if is_fem:
-		gr = gr.lstrip("#")
-		return (prefix + gr, "а")
-	elif is_plur:
-		gr = gr.lstrip("@")
-		return (prefix + gr, "і")
-	else:
-		return (prefix + gr, "ий")
 
 goodnight_emoji = ["🥱", "🛌", "😴", "💤"]
 
@@ -77,6 +82,55 @@ def get_goodnight_wish(player_name):
 	wish += f"{get_adjectives(ending='их')} снів "
 	wish += random.choice(goodnight_emoji)
 	return wish
+
+_dict_cache = {}
+
+def cache_rnd_prefetch(dict_path, size=50):
+	dict_name = dict_path.stem
+	lines_count = _dict_cache[dict_name]["lines_count"]
+	prefetch = [random.randint(0, lines_count - 1) for _ in range(size)]
+	_dict_cache[dict_name]["rnd_prefetch"] = prefetch
+	
+	with dict_path.open("r", encoding="utf-8") as dict_file:
+		for i, line in enumerate(dict_file):
+			if i not in prefetch:
+				continue # optimization
+			util.list_replace(prefetch, i, line.strip())
+
+def get_dict_rnd(dict_path):
+	dict_name = dict_path.stem
+	
+	if not dict_name in _dict_cache:
+		_dict_cache[dict_name] = {
+			# if last line is empty count lines produces number bigger by 1
+			# than len(open(...).readlines()), so dicts must not have empty
+			# lines
+			"lines_count": util.count_lines(dict_path),
+			"rnd_prefetch": []
+		}
+	if not _dict_cache[dict_name]["rnd_prefetch"]:
+		cache_rnd_prefetch(dict_path)
+	
+	return _dict_cache[dict_name]["rnd_prefetch"].pop()
+
+def parse_tags(line):
+	word, *tags = line.split(":")
+	return word, tags
+
+def get_count_props(count):
+	"""
+	returns tuple of 4 boolean values representing
+	adj v_rod, adj plur, noun v_rod, noun plur
+	which should be applied to words multiplied by count
+	"""
+	count = abs(count)
+	
+	if count == 1:
+		return False, False, False, False
+	elif 2 <= count <= 4:
+		return True, True, False, True
+	else:
+		return True, True, True, True
 
 translations = {
 	"Unranked": "Ніхто",

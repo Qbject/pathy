@@ -5,7 +5,7 @@ from multiprocessing.connection import Listener
 from util import log
 from const import *
 from pathylib import TrackedPlayer, format_map_rotation
-from textutil import trans, fix_text_layout, get_moniker
+from textutil import trans, fix_text_layout, get_moniker, get_count_moniker
 
 class PathyDaemon():
 	def __init__(self):
@@ -103,6 +103,8 @@ class PathyDaemon():
 		elif msg == "unwhitelist":
 			removed = self.unwhitelist_chat(args.get("chat_id"))
 			return "Removed" if removed else "Already unwhitelisted"
+		elif msg == "monikers":
+			return "\n".join([get_moniker() for i in range(args.get("n", 5))])
 		else:
 			return "UNKNOWN_MSG"
 	
@@ -155,7 +157,12 @@ class PathyDaemon():
 				online=True, in_chat=chat_id)))
 			img = util.get_party_img(players_online)
 			if not img: continue
-			caption = f"{players_online} <i>{get_moniker(plural=True)}</i>!"
+			
+			online_desc = str(players_online)
+			if players_online == 1:
+				online_desc = "Соло"
+			moniker = get_count_moniker(players_online)
+			caption = f"{online_desc} <i>{moniker}</i>!"
 			
 			with img.open("rb") as imgfile:
 				sent_msg = tgapi.call(

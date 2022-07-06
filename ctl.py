@@ -69,6 +69,10 @@ def entry(action, args={}, body_raw=b"", from_web=False):
 			ensure_running()
 			return send("unwhitelist", **args)
 		
+		elif action == "monikers":
+			ensure_running()
+			return send("monikers", **args)
+		
 		else:
 			raise ValueError(f"Unknown Pathy ctl action: {action}")
 		

@@ -28,9 +28,11 @@ DL_PROXY_CHAT_ID = ***REMOVED***
 
 MOZAM_API_KEY = "***REMOVED***"
 
-TEXT_GRS_DICT = PATHY_DIR / "textdata/grs.txt"
-TEXT_GRS_PLUR_DICT = PATHY_DIR / "textdata/grs_plur.txt"
-TEXT_ADJECTIVES_DICT = PATHY_DIR / "textdata/adjectives.txt"
-TEXT_PREFIXES_DICT = PATHY_DIR / "textdata/prefixes.txt"
+DICT_ADJ = PATHY_DIR / "dict/adj.txt"
+DICT_NOUN_V_NAZ = PATHY_DIR / "dict/noun_v_naz.txt"
+DICT_NOUN_V_ROD = PATHY_DIR / "dict/noun_v_rod.txt"
+DICT_NOUN_V_NAZ_PLUR = PATHY_DIR / "dict/noun_v_naz_plur.txt"
+DICT_NOUN_V_ROD_PLUR = PATHY_DIR / "dict/noun_v_rod_plur.txt"
+DICT_PREFIXES = PATHY_DIR / "dict/prefixes.txt"
 
 SESS_MAX_BREAK = 30 * 60 # 30 min

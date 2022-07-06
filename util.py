@@ -234,3 +234,22 @@ def get_state():
 def is_chat_whitelisted(chat_id):
 	whitelist = get_state().get("whitelisted_chats", [])
 	return str(chat_id) in whitelist
+
+def count_lines(file_path):
+	newlines_count = 0
+	for seg in iter_file_segments(file_path, "rb"):
+		newlines_count += seg.count(b"\n")
+	return newlines_count + 1
+
+def iter_file_segments(file_path, *args, seg_size=8192, **kwargs):
+	with file_path.open(*args, **kwargs) as file:
+		while True:
+			seg = file.read(seg_size)
+			if not seg:
+				break
+			yield seg
+
+def list_replace(lst, repl_from, repl_to):
+	for i, el in enumerate(lst):
+		if el == repl_from:
+			lst[i] = repl_to
