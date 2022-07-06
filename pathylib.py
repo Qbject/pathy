@@ -593,8 +593,8 @@ class MatchTimeline(ConstantStateTimeline):
 		end_stat = super().get_end_stat(*args, **kwargs)
 		
 		if self.result_stamp:
-			for key, result_value in self.result_stamp.data.items():
-				end_stat[key] = result_value
+			for key, entry in self.result_stamp.data.items():
+				end_stat[key] = entry.stat_value
 		
 		return end_stat
 	
