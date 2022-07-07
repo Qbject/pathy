@@ -157,12 +157,7 @@ class PathyDaemon():
 				online=True, in_chat=chat_id)))
 			img = util.get_party_img(players_online)
 			if not img: continue
-			
-			online_desc = str(players_online)
-			if players_online == 1:
-				online_desc = "Соло"
-			moniker = get_count_moniker(players_online)
-			caption = f"{online_desc} <i>{moniker}</i>!"
+			caption = f"<i>{get_count_moniker(players_online)}</i>!"
 			
 			with img.open("rb") as imgfile:
 				sent_msg = tgapi.call(
