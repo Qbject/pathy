@@ -622,8 +622,7 @@ class MatchTimeline(ConstantStateTimeline):
 			if entry.stat_name == "is_in_match" and \
 			entry.stat_value == "0":
 				return True
-			if entry.stat_name == "is_online" and \
-			entry.stat_value == "0":
+			if entry.stat_name == "is_online":
 				return True
 		return False
 	
