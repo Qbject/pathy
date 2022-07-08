@@ -95,11 +95,11 @@ class Update():
 		return send_message(self.chat_id, text, as_html=as_html, **kwargs)
 	
 	def reply_img(self, img_path, caption, as_html=False, **kwargs):
-		return send_message(self.chat_id, text, as_html=as_html,
+		return send_message(self.chat_id, caption, as_html=as_html,
 			file_path=img_path, file_type="photo", **kwargs)
 	
 	def reply_vid(self, vid_path, caption, as_html=False, **kwargs):
-		return send_message(self.chat_id, text, as_html=as_html,
+		return send_message(self.chat_id, caption, as_html=as_html,
 			file_path=vid_path, file_type="video", **kwargs)
 	
 	def is_debug_cmd(self):
