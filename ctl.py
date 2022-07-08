@@ -95,6 +95,13 @@ def start():
 
 def stop():
 	send("stop")
+	
+	for _ in range(20):
+		time.sleep(0.5)
+		if not is_alive():
+			return
+	
+	raise OSError("Failed to softly stop daemon process")
 
 def send(msg, **args):
 	conn = Client(DAEMON_ADDR, authkey=DAEMON_AUTHKEY)
