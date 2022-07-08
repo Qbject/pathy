@@ -18,7 +18,6 @@ class PathyDaemon():
 		self.last_updated_player = None
 		self.player_upd_errors = []
 		self.player_upd_err_streak = 0
-		self.last_player_upd = 0
 		
 		self.worker_thread = threading.Thread(
 			target=self.run_worker, daemon=True)
@@ -177,9 +176,6 @@ class PathyDaemon():
 				if self.player_upd_err_streak == 10:
 					log(f"Player updater persistent error detected, " \
 						"reporting suppressed", send_tg=True)
-			
-			finally:
-				self.last_player_upd = time.time()
 	
 	def handle_party_events(self, player):
 		for chat_id in player.state["chats"]:
@@ -235,7 +231,7 @@ class PathyDaemon():
 		
 		if _max and same_tasks >= _max:
 			log(f"Daemon worker queue limit reached for task " + 
-				task.__name__, send_tg=True)
+				task.__name__)
 			return
 		self.worker_tasks.append((task, args, kwargs))
 	
@@ -284,17 +280,6 @@ class PathyDaemon():
 		state_raw = json.dumps(self.state, indent="\t", default=_serialize)
 		util.write_file_with_retries(DAEMON_STATE,      state_raw)
 		util.write_file_with_retries(DAEMON_STATE_COPY, state_raw)
-	
-	def handle_tasks(self):
-		while len(self.worker_tasks.qsize):
-			try:
-				func, args, kwargs = self.worker_tasks.popleft()
-				func(*args, **kwargs)
-				self.save_state()
-			except Exception:
-				log(f"Daemon worker task execution error:" \
-					f"\n{traceback.format_exc()}",
-					err=True, send_tg=True)
 	
 	def iter_players(self, online=False, in_chat=None):
 		for player in self.state["tracked_players"]:
