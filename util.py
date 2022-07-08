@@ -210,14 +210,15 @@ def get_party_img(party_count):
 
 _interval_data = {}
 def cap_freq(tag, min_interval):
+	# supports parallel threads! (probably)
 	if not tag in _interval_data:
 		_interval_data[tag] = time.time()
 		return
 	
 	time_to_wait = min_interval - (time.time() - _interval_data[tag])
 	if time_to_wait > 0:
+		_interval_data[tag] = time.time() + time_to_wait
 		time.sleep(time_to_wait)
-	_interval_data[tag] = time.time()
 
 def get_state():
 	def _try_read(path):
