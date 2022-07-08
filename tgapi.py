@@ -49,19 +49,21 @@ def download_url_proxied(url, dest):
 
 def send_message(chat_id, text, as_html=False, filepath=None,
 		filetype="document", **params):
+	params[chat_id] = int(chat_id)
+	params["parse_mode"] = "HTML" if as_html else None
+	
 	if filepath:
 		method = f"send{util.ucfirst(filetype)}"
 		params[filetype.lower()] = "attach://file"
 		params["caption"] = text
+		
+		with open(filepath, "rb") as file:
+			return call(method, params, files={"file": file})
 	else:
 		method = "sendMessage"
 		params["text"] = text
-	
-	params[chat_id] = int(chat_id)
-	params["parse_mode"] = "HTML" if as_html else None
-	
-	with open(filepath, "rb") as file:
-		return call(method, params, files={"file": file})
+		
+		return call(method, params)
 
 class Update():
 	def __init__(self, update_data):
