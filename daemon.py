@@ -161,17 +161,8 @@ class PathyDaemon():
 			if not img: continue
 			caption = f"<i>{get_count_moniker(players_online)}</i>!"
 			
-			with img.open("rb") as imgfile:
-				sent_msg = tgapi.call(
-					"sendPhoto",
-					{
-						"chat_id": chat_id,
-						"photo": "attach://file",
-						"parse_mode": "HTML",
-						"caption": caption
-					},
-					files={"file": imgfile}
-				)
+			tgapi.send_message(chat_id, caption, as_html=True,
+				file_path=img, file_type="photo")
 			chat_state["last_party_msg_id"] = sent_msg.get("message_id")
 	
 	def get_chat_state(self, chat_id):
@@ -443,15 +434,8 @@ class PathyDaemon():
 		monday_img_id = "AgACAgIAAx0CTJBx5QADHWEiP2LrqUGngEIIOJ4BNUHmVk_" \
 		"4AAJntTEboQ8RSVxQerfln3yYAQADAgADeQADIAQ"
 		
-		tgapi.call(
-			"sendPhoto",
-			{
-				"chat_id": ASL_CHAT_ID,
-				"photo": monday_img_id,
-				"parse_mode": "HTML",
-				"disable_notification": True
-			}
-		)
+		tgapi.send_message(ASL_CHAT_ID, as_html=True,
+			file_id=monday_img_id, file_type="photo")
 	
 	def notify_new_videos(self):
 		if self.state.get("yt_news") == None:

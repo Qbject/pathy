@@ -32,12 +32,7 @@ def delete_msg(chat_id, msg_id):
 		return False
 
 def download_url_proxied(url, dest):
-	sent_msg = call("sendDocument",
-		{
-		"chat_id": DL_PROXY_CHAT_ID,
-		"document": url,
-		"caption": f"Caching {url}"
-		})
+	sent_msg = send_message(DL_PROXY_CHAT_ID, f"Caching {url}", file_url=url)
 	file_id = sent_msg["document"]["file_id"]
 	
 	tg_file = call("getFile", {"file_id": file_id})
@@ -47,22 +42,23 @@ def download_url_proxied(url, dest):
 	resp = requests.get(tg_url, allow_redirects=True)
 	open(dest, 'wb').write(resp.content)
 
-def send_message(chat_id, text, as_html=False, filepath=None,
-		filetype="document", **params):
+def send_message(chat_id, text, as_html=False, file_path=None,
+		file_id=None, file_url=None, file_type="document", **params):
 	params["chat_id"] = int(chat_id)
 	params["parse_mode"] = "HTML" if as_html else None
 	
-	if filepath:
-		method = f"send{util.ucfirst(filetype)}"
-		params[filetype.lower()] = "attach://file"
+	if file_path or file_id:
+		method = f"send{util.ucfirst(file_type)}"
+		params[file_type.lower()] = file_id or file_url or "attach://file"
 		params["caption"] = text
-		
-		with open(filepath, "rb") as file:
-			return call(method, params, files={"file": file})
 	else:
 		method = "sendMessage"
 		params["text"] = text
-		
+	
+	if file_path:
+		with open(file_path, "rb") as file:
+			return call(method, params, files={"file": file})
+	else:
 		return call(method, params)
 
 class Update():
@@ -100,11 +96,11 @@ class Update():
 	
 	def reply_img(self, img_path, caption, as_html=False, **kwargs):
 		return send_message(self.chat_id, text, as_html=as_html,
-			filepath=img_path, filetype="photo", **kwargs)
+			file_path=img_path, file_type="photo", **kwargs)
 	
 	def reply_vid(self, vid_path, caption, as_html=False, **kwargs):
 		return send_message(self.chat_id, text, as_html=as_html,
-			filepath=vid_path, filetype="video", **kwargs)
+			file_path=vid_path, file_type="video", **kwargs)
 	
 	def is_debug_cmd(self):
 		if not self.is_text_msg():
