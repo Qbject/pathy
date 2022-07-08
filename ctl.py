@@ -38,7 +38,7 @@ def entry(action, args={}, body_raw=b"", from_web=False):
 		
 		elif action == "stop":
 			stop()
-			return
+			return "STOPPED"
 		
 		elif action == "status":
 			ensure_running()
