@@ -147,8 +147,9 @@ class TrackedPlayer():
 			f"<i>{get_wish()}</i>"
 		
 		for chat_id, chat_state in self.state["chats"].items():
-			msg_id = self.notify_chat(
-				chat_id, sess_start_msg, as_html=True)
+			msg_id = self.notify_chat(chat_id, sess_start_msg, as_html=True,
+				disable_web_page_preview=True)
+			# disabling previews for some easter eggs to work
 			chat_state["sess_end_msg_id"] = None
 	
 	def on_offline(self):
@@ -167,7 +168,7 @@ class TrackedPlayer():
 		
 		for chat_id, chat_state in self.state["chats"].items():
 			msg_id = self.notify_chat(chat_id, sess_end_msg,
-				as_html=True, silent=True)
+				as_html=True, disable_notification=True)
 			chat_state["sess_end_msg_id"] = msg_id
 	
 	def on_banned(self):
@@ -195,21 +196,17 @@ class TrackedPlayer():
 			return
 		
 		wish = get_goodnight_wish(self.name)
-		self.notify_all_chats(wish, as_html=True, silent=True)
+		self.notify_all_chats(wish, as_html=True, disable_notification=True)
 		self.state["goodnight_at"] = None
 	
-	def notify_chat(self, chat_id, msg, as_html=False, silent=False):
-		sent_msg = tgapi.call("sendMessage", {
-			"chat_id": chat_id,
-			"text": msg,
-			"parse_mode": "HTML" if as_html else None,
-			"disable_notification": silent
-		})
+	def notify_chat(self, chat_id, msg, as_html=False, **kwargs):
+		sent_msg = tgapi.send_message(chat_id, msg,
+			as_html=as_html, **kwargs)
 		return sent_msg.get("message_id")
 	
-	def notify_all_chats(self, msg, as_html=False, silent=False):
+	def notify_all_chats(self, msg, as_html=False, **kwargs):
 		for chat_id, chat_state in self.state["chats"].items():
-			self.notify_chat(chat_id, msg, as_html, silent)
+			self.notify_chat(chat_id, msg, as_html, **kwargs)
 	
 	def get_last_online(self, before_moment):
 		for entry in self.timeline.iter(reverse=True):

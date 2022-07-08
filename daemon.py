@@ -472,8 +472,7 @@ class PathyDaemon():
 		vids_to_notify.reverse()
 		vids_to_notify = vids_to_notify[-3:]
 		for link in vids_to_notify:
-			tgapi.call(
-				"sendMessage", {"chat_id": ASL_CHAT_ID, "text": link})
+			tgapi.send_message(ASL_CHAT_ID, link)
 
 
 if __name__ == "__main__":

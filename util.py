@@ -21,11 +21,8 @@ def log(text, err=False, send_tg=False):
 	if send_tg:
 		msg_text = sanitize_html(log_entry)
 		try:
-			tgapi.call("sendMessage", {
-				"chat_id": DEBUG_CHAT_ID,
-				"text": "<pre>" + msg_text + "</pre>",
-				"parse_mode": "HTML"
-			})
+			tgapi.send_message(DEBUG_CHAT_ID, f"<pre>{msg_text}</pre>",
+				as_html=True)
 		except Exception:
 			print(f"Failed to send tg log:\n{traceback.format_exc()}")
 			print("(failed to log) " + log_entry)
@@ -230,6 +227,11 @@ def get_state():
 				err=True, send_tg=True)
 	
 	return _try_read(DAEMON_STATE) or _try_read(DAEMON_STATE_COPY) or {}
+
+def ucfirst(input_str):
+	if input_str:
+		return input_str[0].upper + input_str[1:]
+	return input_str
 
 def is_chat_whitelisted(chat_id):
 	whitelist = get_state().get("whitelisted_chats", [])

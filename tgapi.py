@@ -47,6 +47,22 @@ def download_url_proxied(url, dest):
 	resp = requests.get(tg_url, allow_redirects=True)
 	open(dest, 'wb').write(resp.content)
 
+def send_message(chat_id, text, as_html=False, filepath=None,
+		filetype="document", **params):
+	if filepath:
+		method = f"send{util.ucfirst(filetype)}"
+		params[filetype.lower()] = "attach://file"
+		params["caption"] = text
+	else:
+		method = "sendMessage"
+		params["text"] = text
+	
+	params[chat_id] = int(chat_id)
+	params["parse_mode"] = "HTML" if as_html else None
+	
+	with open(filepath, "rb") as file:
+		return call(method, params, files={"file": file})
+
 class Update():
 	def __init__(self, update_data):
 		self.data = update_data
@@ -78,45 +94,15 @@ class Update():
 		return "text" in self.data["message"]
 	
 	def reply(self, text, as_html=False, **kwargs):
-		return call(
-			"sendMessage",
-			{
-				"chat_id": self.chat_id,
-				"text": text,
-				"parse_mode": "HTML" if as_html else None,
-				**kwargs
-			}
-		)
+		return send_message(self.chat_id, text, as_html=as_html, **kwargs)
 	
 	def reply_img(self, img_path, caption, as_html=False, **kwargs):
-		img_path = Path(img_path)
-		with img_path.open("rb") as imgfile:
-			return call(
-				"sendPhoto",
-				{
-					"chat_id": self.chat_id,
-					"photo": "attach://file",
-					"caption": caption,
-					"parse_mode": "HTML" if as_html else None,
-					**kwargs
-				},
-				files={"file": imgfile}
-			)
+		return send_message(self.chat_id, text, as_html=as_html,
+			filepath=img_path, filetype="photo", **kwargs)
 	
 	def reply_vid(self, vid_path, caption, as_html=False, **kwargs):
-		vid_path = Path(vid_path)
-		with vid_path.open("rb") as vidfile:
-			return call(
-				"sendVideo",
-				{
-					"chat_id": self.chat_id,
-					"video": "attach://file",
-					"caption": caption,
-					"parse_mode": "HTML" if as_html else None,
-					**kwargs
-				},
-				files={"file": vidfile}
-			)
+		return send_message(self.chat_id, text, as_html=as_html,
+			filepath=vid_path, filetype="video", **kwargs)
 	
 	def is_debug_cmd(self):
 		if not self.is_text_msg():
