@@ -1,38 +1,40 @@
+from os import getenv, environ
 from pathlib import Path
+from dotenv import load_dotenv
 
-#TODO: move sensitive data to env
-PATHY_DIR = Path(__file__).parent
-ASSETS_DIR = PATHY_DIR / "assets"
-CACHE_DIR = PATHY_DIR / "data/cache"
-TIMELINE_DIR = PATHY_DIR / "data/timeline"
-LOGS_DIR = PATHY_DIR / "data/logs"
-ERROR_LOG = LOGS_DIR / "error.log"
-INFO_LOG = LOGS_DIR / "info.log"
+load_dotenv()
 
-DAEMON_ADDR = ("localhost", 6914)
-DAEMON_AUTHKEY = b"***REMOVED***"
+ROOT_DIR     = getenv("PATHY_ROOT_DIR")     or Path(__file__).parent
+ASSETS_DIR   = getenv("PATHY_ASSETS_DIR")   or ROOT_DIR / "assets"
+TIMELINE_DIR = getenv("PATHY_TIMELINE_DIR") or ROOT_DIR / "data/timeline"
+LOGS_DIR     = getenv("PATHY_LOGS_DIR")     or ROOT_DIR / "data/logs"
+ERROR_LOG    = getenv("PATHY_ERROR_LOG")    or LOGS_DIR / "error.log"
+INFO_LOG     = getenv("PATHY_INFO_LOG")     or LOGS_DIR / "info.log"
 
-DAEMON_STATE = PATHY_DIR / "data/state.json"
-DAEMON_STATE_COPY = PATHY_DIR / "data/state.copy.json"
-DAEMON_LOCKFILE = PATHY_DIR / "data/parent.lock"
+DAEMON_STATE      = getenv("PATHY_DAEMON_STATE")      or ROOT_DIR / "data/state.json"
+DAEMON_STATE_COPY = getenv("PATHY_DAEMON_STATE_COPY") or ROOT_DIR / "data/state.copy.json"
+DAEMON_LOCKFILE   = getenv("PATHY_DAEMON_LOCKFILE")   or ROOT_DIR / "data/parent.lock"
 
+DICT_ADJ             = getenv("PATHY_DICT_ADJ")             or ROOT_DIR / "dict/adj.txt"
+DICT_NOUN_V_NAZ      = getenv("PATHY_DICT_NOUN_V_NAZ")      or ROOT_DIR / "dict/noun_v_naz.txt"
+DICT_NOUN_V_ROD      = getenv("PATHY_DICT_NOUN_V_ROD")      or ROOT_DIR / "dict/noun_v_rod.txt"
+DICT_NOUN_V_NAZ_PLUR = getenv("PATHY_DICT_NOUN_V_NAZ_PLUR") or ROOT_DIR / "dict/noun_v_naz_plur.txt"
+DICT_NOUN_V_ROD_PLUR = getenv("PATHY_DICT_NOUN_V_ROD_PLUR") or ROOT_DIR / "dict/noun_v_rod_plur.txt"
+DICT_PREFIXES        = getenv("PATHY_DICT_PREFIXES")        or ROOT_DIR / "dict/prefixes.txt"
 
-BOT_TOKEN = "***REMOVED***"
-BOT_USERNAME = "***REMOVED***"
+DAEMON_PORT = int(getenv("PATHY_DAEMON_PORT", 6914))
+DAEMON_ADDR = ("localhost", DAEMON_PORT)
+DAEMON_AUTHKEY = bytes(environ["PATHY_DAEMON_AUTHKEY"], encoding="utf-8")
 
-WEBAPI_SECRET = "***REMOVED***"
+BOT_TOKEN    = environ["PATHY_BOT_TOKEN"]
+BOT_USERNAME = environ["PATHY_BOT_USERNAME"]
 
-DEBUG_CHAT_ID = ***REMOVED***
-ASL_CHAT_ID = ***REMOVED***
-DL_PROXY_CHAT_ID = ***REMOVED***
+WEBAPI_SECRET = environ["PATHY_WEBAPI_SECRET"]
+MOZAM_API_KEY = environ["PATHY_MOZAM_API_KEY"]
 
-MOZAM_API_KEY = "***REMOVED***"
+DEBUG_CHAT_ID    = int(environ["PATHY_DEBUG_CHAT_ID"])
+ASL_CHAT_ID      = int(environ["PATHY_ASL_CHAT_ID"])
+DL_PROXY_CHAT_ID = int(environ["PATHY_DL_PROXY_CHAT_ID"])
 
-DICT_ADJ = PATHY_DIR / "dict/adj.txt"
-DICT_NOUN_V_NAZ = PATHY_DIR / "dict/noun_v_naz.txt"
-DICT_NOUN_V_ROD = PATHY_DIR / "dict/noun_v_rod.txt"
-DICT_NOUN_V_NAZ_PLUR = PATHY_DIR / "dict/noun_v_naz_plur.txt"
-DICT_NOUN_V_ROD_PLUR = PATHY_DIR / "dict/noun_v_rod_plur.txt"
-DICT_PREFIXES = PATHY_DIR / "dict/prefixes.txt"
-
-SESS_MAX_BREAK = 30 * 60 # 30 min
+SESS_MAX_BREAK = int(getenv("PATHY_SESS_MAX_BREAK", 30 * 60)) # default 30 min
+MAINTAINANCE_MODE = bool(int(getenv("PATHY_MAINTAINANCE_MODE", 0)))

@@ -31,10 +31,9 @@ def log(text, err=False, send_tg=False):
 			print("(failed to log) " + log_entry)
 
 def git_pull():
-	pathy_dir = Path(__file__).parent
 	out = subprocess.check_output(["git", "pull"],
 		stderr=subprocess.STDOUT,
-		cwd=pathy_dir,
+		cwd=ROOT_DIR,
 		text=True
 	)
 	return out

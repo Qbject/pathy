@@ -83,8 +83,7 @@ def entry(action, args={}, body_raw=b"", from_web=False):
 		return "Failed to handle request"
 
 def start():
-	pathy_dir = Path(__file__).parent
-	daemon_file = pathy_dir / "daemon.py"
+	daemon_file = ROOT_DIR / "daemon.py"
 	subprocess.Popen(["python3", daemon_file, "start"])
 	
 	for _ in range(10):

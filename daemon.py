@@ -22,6 +22,8 @@ class PathyDaemon():
 			target=self.run_scheduler, daemon=True)
 	
 	def start(self):
+		if MAINTAINANCE_MODE:
+			raise RuntimeError("Daemon cannot be started during maintainance")
 		if self.started:
 			raise RuntimeError("Daemon object can be started only once")
 		self.started = True

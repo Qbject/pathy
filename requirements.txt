@@ -2,3 +2,4 @@ schedule
 requests
 PIL
 pytz
+python-dotenv
