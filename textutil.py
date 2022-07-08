@@ -79,7 +79,7 @@ goodnight_emoji = ["🥱", "🛌", "😴", "💤"]
 
 def get_goodnight_wish(player_name):
 	wish = f"Гуд найт, <b>{player_name}</b>\n"
-	wish += f"{get_adjectives(ending='их')} снів "
+	wish += f"<i>{get_adjectives(ending='их')} снів</i> "
 	wish += random.choice(goodnight_emoji)
 	return wish
 

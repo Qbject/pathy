@@ -95,7 +95,7 @@ def start():
 
 def stop():
 	send("stop")
-	
+	# TODO: check by pid
 	for _ in range(20):
 		time.sleep(0.5)
 		if not is_alive():

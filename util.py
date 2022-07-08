@@ -228,6 +228,10 @@ def get_state():
 	
 	return _try_read(DAEMON_STATE) or _try_read(DAEMON_STATE_COPY) or {}
 
+def equal_functions(fn1, fn2):
+	# methods are not comparable, so converting them to functions
+	return getattr(fn1, "__func__", fn1) == getattr(fn2, "__func__", fn2)
+
 def ucfirst(input_str):
 	if input_str:
 		return input_str[0].upper() + input_str[1:]

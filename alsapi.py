@@ -5,6 +5,8 @@ from const import *
 
 def _send_request(url, validate_fn=None, retries=3):
 	for attempt in range(retries):
+		util.cap_freq("als_api", 1)
+		
 		try:
 			resp = requests.get(url, headers={"Authorization": MOZAM_API_KEY})
 			

@@ -1,7 +1,8 @@
-import time, traceback, sys, json, threading, queue, random, schedule
+import time, traceback, sys, json, threading, random, schedule
 import util, alsapi, tgapi
 from pathlib import Path
 from multiprocessing.connection import Listener
+from collections import deque
 from util import log
 from const import *
 from pathylib import TrackedPlayer, format_map_rotation
@@ -12,9 +13,12 @@ class PathyDaemon():
 		self.started = False
 		self.state = None
 		self.stopping = False
-		self.worker_tasks = queue.Queue()
-		self.players_online_count = None
-		self.worker_cycle = 0
+		self.worker_tasks = deque()
+		
+		self.last_updated_player = None
+		self.player_upd_errors = []
+		self.player_upd_err_streak = 0
+		self.last_player_upd = 0
 		
 		self.worker_thread = threading.Thread(
 			target=self.run_worker, daemon=True)
@@ -80,16 +84,21 @@ class PathyDaemon():
 	def handle_cmd(self, msg, args):
 		if msg == "status":
 			return self.get_status()
-		elif msg == "setdelay":
+		
+		if msg == "setdelay":
 			self.state["player_fetch_delay"] = int(args.get("delay", 2))
-		elif msg == "tgupd":
+			return True
+		
+		if msg == "tgupd":
 			self.as_worker(self.handle_tg_upd, args.get("upd_body"))
 			return "DONE"
-		elif msg == "segments":
+		
+		if msg == "segments":
 			player = self.get_player_by_uid(args.get("uid", "1007161381428"))
 			sess_segs = player.get_last_sess().split_by_states()
 			return "\n--- --- ---\n".join([seg.format() for seg in sess_segs])
-		elif msg == "format_players":
+		
+		if msg == "format_players":
 			result = ""
 			for player in self.iter_players():
 				result += f"[{player.uid}]: {player.name}\n"
@@ -99,53 +108,78 @@ class PathyDaemon():
 					result += f"  [{chat_id}]: {chat_state.get('title')}\n"
 				result += "\n"
 			return f"<pre>{util.sanitize_html(result.strip())}</pre>"
-		elif msg == "whitelist":
+		
+		if msg == "whitelist":
 			added = self.whitelist_chat(args.get("chat_id"))
 			return "Added" if added else "Already whitelisted"
-		elif msg == "unwhitelist":
+		
+		if msg == "unwhitelist":
 			removed = self.unwhitelist_chat(args.get("chat_id"))
 			return "Removed" if removed else "Already unwhitelisted"
-		elif msg == "monikers":
+		
+		if msg == "monikers":
 			return "\n".join([get_moniker() for i in range(args.get("n", 5))])
+		
 		else:
 			return "UNKNOWN_MSG"
 	
 	def run_worker(self):
 		while True:
 			try:
-				if (self.worker_cycle % 2) == 0:
-					self.do_player_upd(self.worker_cycle / 2)
-				elif (self.worker_cycle % 2) == 1:
-					self.handle_cmds()
-				self.save_state()
-			except Exception:
+				if len(self.worker_tasks):
+					task, args, kwargs = self.worker_tasks.popleft()
+					task(*args, **kwargs)
+					self.save_state()
+			
+			except Exception as e:
 				log(f"Daemon worker error:\n{traceback.format_exc()}",
 					err=True, send_tg=True)
 			
-			if self.stopping:
-				break
-			
-			util.cap_freq("worker_cycle", 0.1)
-			self.worker_cycle += 1
+			finally:
+				if self.stopping:
+					break
+				
+				util.cap_freq("worker_cycle", 0.1)
 	
-	def do_player_upd(self, i):
-		util.cap_freq("player_upd", self.state.get("player_fetch_delay", 2))
-		
-		try:
-			# this approach is inconsistent if
-			# player list is updated in runtime
-			players_count = len(self.state["tracked_players"])
+	def do_player_upd(self):
+		players = self.state["tracked_players"]
+		if players:
+			# logic for ordered tracked player list updating. This approach
+			# is inconsistent if player list is updated in runtime
+			prev_player = self.last_updated_player
+			if prev_player in players:
+				idx = (players.index(prev_player) + 1) % len(players)
+				player = players[idx]
+			else:
+				player = players[0]
+			self.last_updated_player = player
 			
-			if players_count:
-				player_idx = int((i / 2) % players_count)
-				player = self.state["tracked_players"][player_idx]
+			try:
 				upd_resp = player.update()
 				if upd_resp["went_online"] or upd_resp["went_offline"]:
 					self.handle_party_events(player)
-		except Exception as e:
-			log(f"Player '{player.name}' update error, throttling\n" +
-				traceback.format_exc(), err=True, send_tg=True)
-			time.sleep(10)
+				
+				if self.player_upd_err_streak and \
+				self.player_upd_err_streak <= 10:
+					log(f"Player updater recovered after " \
+						f"{self.player_upd_err_streak} errors",
+						err=True, send_tg=True)
+					self.player_upd_errors = []
+					self.player_upd_err_streak = 0
+				
+			except Exception as e:
+				if e.args not in self.player_upd_errors:
+					self.player_upd_errors.append(e.args)
+				self.player_upd_err_streak += 1
+				log(f"Player '{player.name}' update error:\n" +
+					traceback.format_exc(), err=True, send_tg=True)
+				
+				if self.player_upd_err_streak == 10:
+					log(f"Player updater persistent error detected, " \
+						"reporting suppressed", send_tg=True)
+			
+			finally:
+				self.last_player_upd = time.time()
 	
 	def handle_party_events(self, player):
 		for chat_id in player.state["chats"]:
@@ -161,7 +195,7 @@ class PathyDaemon():
 			if not img: continue
 			caption = f"<i>{get_count_moniker(players_online)}</i>!"
 			
-			tgapi.send_message(chat_id, caption, as_html=True,
+			sent_msg = tgapi.send_message(chat_id, caption, as_html=True,
 				file_path=img, file_type="photo")
 			chat_state["last_party_msg_id"] = sent_msg.get("message_id")
 	
@@ -175,8 +209,7 @@ class PathyDaemon():
 		result += f"Головний потік: "
 		result += f"{'Живий' if True else '😵'}\n"
 		result += f"Робочий потік: "
-		result += f"{'Живий' if self.worker_thread.is_alive() else '😵'}"
-		result += f" (циклів: {self.worker_cycle})\n"
+		result += f"{'Живий' if self.worker_thread.is_alive() else '😵'}\n"
 		result += f"Потік планувальника: "
 		result += f"{'Живий' if self.scheduler_thread.is_alive() else '😵'}\n"
 		
@@ -194,8 +227,17 @@ class PathyDaemon():
 	def unlock(self):
 		self.lock_handle.close()
 	
-	def as_worker(self, func, *args, **kwargs):
-		self.worker_tasks.put((func, args, kwargs))
+	def as_worker(self, task, *args, _max=0, **kwargs):
+		same_tasks = 0
+		for added_task, _, _ in self.worker_tasks:
+			if util.equal_functions(added_task, task):
+				same_tasks += 1
+		
+		if _max and same_tasks >= _max:
+			log(f"Daemon worker queue limit reached for task " + 
+				task.__name__, send_tg=True)
+			return
+		self.worker_tasks.append((task, args, kwargs))
 	
 	def run_scheduler(self):
 		def _hour(hour):
@@ -203,15 +245,19 @@ class PathyDaemon():
 		
 		schedule.every().monday.at(f"{_hour(8)}:00").do(
 			self.as_worker, self.send_hate_monday_pic)
-		schedule.every().hour.at(f":05").do(
+		schedule.every().hour.at(":05").do(
 			self.as_worker, self.notify_new_videos)
+		
+		updater_interval = self.state.get("player_fetch_delay", 2)
+		schedule.every(updater_interval).seconds.do(
+			self.as_worker, self.do_player_upd, _max=1)
 		
 		while True:
 			try:
 				schedule.run_pending()
 			except Exception:
 				log(f"Failed to execute scheduled task:" \
-					f"\n{traceback.foemat_exc()}",
+					f"\n{traceback.format_exc()}",
 					err=True, send_tg=True)
 			time.sleep(1)
 	
@@ -239,13 +285,14 @@ class PathyDaemon():
 		util.write_file_with_retries(DAEMON_STATE,      state_raw)
 		util.write_file_with_retries(DAEMON_STATE_COPY, state_raw)
 	
-	def handle_cmds(self):
-		while self.worker_tasks.qsize():
+	def handle_tasks(self):
+		while len(self.worker_tasks.qsize):
 			try:
-				func, args, kwargs = self.worker_tasks.get()
+				func, args, kwargs = self.worker_tasks.popleft()
 				func(*args, **kwargs)
+				self.save_state()
 			except Exception:
-				log(f"Daemon worker task executing error:" \
+				log(f"Daemon worker task execution error:" \
 					f"\n{traceback.format_exc()}",
 					err=True, send_tg=True)
 	

@@ -28,7 +28,8 @@ def delete_msg(chat_id, msg_id):
 		})
 		return True
 	except TgBotApiError:
-		log(f"Failed to delete msg {chat_id}/{msg_id}", err=True, send_tg=True)
+		util.log(f"Failed to delete msg {chat_id}/{msg_id}",
+			err=True, send_tg=True)
 		return False
 
 def download_url_proxied(url, dest):
