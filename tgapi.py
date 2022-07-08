@@ -49,7 +49,7 @@ def download_url_proxied(url, dest):
 
 def send_message(chat_id, text, as_html=False, filepath=None,
 		filetype="document", **params):
-	params[chat_id] = int(chat_id)
+	params["chat_id"] = int(chat_id)
 	params["parse_mode"] = "HTML" if as_html else None
 	
 	if filepath:
