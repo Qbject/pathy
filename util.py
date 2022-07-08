@@ -230,7 +230,7 @@ def get_state():
 
 def ucfirst(input_str):
 	if input_str:
-		return input_str[0].upper + input_str[1:]
+		return input_str[0].upper() + input_str[1:]
 	return input_str
 
 def is_chat_whitelisted(chat_id):
