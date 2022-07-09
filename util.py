@@ -15,7 +15,7 @@ def log(text, err=False, send_tg=False):
 		logfile.write(log_entry + "\n")
 		logfile.close()
 	except Exception:
-		print(f"Failed to write to logfile:\n{traceback.format_exc()}")
+		print(f"Failed to write to logfile:\n{get_err()}")
 		print("(failed to log) " + log_entry)
 	
 	if send_tg:
@@ -24,7 +24,7 @@ def log(text, err=False, send_tg=False):
 			tgapi.send_message(DEBUG_CHAT_ID, f"<pre>{msg_text}</pre>",
 				as_html=True)
 		except Exception:
-			print(f"Failed to send tg log:\n{traceback.format_exc()}")
+			print(f"Failed to send tg log:\n{get_err()}")
 			print("(failed to log) " + log_entry)
 
 def git_pull():
@@ -223,7 +223,7 @@ def get_state():
 			state_raw = path.read_text(encoding="utf-8")
 			return json.loads(state_raw)
 		except (json.decoder.JSONDecodeError, FileNotFoundError):
-			log(f"Failed to read {path.name}:\n{traceback.format_exc()}",
+			log(f"Failed to read {path.name}:\n{get_err()}",
 				err=True, send_tg=True)
 	
 	return _try_read(DAEMON_STATE) or _try_read(DAEMON_STATE_COPY) or {}
@@ -236,6 +236,9 @@ def ucfirst(input_str):
 	if input_str:
 		return input_str[0].upper() + input_str[1:]
 	return input_str
+
+def get_err(): # shorter version of traceback.format_exc
+	return traceback.format_exc()
 
 def is_chat_whitelisted(chat_id):
 	whitelist = get_state().get("whitelisted_chats", [])

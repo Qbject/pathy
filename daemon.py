@@ -1,9 +1,9 @@
-import time, traceback, sys, json, threading, random, schedule
+import time, sys, json, threading, random, schedule
 import util, alsapi, tgapi
 from pathlib import Path
 from multiprocessing.connection import Listener
 from collections import deque
-from util import log
+from util import log, get_err
 from const import *
 from pathylib import TrackedPlayer, format_map_rotation
 from textutil import trans, fix_text_layout, get_moniker, get_count_moniker
@@ -28,7 +28,7 @@ class PathyDaemon():
 		if MAINTAINANCE_MODE:
 			raise RuntimeError("Daemon cannot be started during maintainance")
 		if self.started:
-			raise RuntimeError("Daemon object can be started only once")
+			raise RuntimeError("Daemon object can only be started once")
 		self.started = True
 		
 		log("Starting daemon")
@@ -77,7 +77,7 @@ class PathyDaemon():
 				conn.close()
 			except Exception:
 				log(f"Failed to handle daemon command:" \
-					f"\n{traceback.format_exc()}",
+					f"\n{get_err()}",
 					err=True, send_tg=True)
 	
 	def handle_cmd(self, msg, args):
@@ -131,7 +131,7 @@ class PathyDaemon():
 					self.save_state()
 			
 			except Exception as e:
-				log(f"Daemon worker error:\n{traceback.format_exc()}",
+				log(f"Daemon worker error:\n{get_err()}",
 					err=True, send_tg=True)
 			
 			finally:
@@ -171,7 +171,7 @@ class PathyDaemon():
 					self.player_upd_errors.append(e.args)
 				self.player_upd_err_streak += 1
 				log(f"Player '{player.name}' update error:\n" +
-					traceback.format_exc(), err=True, send_tg=True)
+					get_err(), err=True, send_tg=True)
 				
 				if self.player_upd_err_streak == 10:
 					log(f"Player updater persistent error detected, " \
@@ -253,7 +253,7 @@ class PathyDaemon():
 				schedule.run_pending()
 			except Exception:
 				log(f"Failed to execute scheduled task:" \
-					f"\n{traceback.format_exc()}",
+					f"\n{get_err()}",
 					err=True, send_tg=True)
 			time.sleep(1)
 	
@@ -476,7 +476,7 @@ class PathyDaemon():
 		vids_to_notify = []
 		vids = util.get_yt_videos("https://www.youtube.com/c/playapex/videos")
 		if not vids:
-			raise Exception("Videos list is empty")
+			raise ValueError("Video list is empty")
 		
 		for vid_url in vids:
 			if not vid_url == self.state["yt_news"].get("last_link"):
@@ -490,8 +490,90 @@ class PathyDaemon():
 		for link in vids_to_notify:
 			tgapi.send_message(ASL_CHAT_ID, link)
 
+class WorkerThread(threading.Thread):
+	def __init__(self, name=None):
+		super().__init__()
+		self.name = name
+		self._tasks = deque()
+		self._idle = threading.Lock()
+	
+	def run(self):
+		while True:
+			if self._tasks:
+				task = self._tasks.popleft()
+				
+				try:
+					if util.equal_functions( \
+					task["func"], self._stop_identifier):
+						break
+					
+					task["result"] = task["func"](
+						*task["args"], **task["kwargs"])
+					if task["callback"]:
+						task["callback"]()
+				
+				except Exception as e:
+					task["err"] = e
+					log(f"Worker '{self.name}' error:\n{get_err()}",
+						err=True, send_tg=True)
+				
+				finally:
+					if task["lock"]:
+						task["lock"].release()
+			else:
+				self._idle.acquire()
+				self._idle.acquire()
+				self._idle.release()
+		
+		print("dying")
+	
+	def do(self, func, *args, _sync=False, _max=0,
+			_then=None, _timeout=-1, **kwargs):
+		
+		if _max:
+			same_tasks = len(list(filter(
+				lambda task: util.equal_functions(task["func"], func),
+				self._tasks
+			)))
+			if same_tasks >= _max:
+				raise OverflowError(f"Daemon worker queue limit reached " \
+					f"for task {func.__name__}")
+		
+		task = {
+			"func": func,
+			"args": args,
+			"kwargs": kwargs,
+			"callback": _then,
+			"lock": None,
+			"result": None,
+			"err": None
+		}
+		
+		if _sync:
+			task["lock"] = threading.Lock()
+			task["lock"].acquire()
+		
+		self._tasks.append(task)
+		if self._idle.locked():
+			self._idle.release()
+		
+		if _sync:
+			if not task["lock"].acquire(timeout=_timeout):
+				raise TimeoutError
+			task["lock"].release()
+			if task["err"]: raise task["err"]
+			return task["result"]
+	
+	def stop(self, drop_pending=False, timeout=10):
+		if drop_pending:
+			self._tasks.clear()
+		self.do(self._stop, _sync=True, _timeout=timeout)
+	
+	def _stop_identifier(self):
+		pass
+
+
 
 if __name__ == "__main__":
-	if len(sys.argv) == 2 and sys.argv[1] == "start":
-		daemon = PathyDaemon()
-		daemon.start()
+	daemon = PathyDaemon()
+	daemon.start()

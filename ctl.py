@@ -1,9 +1,9 @@
-import time, traceback, sys, subprocess, json
+import time, sys, subprocess, json
 import util, tgapi
 from pathlib import Path
 from hashlib import md5
 from multiprocessing.connection import Client
-from util import log
+from util import log, get_err
 from const import *
 
 def check_web_action(web_action):
@@ -78,13 +78,13 @@ def entry(action, args={}, body_raw=b"", from_web=False):
 		
 	except Exception:
 		err_msg = f"Failed to execute action {action}:" \
-		f"\n{traceback.format_exc()}"
+		f"\n{get_err()}"
 		log(err_msg, err=True, send_tg=True)
 		return "Failed to handle request"
 
 def start():
 	daemon_file = ROOT_DIR / "daemon.py"
-	subprocess.Popen(["python3", daemon_file, "start"])
+	subprocess.Popen(["python3", daemon_file])
 	
 	for _ in range(10):
 		time.sleep(0.5)
@@ -128,7 +128,7 @@ def ensure_running():
 		start()
 	except Exception as e:
 		log(f"Detected daemon down for {downtime:.2f}s, " \
-			f"failed to restart:\n{traceback.format_exc()}",
+			f"failed to restart:\n{get_err()}",
 			err=True, send_tg=True)
 		raise e
 	

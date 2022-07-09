@@ -1,7 +1,7 @@
-import time, datetime, traceback, os
+import time, datetime, os
 import util, textutil, alsapi, tgapi
 from pathlib import Path
-from util import log, format_time
+from util import log, format_time, get_err
 from const import *
 from textutil import trans, get_wish, get_moniker, \
 	get_adjectives, get_goodnight_wish
@@ -705,7 +705,7 @@ class StoredTimeline(Timeline):
 					if line.strip(): # do not report empty lines
 						log(f"Skipping invalid entry in"
 							f" {self.path.name} timeline: '{line}'\n"
-							f"Traceback:\n{traceback.format_exc()}")
+							f"Traceback:\n{get_err()}")
 					continue
 				
 				yield entry

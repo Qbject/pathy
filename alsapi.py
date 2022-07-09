@@ -1,6 +1,6 @@
-import requests, time, traceback
+import requests, time
 import util
-from util import log
+from util import log, get_err
 from const import *
 
 def _send_request(url, validate_fn=None, retries=3):
@@ -22,7 +22,7 @@ def _send_request(url, validate_fn=None, retries=3):
 			return resp_data
 		except Exception as e:
 			log(f"Failed to retrieve ALS API data (attempt #{attempt+1}):\n" +
-				traceback.format_exc(), err=True)
+				get_err(), err=True)
 			time.sleep(1)
 			if (attempt + 1) == retries:
 				raise e
