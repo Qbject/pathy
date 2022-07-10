@@ -50,7 +50,7 @@ class PathyDaemon():
 			except TimeoutError:
 				log("Failed to gracefully stop fetch worker, killing")
 			
-			self.save_state
+			self.save_state()
 			self.unlock()
 		except Exception:
 			log(f"Daemon stopping error:\n{get_err()}", err=True)

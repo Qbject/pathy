@@ -1,31 +1,38 @@
-import time, traceback, subprocess, os, requests, json, pytz, datetime, random, re
+import time, traceback, subprocess, os, requests, json, pytz, datetime, \
+	random, re, threading
 import tgapi
 from pathlib import Path
 from const import *
 
+_info_log_lock  = threading.Lock()
+_error_log_lock = threading.Lock()
 def log(text, err=False, send_tg=False):
-	log_entry = f"{time.asctime()}: {text}"
-	log_entry = log_entry.replace("\n", "\n\t")
+	log_entry = f"{time.asctime()}: " + text.replace("\n", "\n\t")
 	
 	LOGS_DIR.mkdir(exist_ok=True)
-	
-	logfile = open(ERROR_LOG if err else INFO_LOG, "a", encoding="utf-8")
+	log_path = ERROR_LOG if err else INFO_LOG
+	lock = _error_log_lock if err else _info_log_lock
 	
 	try:
-		logfile.write(log_entry + "\n")
-		logfile.close()
+		with lock:
+			with open(log_path, "a", encoding="utf-8") as logfile:
+				logfile.write(log_entry + "\n")
+				logfile.close()
 	except Exception:
-		print(f"Failed to write to logfile:\n{get_err()}")
-		print("(failed to log) " + log_entry)
+		print(f"Failed to write to logfile:\n{log_entry}")
+		print(f"traceback: {get_err()}")
 	
 	if send_tg:
-		msg_text = sanitize_html(log_entry)
-		try:
-			tgapi.send_message(DEBUG_CHAT_ID, f"<pre>{msg_text}</pre>",
-				as_html=True)
-		except Exception:
-			print(f"Failed to send tg log:\n{get_err()}")
-			print("(failed to log) " + log_entry)
+		def report_async():
+			try:
+				tgapi.send_message(DEBUG_CHAT_ID, msg_text, as_html=True)
+			except Exception:
+				print(f"Failed to send tg log:\n{get_err()}")
+		
+		msg_text = f"<pre>{sanitize_html(log_entry)}</pre>"
+		thread = threading.Thread(name="tg_logger", target=report_async,
+			daemon=True)
+		thread.start()
 
 def git_pull():
 	out = subprocess.check_output(["git", "pull"],
