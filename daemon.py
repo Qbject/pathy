@@ -519,6 +519,10 @@ class WorkerThread(threading.Thread):
 				raise OverflowError(f"Daemon worker queue limit reached " \
 					f"for task with tag {task.tag}")
 		
+		if len(self._tasks) > 10:
+			log(f"WARN: Worker {self.name} queue size is {len(self._tasks)}",
+				send_tg=True)
+		
 		self._tasks.append(task)
 		if self._idle.locked():
 			self._idle.release()
