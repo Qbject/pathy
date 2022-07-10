@@ -23,15 +23,16 @@ def log(text, err=False, send_tg=False):
 		print(f"traceback: {get_err()}")
 	
 	if send_tg:
-		def report_async():
+		def report():
 			try:
 				tgapi.send_message(DEBUG_CHAT_ID, msg_text, as_html=True)
 			except Exception:
 				print(f"Failed to send tg log:\n{get_err()}")
 		
 		msg_text = f"<pre>{sanitize_html(log_entry)}</pre>"
-		thread = threading.Thread(name="tg_logger", target=report_async)
-		thread.start()
+		report()
+		#thread = threading.Thread(name="tg_logger", target=report)
+		#thread.start()
 
 def git_pull():
 	out = subprocess.check_output(["git", "pull"],
