@@ -12,16 +12,11 @@ class PathyDaemon():
 	def __init__(self):
 		self.started = False
 		self.state = None
-		self.stopping = False
-		self.worker_tasks = deque()
-		
 		self.last_updated_player = None
-		self.player_upd_errors = []
-		self.player_upd_err_streak = 0
 		
-		self.worker_thread = threading.Thread(
-			target=self.run_worker, daemon=True)
-		self.scheduler_thread = threading.Thread(
+		self.main_worker  = WorkerThread("main",  daemon=True)
+		self.fetch_worker = WorkerThread("fetch", daemon=True)
+		self.scheduler = threading.Thread(
 			target=self.run_scheduler, daemon=True)
 	
 	def start(self):
@@ -35,21 +30,32 @@ class PathyDaemon():
 		self.lock()
 		self.load_state()
 		
-		self.worker_thread.start()
-		self.scheduler_thread.start()
-		self.listen_msgs()
-		
-		# if we are here, softly stopping everything
-		log("Stopping daemon")
-		self.stopping = True
-		self.worker_thread.join(timeout=10)
-		if self.worker_thread.is_alive():
-			log("Failed to softly stop worker thread, killing")
-		else:
-			log("Worker thread stopped softly")
-		self.unlock()
+		self.main_worker.start()
+		self.fetch_worker.start()
+		self.scheduler.start()
+		self.run_listener()
 	
-	def listen_msgs(self):
+	def stop(self):
+		try:
+			log("Stopping daemon")
+			
+			try:
+				self.main_worker.stop(timeout=10)
+				log("Main worker stopped gracefully")
+			except TimeoutError:
+				log("Failed to gracefully stop main worker, killing")
+			try:
+				self.fetch_worker.stop(timeout=10)
+				log("Fetch worker stopped gracefully")
+			except TimeoutError:
+				log("Failed to gracefully stop fetch worker, killing")
+			
+			self.save_state
+			self.unlock()
+		except Exception:
+			log(f"Daemon stopping error:\n{get_err()}", err=True)
+	
+	def run_listener(self):
 		listener = Listener(DAEMON_ADDR, authkey=DAEMON_AUTHKEY)
 		
 		running = True
@@ -67,13 +73,8 @@ class PathyDaemon():
 						"Daemon: accepted connection but got no msg")
 				
 				msg, args = conn.recv()
-				if msg == "stop":
-					running = False
-					conn.send("STOPPING")
-					log("Stopping daemon")
-				else:
-					conn.send(self.handle_cmd(msg, args))
-				
+				if msg == "stop": running = False
+				conn.send(self.handle_cmd(msg, args))
 				conn.close()
 			except Exception:
 				log(f"Failed to handle daemon command:" \
@@ -81,6 +82,10 @@ class PathyDaemon():
 					err=True, send_tg=True)
 	
 	def handle_cmd(self, msg, args):
+		if msg == "stop":
+			self.stop()
+			return "STOPPED"
+		
 		if msg == "status":
 			return self.get_status()
 		
@@ -89,7 +94,7 @@ class PathyDaemon():
 			return True
 		
 		if msg == "tgupd":
-			self.as_worker(self.handle_tg_upd, args.get("upd_body"))
+			self.main_worker.task(self.handle_tg_upd).run(args.get("upd_body"))
 			return "DONE"
 		
 		if msg == "segments":
@@ -122,60 +127,47 @@ class PathyDaemon():
 		else:
 			return "UNKNOWN_MSG"
 	
-	def run_worker(self):
-		while True:
-			try:
-				if len(self.worker_tasks):
-					task, args, kwargs = self.worker_tasks.popleft()
-					task(*args, **kwargs)
-					self.save_state()
-			
-			except Exception as e:
-				log(f"Daemon worker error:\n{get_err()}",
-					err=True, send_tg=True)
-			
-			finally:
-				if self.stopping:
-					break
-				
-				util.cap_freq("worker_cycle", 0.1)
+	def _get_player_to_upd(self):
+		# This approach is inconsistent if player list is updated in runtime
+		players = self.state["tracked_players"]
+		if not players:
+			return
+		
+		if self.last_updated_player in players:
+			idx = (players.index(self.last_updated_player) + 1) % len(players)
+		else:
+			idx = 0
+		
+		self.last_updated_player = players[idx]
+		return players[idx]
 	
 	def do_player_upd(self):
-		players = self.state["tracked_players"]
-		if players:
-			# logic for ordered tracked player list updating. This approach
-			# is inconsistent if player list is updated in runtime
-			prev_player = self.last_updated_player
-			if prev_player in players:
-				idx = (players.index(prev_player) + 1) % len(players)
-				player = players[idx]
-			else:
-				player = players[0]
-			self.last_updated_player = player
-			
-			try:
-				upd_resp = player.update()
-				if upd_resp["went_online"] or upd_resp["went_offline"]:
-					self.handle_party_events(player)
-				
-				if self.player_upd_err_streak and \
-				self.player_upd_err_streak <= 10:
-					log(f"Player updater recovered after " \
-						f"{self.player_upd_err_streak} errors",
-						err=True, send_tg=True)
-					self.player_upd_errors = []
-					self.player_upd_err_streak = 0
-				
-			except Exception as e:
-				if e.args not in self.player_upd_errors:
-					self.player_upd_errors.append(e.args)
-				self.player_upd_err_streak += 1
-				log(f"Player '{player.name}' update error:\n" +
-					get_err(), err=True, send_tg=True)
-				
-				if self.player_upd_err_streak == 10:
-					log(f"Player updater persistent error detected, " \
-						"reporting suppressed", send_tg=True)
+		"""
+		Uses main worker to get player to update, then retrieves player
+		statistics from ALS API using fetch worker (to not to slow down main
+		worker with web requests), then runs update on retrieved data on
+		main worker
+		"""
+		player = self.main_worker.task(
+			self._get_player_to_upd, sync=True).run()
+		if not player: return
+		
+		def _fetch_step():
+			stat = alsapi.get_player_stat(player.uid)
+			self.main_worker.task(_update_step).run(stat)
+		
+		def _update_step(stat):
+			upd_resp = player.update(stat)
+			if upd_resp["went_online"] or upd_resp["went_offline"]:
+				self.handle_party_events(player)
+		
+		try:
+			self.fetch_worker.task(
+				_fetch_step, max=1, tag="stat_fetch").run()
+		except OverflowError:
+			pass
+		# fetch_thread = threading.Thread(target=_fetch_step, daemon=True)
+		# fetch_thread.start()
 	
 	def handle_party_events(self, player):
 		for chat_id in player.state["chats"]:
@@ -205,9 +197,11 @@ class PathyDaemon():
 		result += f"Головний потік: "
 		result += f"{'Живий' if True else '😵'}\n"
 		result += f"Робочий потік: "
-		result += f"{'Живий' if self.worker_thread.is_alive() else '😵'}\n"
+		result += f"{'Живий' if self.main_worker.is_alive() else '😵'}\n"
+		result += f"Потік отримання стати: "
+		result += f"{'Живий' if self.fetch_worker.is_alive() else '😵'}\n"
 		result += f"Потік планувальника: "
-		result += f"{'Живий' if self.scheduler_thread.is_alive() else '😵'}\n"
+		result += f"{'Живий' if self.scheduler.is_alive() else '😵'}\n"
 		
 		return result.strip()
 	
@@ -223,30 +217,19 @@ class PathyDaemon():
 	def unlock(self):
 		self.lock_handle.close()
 	
-	def as_worker(self, task, *args, _max=0, **kwargs):
-		same_tasks = 0
-		for added_task, _, _ in self.worker_tasks:
-			if util.equal_functions(added_task, task):
-				same_tasks += 1
-		
-		if _max and same_tasks >= _max:
-			log(f"Daemon worker queue limit reached for task " + 
-				task.__name__)
-			return
-		self.worker_tasks.append((task, args, kwargs))
-	
 	def run_scheduler(self):
 		def _hour(hour):
 			return str(hour - util.get_hours_offset()).zfill(2)
 		
 		schedule.every().monday.at(f"{_hour(8)}:00").do(
-			self.as_worker, self.send_hate_monday_pic)
+			lambda: self.main_worker.task(self.send_hate_monday_pic).run())
 		schedule.every().hour.at(":05").do(
-			self.as_worker, self.notify_new_videos)
+			lambda: self.main_worker.task(self.notify_new_videos).run())
 		
 		updater_interval = self.state.get("player_fetch_delay", 2)
-		schedule.every(updater_interval).seconds.do(
-			self.as_worker, self.do_player_upd, _max=1)
+		schedule.every(updater_interval).seconds.do(self.do_player_upd)
+		schedule.every(5).seconds.do(
+			lambda: self.main_worker.task(self.save_state).run())
 		
 		while True:
 			try:
@@ -491,8 +474,8 @@ class PathyDaemon():
 			tgapi.send_message(ASL_CHAT_ID, link)
 
 class WorkerThread(threading.Thread):
-	def __init__(self, name=None):
-		super().__init__()
+	def __init__(self, name=None, daemon=False):
+		super().__init__(daemon=daemon)
 		self.name = name
 		self._tasks = deque()
 		self._idle = threading.Lock()
@@ -503,75 +486,92 @@ class WorkerThread(threading.Thread):
 				task = self._tasks.popleft()
 				
 				try:
-					if util.equal_functions( \
-					task["func"], self._stop_identifier):
+					if util.equal_functions(task.func, self._stop_identifier):
 						break
 					
-					task["result"] = task["func"](
-						*task["args"], **task["kwargs"])
-					if task["callback"]:
-						task["callback"]()
+					task.result = task.func(*task.args, **task.kwargs)
+					if task.then: task.then()
 				
 				except Exception as e:
-					task["err"] = e
+					task.err = e
 					log(f"Worker '{self.name}' error:\n{get_err()}",
 						err=True, send_tg=True)
 				
 				finally:
-					if task["lock"]:
-						task["lock"].release()
+					if task.lock:
+						task.lock.release()
 			else:
 				self._idle.acquire()
 				self._idle.acquire()
 				self._idle.release()
-		
-		print("dying")
 	
-	def do(self, func, *args, _sync=False, _max=0,
-			_then=None, _timeout=-1, **kwargs):
-		
-		if _max:
+	def task(self, func, *args, **kwargs):
+		return WorkerTask(self, func, *args, **kwargs)
+	
+	def do_task(self, task):
+		if task.max:
 			same_tasks = len(list(filter(
-				lambda task: util.equal_functions(task["func"], func),
-				self._tasks
-			)))
-			if same_tasks >= _max:
+				lambda prev_task: prev_task.tag == task.tag, self._tasks)))
+			if same_tasks >= task.max:
 				raise OverflowError(f"Daemon worker queue limit reached " \
-					f"for task {func.__name__}")
-		
-		task = {
-			"func": func,
-			"args": args,
-			"kwargs": kwargs,
-			"callback": _then,
-			"lock": None,
-			"result": None,
-			"err": None
-		}
-		
-		if _sync:
-			task["lock"] = threading.Lock()
-			task["lock"].acquire()
+					f"for task with tag {task.tag}")
 		
 		self._tasks.append(task)
 		if self._idle.locked():
 			self._idle.release()
 		
-		if _sync:
-			if not task["lock"].acquire(timeout=_timeout):
+		if task.sync:
+			if not task.lock.acquire(timeout=task.timeout):
 				raise TimeoutError
-			task["lock"].release()
-			if task["err"]: raise task["err"]
-			return task["result"]
+			task.lock.release()
+			
+			if task.err: raise task.err
+			return task.result
 	
 	def stop(self, drop_pending=False, timeout=10):
 		if drop_pending:
 			self._tasks.clear()
-		self.do(self._stop, _sync=True, _timeout=timeout)
+		self.task(self._stop_identifier, sync=True, timeout=timeout).run()
 	
 	def _stop_identifier(self):
 		pass
 
+class WorkerTask():
+	def __init__(self, thread, func, sync=False,
+			max=0, tag=None, then=None, timeout=-1):
+		if max and not tag:
+			raise ValueError("Specifying tag is required if max is provided")
+		if (timeout > 0) and not sync:
+			raise ValueError("Timeout param is only applicable in sync mode")
+		
+		self.thread = thread
+		self.func = func
+		self.sync = sync
+		self.max = max
+		self.tag = tag
+		self.then = then
+		self.timeout = timeout
+		
+		self.invoked = False
+		self.result = None
+		self.err = None
+		
+		self.lock = None
+		if self.sync:
+			self.lock = threading.Lock()
+			self.lock.acquire()
+	
+	def run(self, *args, **kwargs):
+		if self.invoked:
+			raise RuntimeError("Worker task can be invoked only once")
+		self.invoked = True
+		
+		if not self.thread.is_alive():
+			raise RuntimeError(f"Worker thread {self.thread.name} is dead")
+		
+		self.args = args
+		self.kwargs = kwargs
+		return self.thread.do_task(self)
 
 
 if __name__ == "__main__":

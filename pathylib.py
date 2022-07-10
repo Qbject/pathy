@@ -84,12 +84,11 @@ class TrackedPlayer():
 			int(time.time()), "_", "moniker", self.moniker)
 		self.timeline.add_entry(moniker_entry)
 	
-	def update(self):
+	def update(self, stat):
 		upd_resp = {}
 		
 		self.handle_goodnights()
 		
-		stat = alsapi.get_player_stat(self.uid)
 		diff = self.timeline.consume_als_stat(stat)
 		self.read_timeline()
 		

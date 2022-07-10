@@ -37,8 +37,7 @@ def entry(action, args={}, body_raw=b"", from_web=False):
 			return
 		
 		elif action == "stop":
-			stop()
-			return "STOPPED"
+			return stop()
 		
 		elif action == "status":
 			ensure_running()
@@ -94,20 +93,14 @@ def start():
 	raise OSError("Daemon process started, but not responding")
 
 def stop():
-	send("stop")
-	# TODO: check by pid
-	for _ in range(20):
-		time.sleep(0.5)
-		if not is_alive():
-			return
-	
-	raise OSError("Failed to softly stop daemon process")
+	return send("stop", _timeout=20)
+	time.sleep(0.5) # process may need some additional time to fully terminate
 
-def send(msg, **args):
+def send(msg, _timeout=5, **args):
 	conn = Client(DAEMON_ADDR, authkey=DAEMON_AUTHKEY)
 	conn.send((msg, args))
 	
-	if not conn.poll(5):
+	if not conn.poll(_timeout):
 		try:
 			conn.send("timeout, closing")
 		except Exception:
