@@ -509,6 +509,9 @@ class WorkerThread(threading.Thread):
 		return WorkerTask(self, func, *args, **kwargs)
 	
 	def do_task(self, task):
+		if not self.is_alive():
+			raise RuntimeError(f"Worker thread {self.name} is dead")
+		
 		if task.max:
 			same_tasks = len(list(filter(
 				lambda prev_task: prev_task.tag == task.tag, self._tasks)))
@@ -565,9 +568,6 @@ class WorkerTask():
 		if self.invoked:
 			raise RuntimeError("Worker task can be invoked only once")
 		self.invoked = True
-		
-		if not self.thread.is_alive():
-			raise RuntimeError(f"Worker thread {self.thread.name} is dead")
 		
 		self.args = args
 		self.kwargs = kwargs
