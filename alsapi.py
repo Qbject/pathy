@@ -9,23 +9,17 @@ def _send_request(url, validate_fn=None, retries=3):
 		
 		try:
 			resp = requests.get(url, headers={"Authorization": MOZAM_API_KEY})
-			
-			try:
-				resp.raise_for_status()
-				resp_data = resp.json()
-				if validate_fn:
-					assert validate_fn(resp_data)
-			except Exception as e:
-				log(f"ALS API invalid resp:\n{resp.text}", err=True)
-				raise e
-			
+			resp.raise_for_status()
+			resp_data = resp.json()
+			if validate_fn:
+				assert validate_fn(resp_data)
 			return resp_data
+		
 		except Exception as e:
-			log(f"Failed to retrieve ALS API data (attempt #{attempt+1}):\n" +
-				get_err(), err=True)
-			time.sleep(1)
 			if (attempt + 1) == retries:
 				raise e
+			else:
+				time.sleep(1)
 
 def get_player_stat(player_uid):
 	url = f"https://api.mozambiquehe.re/bridge?version=5&platform=PC" \

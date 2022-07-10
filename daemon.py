@@ -13,6 +13,7 @@ class PathyDaemon():
 		self.started = False
 		self.state = None
 		self.last_updated_player = None
+		self.last_als_err_time = 0
 		
 		self.main_worker  = WorkerThread("main",  daemon=True)
 		self.fetch_worker = WorkerThread("fetch", daemon=True)
@@ -148,12 +149,22 @@ class PathyDaemon():
 		worker with web requests), then runs update on retrieved data on
 		main worker
 		"""
+		
+		throttle_cooldown = 30
+		if self.last_als_err_time + throttle_cooldown > time.time():
+			return # throttling in case of ALS API errors
+		
 		player = self.main_worker.task(
 			self._get_player_to_upd, sync=True).run()
 		if not player: return
 		
 		def _fetch_step():
-			stat = alsapi.get_player_stat(player.uid)
+			try:
+				stat = alsapi.get_player_stat(player.uid)
+			except Exception:
+				self.last_als_err_time = time.time()
+				log("Detected ALS API error, throttling")
+				raise
 			self.main_worker.task(_update_step).run(stat)
 		
 		def _update_step(stat):
