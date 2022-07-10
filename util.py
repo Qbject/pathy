@@ -30,8 +30,7 @@ def log(text, err=False, send_tg=False):
 				print(f"Failed to send tg log:\n{get_err()}")
 		
 		msg_text = f"<pre>{sanitize_html(log_entry)}</pre>"
-		thread = threading.Thread(name="tg_logger", target=report_async,
-			daemon=True)
+		thread = threading.Thread(name="tg_logger", target=report_async)
 		thread.start()
 
 def git_pull():
