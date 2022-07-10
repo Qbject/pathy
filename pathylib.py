@@ -393,8 +393,8 @@ class PathyDaemon():
 					player.format_status(), as_html=True)
 			
 			if not online_in_chat:
-				tumbleweed_vid = ASSETS_DIR / "tumbleweed.mkv"
-				upd.reply_vid(tumbleweed_vid, "Немає грунів :(")
+				tumbleweed_path = ASSETS_DIR / "tumbleweed.gif"
+				upd.reply_anim(tumbleweed_path, "Немає грунів :(")
 			return
 		
 		if bot_cmd == "/addplayer":

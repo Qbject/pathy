@@ -103,6 +103,10 @@ class Update():
 		return send_message(self.chat_id, caption, as_html=as_html,
 			file_path=vid_path, file_type="video", **kwargs)
 	
+	def reply_anim(self, anim_path, caption, as_html=False, **kwargs):
+		return send_message(self.chat_id, caption, as_html=as_html,
+			file_path=anim_path, file_type="animation", **kwargs)
+	
 	def is_debug_cmd(self):
 		if not self.is_text_msg():
 			return False
