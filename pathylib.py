@@ -1169,9 +1169,19 @@ class ConstantStateTimeline(Timeline):
 	
 	def format(self):
 		state = trans(self.get_state())
-		legend = trans("on_" + self.get_end_stat().get(("_", "legend")))
+		legend = trans("on_" + self.get_legend())
 		duration = format_time(self.get_duration())
 		return f"{state} на {legend} ({duration})"
+	
+	def get_legend(self):
+		legend = self.start_stat.get(("_", "legend"))
+		for ts in self.iter_timestamps():
+			if ts.timestamp == self.get_end():
+				break
+				# legend change at the state end belongs to the next state
+			legend = ts.get_value("legend") or legend
+		
+		return legend
 
 class MatchTimeline(ConstantStateTimeline):
 	def __init__(self, *args, **kwargs):
@@ -1236,11 +1246,7 @@ class MatchTimeline(ConstantStateTimeline):
 		return bool(self.result_stamp)
 	
 	def format(self):
-		state = trans(self.get_state())
-		legend = trans("on_" + self.get_legend())
-		duration = format_time(self.get_duration())
-		text = f"{state} на {legend} ({duration})\n"
-		
+		text = super().format() + "\n"
 		diff = self.get_diff()
 		
 		lvl_diff = diff.get(("_", "level"))
