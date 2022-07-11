@@ -22,6 +22,10 @@ DICT_NOUN_V_NAZ_PLUR = getenv("PATHY_DICT_NOUN_V_NAZ_PLUR") or ROOT_DIR / "dict/
 DICT_NOUN_V_ROD_PLUR = getenv("PATHY_DICT_NOUN_V_ROD_PLUR") or ROOT_DIR / "dict/noun_v_rod_plur.txt"
 DICT_PREFIXES        = getenv("PATHY_DICT_PREFIXES")        or ROOT_DIR / "dict/prefixes.txt"
 
+CACHE_DIR =      getenv("PATHY_CACHE_DIR")      or ROOT_DIR / "data/cache"
+FILE_IDS_CACHE = getenv("PATHY_FILE_IDS_CACHE") or CACHE_DIR / "file_ids.json"
+FILE_CACHE_DIR = getenv("PATHY_FILE_CACHE_DIR") or CACHE_DIR / "files"
+
 DAEMON_PORT = int(getenv("PATHY_DAEMON_PORT", 6914))
 DAEMON_ADDR = ("localhost", DAEMON_PORT)
 DAEMON_AUTHKEY = bytes(environ["PATHY_DAEMON_AUTHKEY"], encoding="utf-8")

@@ -1,5 +1,5 @@
 import requests, json, re
-import util
+import util, cache
 from pathlib import Path
 from const import *
 
@@ -32,23 +32,44 @@ def delete_msg(chat_id, msg_id):
 			err=True, send_tg=True)
 		return False
 
-def download_url_proxied(url, dest):
-	sent_msg = send_message(DL_PROXY_CHAT_ID, f"Caching {url}", file_url=url)
-	file_id = sent_msg["document"]["file_id"]
+def download_url_proxied(url, dest=None, use_cache=True):
+	file_bytes = cache.get_file(f"url:{url}")
+	if not use_cache or not file_bytes:
+		sent_msg = send_message(DL_PROXY_CHAT_ID,
+			f"Caching {url}", file_url=url)
+		file_id = sent_msg["document"]["file_id"]
+		
+		tg_file = call("getFile", {"file_id": file_id})
+		tg_url = f"https://api.telegram.org/file/bot" \
+			f"{BOT_TOKEN}/{tg_file['file_path']}"
+		
+		resp = requests.get(tg_url, allow_redirects=True)
+		file_bytes = resp.content
+		
+		if use_cache:
+			cache.add_file(f"url:{url}", file_bytes)
 	
-	tg_file = call("getFile", {"file_id": file_id})
-	tg_url = f"https://api.telegram.org/file/bot" \
-		f"{BOT_TOKEN}/{tg_file['file_path']}"
-	
-	resp = requests.get(tg_url, allow_redirects=True)
-	open(dest, 'wb').write(resp.content)
+	if not dest:
+		return file_bytes
+	Path(dest).write_bytes(file_bytes)
 
-def send_message(chat_id, text, as_html=False, file_path=None,
-		file_id=None, file_url=None, file_type="document", **params):
+def send_message(chat_id, text, as_html=False, file_path=None, file_id=None,
+		file_url=None, file_type="document", use_cache=True, **params):
+	
+	if len([p for p in [file_path, file_id, file_url] if p]) > 1:
+		raise ValueError("Only one of file_path, file_id, "
+			"file_url can be specified at the same time")
+	
+	if use_cache and any([file_path, file_url]):
+		key = str(Path(file_path).resolve()) if file_path else file_url
+		file_id = cache.get_file_id(key)
+		if file_id:
+			file_path = file_url = None
+	
 	params["chat_id"] = int(chat_id)
 	params["parse_mode"] = "HTML" if as_html else None
 	
-	if file_path or file_id:
+	if any([file_path, file_id, file_url]):
 		method = f"send{util.ucfirst(file_type)}"
 		params[file_type.lower()] = file_id or file_url or "attach://file"
 		params["caption"] = text
@@ -58,9 +79,29 @@ def send_message(chat_id, text, as_html=False, file_path=None,
 	
 	if file_path:
 		with open(file_path, "rb") as file:
-			return call(method, params, files={"file": file})
+			sent_msg = call(method, params, files={"file": file})
 	else:
-		return call(method, params)
+		sent_msg = call(method, params)
+	
+	if use_cache and any([file_path, file_url]):
+		file_id = _get_msg_file_id(sent_msg)
+		if file_id:
+			cache.add_file_id(key, file_id)
+	
+	return sent_msg
+
+def _get_msg_file_id(msg):
+	file_props = ("animation", "audio", "document", "photo", "sticker",
+		"video", "video_note", "voice")
+	
+	for prop in file_props:
+		attachment = msg.get(prop)
+		if not attachment:
+			continue
+		if isinstance(attachment, list):
+			attachment = attachment[-1] # for multiple PhotoSizes
+		return attachment.get("file_id")
+
 
 class Update():
 	def __init__(self, update_data):
