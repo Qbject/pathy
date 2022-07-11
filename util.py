@@ -27,12 +27,11 @@ def log(text, err=False, send_tg=False):
 			try:
 				tgapi.send_message(DEBUG_CHAT_ID, msg_text, as_html=True)
 			except Exception:
-				print(f"Failed to send tg log:\n{get_err()}")
+				log(f"Failed to send tg log:\n{text}\n{get_err()}",
+					err=True)
 		
 		msg_text = f"<pre>{sanitize_html(log_entry)}</pre>"
 		report()
-		#thread = threading.Thread(name="tg_logger", target=report)
-		#thread.start()
 
 def git_pull():
 	out = subprocess.check_output(["git", "pull"],
