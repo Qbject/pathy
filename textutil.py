@@ -219,7 +219,7 @@ translations = {
 	"kills_as_kill_leader": "Кіли як кіл лід",
 	"motherlode_captured": "Зажарені супостати",
 	"gunshield_damage_blocked": "Дамаг заблочений щитом",
-	"enemies_scanned": "Засканені вруги",
+	"enemies_scanned": "Засканена здобич",
 	"wins_season_8": "Віни в сезоні 8",
 	"kills_season_1": "Кіли в сезоні 1",
 	"doc_drone_healing": "Хп захілено дроном",
