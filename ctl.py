@@ -24,62 +24,31 @@ def entry(action, args={}, body_raw=b"", from_web=False):
 			return ensure_running()
 		
 		elif action == "get_web_endpoint":
-			action = args.get("action", "")
-			key = md5((WEBAPI_SECRET + action).encode("utf-8")).hexdigest()
-			return f"{key}/{action}"
+			return get_web_endpoint(args.get("action", ""))
 		
 		elif action == "processes":
-			return subprocess.check_output(["ps", "aux"],
-				stderr=subprocess.STDOUT, text=True)
+			return util.ps_aux()
 		
 		elif action == "start":
-			start()
-			return
+			return start()
 		
 		elif action == "stop":
 			return stop()
 		
-		elif action == "status":
-			ensure_running()
-			return send("status")
-		
 		elif action == "tgupdate":
-			handle_tg_upd(body_raw)
-			return
-		
-		elif action == "setdelay":
-			ensure_running()
-			send("setdelay", delay=args.get("delay", 1))
-			return
-		
-		elif action == "segments":
-			ensure_running()
-			return send("segments", **args)
-		
-		elif action == "players":
-			ensure_running()
-			return send("format_players")
-		
-		elif action == "whitelist":
-			ensure_running()
-			return send("whitelist", **args)
-		
-		elif action == "unwhitelist":
-			ensure_running()
-			return send("unwhitelist", **args)
-		
-		elif action == "monikers":
-			ensure_running()
-			return send("monikers", **args)
+			return handle_tg_upd(body_raw)
 		
 		else:
-			raise ValueError(f"Unknown Pathy ctl action: {action}")
+			ensure_running()
+			resp = send(action, **args)
+			if resp == "UNKNOWN_MSG":
+				raise ValueError(f"Unknown Pathy daemon action: {action}")
+			return resp
 		
 	except Exception:
-		err_msg = f"Failed to execute action {action}:" \
-		f"\n{get_err()}"
-		log(err_msg, err=True, send_tg=True)
-		return "Failed to handle request"
+		log(f"Failed to execute action {action}:\n{get_err()}",
+			err=True, send_tg=True)
+		return "Failed to handle action"
 
 def start():
 	daemon_file = ROOT_DIR / "daemon.py"
@@ -93,8 +62,9 @@ def start():
 	raise OSError("Daemon process started, but not responding")
 
 def stop():
-	return send("stop", _timeout=20)
-	time.sleep(0.5) # process may need some additional time to fully terminate
+	resp = send("stop", _timeout=20)
+	time.sleep(0.5) # process need some additional time to fully terminate
+	return resp
 
 def send(msg, _timeout=5, **args):
 	conn = Client(DAEMON_ADDR, authkey=DAEMON_AUTHKEY)
@@ -111,9 +81,13 @@ def send(msg, _timeout=5, **args):
 	conn.close()
 	return resp
 
+def get_web_endpoint(action):
+	key = md5((WEBAPI_SECRET + action).encode("utf-8")).hexdigest()
+	return f"{key}/{action}"
+
 def ensure_running():
 	if is_alive():
-		return True
+		return
 	
 	downtime = get_downtime()
 	
@@ -141,7 +115,7 @@ def get_downtime():
 	return time.time() - last_up
 
 def handle_tg_upd(body_raw):
-	"Handles commands that should not reach daemon"
+	"Handles updates that should not reach daemon"
 	upd = tgapi.Update.from_raw_body(body_raw)
 	
 	if upd.is_msg() and util.is_chat_whitelisted(upd.chat_id):
@@ -154,10 +128,10 @@ def handle_tg_upd(body_raw):
 		bot_cmd, bot_cmd_args = upd.parse_bot_command()
 		if bot_cmd == "/alive":
 			try:
-				result = send("status")
+				result = util.sanitize_html(send("status"))
 			except ConnectionRefusedError:
 				result = "😵"
-			upd.reply(util.sanitize_html(result), as_html=True)
+			upd.reply(f"<pre>{result}</pre>", as_html=True)
 			return
 	
 	ensure_running()

@@ -41,6 +41,10 @@ def git_pull():
 	)
 	return out
 
+def ps_aux():
+	return subprocess.check_output(["ps", "aux"],
+		stderr=subprocess.STDOUT, text=True)
+
 def write_file_with_retries(file_path, data, attempts=6, interval=0.5):
 	if type(data) == str:
 		data = data.encode("utf-8")

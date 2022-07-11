@@ -57,8 +57,10 @@ class PathyDaemon():
 			
 			self.save_state()
 			self.unlock()
+			return True
 		except Exception:
 			log(f"Daemon stopping error:\n{get_err()}", err=True)
+			return False
 	
 	def run_listener(self):
 		listener = Listener(DAEMON_ADDR, authkey=DAEMON_AUTHKEY)
@@ -87,8 +89,10 @@ class PathyDaemon():
 	
 	def handle_cmd(self, msg, args):
 		if msg == "stop":
-			self.stop()
-			return "STOPPED"
+			if self.stop():
+				return "STOPPED_GRACEFULLY"
+			else:
+				return "CRASH_STOPPED"
 		
 		if msg == "status":
 			return self.get_status()
@@ -106,7 +110,7 @@ class PathyDaemon():
 			sess_segs = player.get_last_sess().split_by_states()
 			return "\n--- --- ---\n".join([seg.format() for seg in sess_segs])
 		
-		if msg == "format_players":
+		if msg == "players":
 			result = ""
 			for player in self.iter_players():
 				result += f"[{player.uid}]: {player.name}\n"
