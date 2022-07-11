@@ -1209,6 +1209,8 @@ class MatchTimeline(ConstantStateTimeline):
 	def get_legend(self):
 		legend = self.start_stat.get(("_", "legend"))
 		for ts in self.iter_timestamps():
+			if ts.timestamp == self.get_end():
+				break # do not count legend change at the match end
 			legend = ts.get_value("legend") or legend
 		
 		return legend
