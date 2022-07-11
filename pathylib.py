@@ -162,15 +162,18 @@ class PathyDaemon():
 		if not player: return
 		
 		def _fetch_step():
+			if not self.is_running: return
 			try:
 				stat = alsapi.get_player_stat(player.uid)
 			except Exception:
 				self.last_als_err_time = time.time()
 				log("Detected ALS API error, throttling")
 				raise
+			if not self.is_running: return
 			self.main_worker.task(_update_step).run(stat)
 		
 		def _update_step(stat):
+			if not self.is_running: return
 			upd_resp = player.update(stat)
 			if upd_resp["went_online"] or upd_resp["went_offline"]:
 				self.handle_party_events(player)
@@ -235,24 +238,24 @@ class PathyDaemon():
 			return str(hour - util.get_hours_offset()).zfill(2)
 		
 		def send_monday_pic():
-			if self.is_running:
-				self.main_worker.task(self.send_hate_monday_pic).run()
+			if not self.is_running: return
+			self.main_worker.task(self.send_hate_monday_pic).run()
 		schedule.every().monday.at(f"{_hour(8)}:00").do(send_monday_pic)
 		
 		def notify_new_videos():
-			if self.is_running:
-				self.main_worker.task(self.notify_new_videos).run()
+			if not self.is_running: return
+			self.main_worker.task(self.notify_new_videos).run()
 		schedule.every().hour.at(":05").do(notify_new_videos)
 		
 		def upd_player():
-			if self.is_running:
-				self.do_player_upd()
+			if not self.is_running: return
+			self.do_player_upd()
 		updater_interval = self.state.get("player_fetch_delay", 2)
 		schedule.every(updater_interval).seconds.do(upd_player)
 		
 		def save_state():
-			if self.is_running:
-				self.main_worker.task(self.save_state).run()
+			if not self.is_running: return
+			self.main_worker.task(self.save_state).run()
 		schedule.every(5).seconds.do(save_state)
 		
 		while True:
