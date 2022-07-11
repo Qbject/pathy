@@ -15,6 +15,7 @@ class PathyDaemon():
 		self.state = None
 		self.last_updated_player = None
 		self.last_als_err_time = 0
+		self.is_running = False
 		
 		self.main_worker  = WorkerThread("main",  daemon=True)
 		self.fetch_worker = WorkerThread("fetch", daemon=True)
@@ -35,6 +36,8 @@ class PathyDaemon():
 		self.main_worker.start()
 		self.fetch_worker.start()
 		self.scheduler.start()
+		self.is_running = True
+		
 		self.run_listener()
 	
 	def stop(self):
@@ -60,8 +63,7 @@ class PathyDaemon():
 	def run_listener(self):
 		listener = Listener(DAEMON_ADDR, authkey=DAEMON_AUTHKEY)
 		
-		running = True
-		while running:
+		while self.is_running:
 			try:
 				# strictly 1 request and 1 response per each connection
 				conn = listener.accept()
@@ -75,7 +77,7 @@ class PathyDaemon():
 						"Daemon: accepted connection but got no msg")
 				
 				msg, args = conn.recv()
-				if msg == "stop": running = False
+				if msg == "stop": self.is_running = False
 				conn.send(self.handle_cmd(msg, args))
 				conn.close()
 			except Exception:
@@ -178,8 +180,6 @@ class PathyDaemon():
 				_fetch_step, max=1, tag="stat_fetch").run()
 		except OverflowError:
 			pass
-		# fetch_thread = threading.Thread(target=_fetch_step, daemon=True)
-		# fetch_thread.start()
 	
 	def handle_party_events(self, player):
 		for chat_id in player.state["chats"]:
@@ -234,15 +234,26 @@ class PathyDaemon():
 		def _hour(hour):
 			return str(hour - util.get_hours_offset()).zfill(2)
 		
-		schedule.every().monday.at(f"{_hour(8)}:00").do(
-			lambda: self.main_worker.task(self.send_hate_monday_pic).run())
-		schedule.every().hour.at(":05").do(
-			lambda: self.main_worker.task(self.notify_new_videos).run())
+		def send_monday_pic():
+			if self.is_running:
+				self.main_worker.task(self.send_hate_monday_pic).run()
+		schedule.every().monday.at(f"{_hour(8)}:00").do(send_monday_pic)
 		
+		def notify_new_videos():
+			if self.is_running:
+				self.main_worker.task(self.notify_new_videos).run()
+		schedule.every().hour.at(":05").do(notify_new_videos)
+		
+		def upd_player():
+			if self.is_running:
+				self.do_player_upd()
 		updater_interval = self.state.get("player_fetch_delay", 2)
-		schedule.every(updater_interval).seconds.do(self.do_player_upd)
-		schedule.every(5).seconds.do(
-			lambda: self.main_worker.task(self.save_state).run())
+		schedule.every(updater_interval).seconds.do(upd_player)
+		
+		def save_state():
+			if self.is_running:
+				self.main_worker.task(self.save_state).run()
+		schedule.every(5).seconds.do(save_state)
 		
 		while True:
 			try:
