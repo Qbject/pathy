@@ -191,7 +191,7 @@ def reverse_readline(path, buf_size=8192):
 		if segment is not None:
 			yield _line(segment)
 
-def get_legend_img(legend):
+def get_legend_file(legend):
 	default_img = ASSETS_DIR / "legend/default.jpg"
 	legend_dir = ASSETS_DIR / f"legend/{legend}"
 	if not (legend_dir.exists() and legend_dir.is_dir()):
@@ -202,6 +202,9 @@ def get_legend_img(legend):
 		return default_img
 	
 	return random.choice(legend_imgs)
+
+def is_image(img_path):
+	return img_path.suffix in (".png", ".jpg", ".jpeg", ".webp")
 
 def get_party_img(party_count):
 	if party_count < 2:

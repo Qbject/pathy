@@ -53,7 +53,7 @@ def download_url_proxied(url, dest=None, use_cache=True):
 		return file_bytes
 	Path(dest).write_bytes(file_bytes)
 
-def send_message(chat_id, text, as_html=False, file_path=None, file_id=None,
+def send_message(chat_id, text="", as_html=False, file_path=None, file_id=None,
 		file_url=None, file_type="document", use_cache=True, **params):
 	
 	if len([p for p in [file_path, file_id, file_url] if p]) > 1:
@@ -135,18 +135,6 @@ class Update():
 	
 	def reply(self, text, as_html=False, **kwargs):
 		return send_message(self.chat_id, text, as_html=as_html, **kwargs)
-	
-	def reply_img(self, img_path, caption, as_html=False, **kwargs):
-		return send_message(self.chat_id, caption, as_html=as_html,
-			file_path=img_path, file_type="photo", **kwargs)
-	
-	def reply_vid(self, vid_path, caption, as_html=False, **kwargs):
-		return send_message(self.chat_id, caption, as_html=as_html,
-			file_path=vid_path, file_type="video", **kwargs)
-	
-	def reply_anim(self, anim_path, caption, as_html=False, **kwargs):
-		return send_message(self.chat_id, caption, as_html=as_html,
-			file_path=anim_path, file_type="animation", **kwargs)
 	
 	def is_debug_cmd(self):
 		if not self.is_text_msg():

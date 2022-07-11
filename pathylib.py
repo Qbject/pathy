@@ -191,12 +191,13 @@ class PathyDaemon():
 			
 			players_online = len(list(self.iter_players(
 				online=True, in_chat=chat_id)))
-			img = util.get_party_img(players_online)
-			if not img: continue
+			pic = util.get_party_img(players_online)
+			if not pic: continue
 			caption = f"<i>{get_count_moniker(players_online)}</i>!"
 			
+			pic_type = "photo" if util.is_image(pic) else "animation"
 			sent_msg = tgapi.send_message(chat_id, caption, as_html=True,
-				file_path=img, file_type="photo")
+				file_path=pic, file_type=pic_type)
 			chat_state["last_party_msg_id"] = sent_msg.get("message_id")
 	
 	def get_chat_state(self, chat_id):
@@ -389,12 +390,16 @@ class PathyDaemon():
 			online_in_chat = 0
 			for player in self.iter_players(online=True, in_chat=upd.chat_id):
 				online_in_chat += 1
-				upd.reply_img(util.get_legend_img(player.legend), \
-					player.format_status(), as_html=True)
+				
+				pic = util.get_legend_file(player.legend)
+				pic_type = "photo" if util.is_image(pic) else "animation"
+				upd.reply(player.format_status(), as_html=True,
+					file_path=pic, file_type=pic_type)
 			
 			if not online_in_chat:
 				tumbleweed_path = ASSETS_DIR / "tumbleweed.gif"
-				upd.reply_anim(tumbleweed_path, "Немає грунів :(")
+				upd.reply("Немає грунів :(", file_path=tumbleweed_path,
+					file_type="animation")
 			return
 		
 		if bot_cmd == "/addplayer":
@@ -458,11 +463,10 @@ class PathyDaemon():
 			return
 	
 	def send_hate_monday_pic(self):
-		monday_img_id = "AgACAgIAAx0CTJBx5QADHWEiP2LrqUGngEIIOJ4BNUHmVk_" \
-		"4AAJntTEboQ8RSVxQerfln3yYAQADAgADeQADIAQ"
+		ihatemondays_path = ASSETS_DIR / "ihatemondays.jpg"
 		
 		tgapi.send_message(ASL_CHAT_ID, as_html=True,
-			file_id=monday_img_id, file_type="photo")
+			file_path=ihatemondays_path, file_type="photo")
 	
 	def notify_new_videos(self):
 		if self.state.get("yt_news") == None:
