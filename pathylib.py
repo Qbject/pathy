@@ -1235,8 +1235,12 @@ class MatchTimeline(ConstantStateTimeline):
 		# False if match didn't increased level (usually firing range)
 		return bool(self.result_stamp)
 	
-	def format(self, *args, **kwargs):
-		text = super().format(*args, **kwargs) + "\n"
+	def format(self):
+		state = trans(self.get_state())
+		legend = trans("on_" + self.get_legend())
+		duration = format_time(self.get_duration())
+		text = f"{state} на {legend} ({duration})\n"
+		
 		diff = self.get_diff()
 		
 		lvl_diff = diff.get(("_", "level"))
