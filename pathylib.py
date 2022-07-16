@@ -1,5 +1,5 @@
-import time, datetime, json, threading, schedule
-import util, textutil, alsapi, tgapi
+import time, datetime, json, threading, schedule, io
+import util, textutil, alsapi, tgapi, cache
 from pathlib import Path
 from multiprocessing.connection import Listener
 from collections import deque
@@ -446,6 +446,12 @@ class PathyDaemon():
 			chat_state["delplayer_msg_id"] = sent_msg.get("message_id")
 			chat_state["delplayer_initiator"] = upd.from_id
 			return
+		
+		if bot_cmd == "/crafting":
+			crafting = CraftingRotation.get_current()
+			img_bytes = crafting.get_img()
+			text = crafting.format()
+			upd.reply(text, file_bytes=img_bytes, file_type="photo")
 		
 		reply_to_id = upd.reply_to["message_id"] if upd.reply_to else None
 		if reply_to_id and (reply_to_id == chat_state.get("addplayer_msg_id")):
@@ -1447,6 +1453,69 @@ class PlayerRank():
 			return None
 		
 		return cls(*args, mode)
+
+class CraftingRotation():
+	def __init__(self, data):
+		self.data = data
+		self.skip_bundles = ["ammo", "evo", "health_pickup", "shield_pickup",
+			"weapon_one", "weapon_two"]
+	
+	@classmethod
+	def get_current(cls):
+		cur_rotation = alsapi.get_craft_rotation()
+		return cls(cur_rotation)
+	
+	def get_img(self):
+		part_urls = []
+		parts = []
+		for bundle in self.data:
+			if bundle["bundle"] in self.skip_bundles:
+				continue
+			
+			for item in bundle.get("bundleContent") or []:
+				if not item.get("itemType"):
+					continue
+				
+				if item["itemType"].get("asset"):
+					url = item["itemType"]["asset"]
+					part_urls.append(url)
+					parts.append(tgapi.download_url_proxied(url))
+		
+		if not parts:
+			return
+		
+		cache_key = "crafting:" + "+".join(part_urls)
+		img_bytes = cache.get_file(cache_key)
+		if not img_bytes:
+			img_bytes = util.combine_imgs(parts, margin=2)
+			cache.add_file(cache_key, img_bytes)
+		
+		return img_bytes
+	
+	def format(self):
+		result = "<b>В реплікаторах зараз:</b>\n"
+		now = int(time.time())
+		
+		for bundle in self.data:
+			if bundle["bundle"] in self.skip_bundles:
+				continue
+			
+			for item in bundle.get("bundleContent") or []:
+				if not item.get("itemType"):
+					continue
+				
+				cost = item["cost"]
+				name = trans(item["itemType"]["name"])
+				if bundle.get("end"):
+					seconds_left = bundle["end"] - now
+					time_left = format_time(seconds_left)
+				else:
+					time_left = "∞"
+				
+				result += f"<b>[{cost}] {name}</b> "
+				result += f"<i>(буде ще {time_left})</i>\n"
+		
+		return result.strip()
 
 def format_map(mode_name, mapinfo):
 	cur_map  = trans(mapinfo["current"]["map"])

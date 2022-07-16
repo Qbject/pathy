@@ -1,7 +1,8 @@
 import time, traceback, subprocess, os, requests, json, pytz, datetime, \
-	random, re, threading
+	random, re, threading, io
 import tgapi
 from pathlib import Path
+from PIL import Image
 from const import *
 
 _info_log_lock  = threading.Lock()
@@ -275,3 +276,31 @@ def list_replace(lst, repl_from, repl_to):
 	for i, el in enumerate(lst):
 		if el == repl_from:
 			lst[i] = repl_to
+
+def resize_img_to_height(img, height):
+	resize_ratio = height / img.height
+	result_width  = int(img.width * resize_ratio)
+	result_height = int(img.height * resize_ratio)
+	return img.resize((result_width, result_height))
+
+def combine_imgs(imgs_bytes, margin=2):
+	width = margin * (len(imgs_bytes) - 1) # sum of all margins
+	height = 100
+	
+	parts = []
+	for url in imgs_bytes:
+		part_bytes = tgapi.download_url_proxied(url)
+		part_img = Image.open(io.BytesIO(part_bytes))
+		part_img = resize_img_to_height(part_img, height)
+		parts.append(part_img)
+		width += part_img.width
+	
+	result_img = Image.new("RGB", (width, height))
+	for i, part_img in enumerate(parts):
+		left = i * (part_img.width + margin)
+		top = 0
+		result_img.paste(part_img, (left, top))
+	
+	img_bytesio = io.BytesIO()
+	result_img.save(img_bytesio, "jpeg")
+	return img_bytesio.getvalue()

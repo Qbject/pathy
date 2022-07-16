@@ -1,4 +1,4 @@
-import requests, json, re
+import requests, json, re, io
 import util, cache
 from pathlib import Path
 from const import *
@@ -36,7 +36,7 @@ def download_url_proxied(url, dest=None, use_cache=True):
 	file_bytes = cache.get_file(f"url:{url}")
 	if not use_cache or not file_bytes:
 		sent_msg = send_message(DL_PROXY_CHAT_ID,
-			f"Caching {url}", file_url=url)
+			f"Downloading {url}", file_url=url)
 		file_id = sent_msg["document"]["file_id"]
 		
 		tg_file = call("getFile", {"file_id": file_id})
@@ -54,36 +54,45 @@ def download_url_proxied(url, dest=None, use_cache=True):
 	Path(dest).write_bytes(file_bytes)
 
 def send_message(chat_id, text="", as_html=False, file_path=None, file_id=None,
-		file_url=None, file_type="document", use_cache=True, **params):
+		file_url=None, file_bytes=None, file_type="document", use_cache=True,
+		**params):
 	
-	if len([p for p in [file_path, file_id, file_url] if p]) > 1:
+	if len([p for p in [file_path, file_id, file_url, file_bytes] if p]) > 1:
 		raise ValueError("Only one of file_path, file_id, "
 			"file_url can be specified at the same time")
 	
-	if use_cache and any([file_path, file_url]):
-		key = str(Path(file_path).resolve()) if file_path else file_url
+	if use_cache and any([file_path, file_url, file_bytes]):
+		key = str(Path(file_path).resolve()) if file_path else \
+			file_url or file_bytes
 		file_id = cache.get_file_id(key)
 		if file_id:
-			file_path = file_url = None
+			file_path = file_url = file_bytes = None
 	
 	params["chat_id"] = int(chat_id)
 	params["parse_mode"] = "HTML" if as_html else None
 	
-	if any([file_path, file_id, file_url]):
+	if any([file_path, file_id, file_url, file_bytes]):
 		method = f"send{util.ucfirst(file_type)}"
-		params[file_type.lower()] = file_id or file_url or "attach://file"
 		params["caption"] = text
+		if file_path or file_bytes:
+			params[file_type.lower()] = "attach://file"
+		else:
+			params[file_type.lower()] = file_id or file_url
 	else:
 		method = "sendMessage"
 		params["text"] = text
 	
-	if file_path:
-		with open(file_path, "rb") as file:
-			sent_msg = call(method, params, files={"file": file})
+	if file_path or file_bytes:
+		if file_path:
+			with open(file_path, "rb") as file:
+				sent_msg = call(method, params, files={"file": file})
+		else:
+			sent_msg = call(method, params,
+				files={"file": io.BytesIO(file_bytes)})
 	else:
 		sent_msg = call(method, params)
 	
-	if use_cache and any([file_path, file_url]):
+	if use_cache and any([file_path, file_url, file_bytes]):
 		file_id = _get_msg_file_id(sent_msg)
 		if file_id:
 			cache.add_file_id(key, file_id)
