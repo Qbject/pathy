@@ -288,8 +288,7 @@ def combine_imgs(imgs_bytes, margin=2):
 	height = 100
 	
 	parts = []
-	for url in imgs_bytes:
-		part_bytes = tgapi.download_url_proxied(url)
+	for part_bytes in imgs_bytes:
 		part_img = Image.open(io.BytesIO(part_bytes))
 		part_img = resize_img_to_height(part_img, height)
 		parts.append(part_img)
