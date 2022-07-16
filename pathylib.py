@@ -246,11 +246,6 @@ class PathyDaemon():
 			self.main_worker.task(self.send_hate_monday_pic).run()
 		schedule.every().monday.at(f"{_hour(8)}:00").do(send_monday_pic)
 		
-		def notify_new_videos():
-			if not self.is_running: return
-			self.main_worker.task(self.notify_new_videos).run()
-		schedule.every().hour.at(":05").do(notify_new_videos)
-		
 		def upd_player():
 			if not self.is_running: return
 			self.do_player_upd()
@@ -492,27 +487,6 @@ class PathyDaemon():
 		
 		tgapi.send_message(ASL_CHAT_ID, as_html=True,
 			file_path=ihatemondays_path, file_type="photo")
-	
-	def notify_new_videos(self):
-		if self.state.get("yt_news") == None:
-			self.state["yt_news"] = {}
-		
-		vids_to_notify = []
-		vids = util.get_yt_videos("https://www.youtube.com/c/playapex/videos")
-		if not vids:
-			raise ValueError("Video list is empty")
-		
-		for vid_url in vids:
-			if not vid_url == self.state["yt_news"].get("last_link"):
-				vids_to_notify.append(vid_url)
-			else:
-				break
-		self.state["yt_news"]["last_link"] = vids[0]
-		
-		vids_to_notify.reverse()
-		vids_to_notify = vids_to_notify[-3:]
-		for link in vids_to_notify:
-			tgapi.send_message(ASL_CHAT_ID, link)
 
 class WorkerThread(threading.Thread):
 	def __init__(self, name=None, daemon=False):
