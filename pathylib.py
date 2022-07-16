@@ -447,11 +447,12 @@ class PathyDaemon():
 			chat_state["delplayer_initiator"] = upd.from_id
 			return
 		
-		if bot_cmd == "/craft":
+		if bot_cmd == "/crafting":
 			crafting = CraftingRotation.get_current()
 			img_bytes = crafting.get_img()
 			text = crafting.format()
-			upd.reply(text, file_bytes=img_bytes, file_type="photo")
+			upd.reply(text, file_bytes=img_bytes, file_type="photo",
+				as_html=True)
 		
 		reply_to_id = upd.reply_to["message_id"] if upd.reply_to else None
 		if reply_to_id and (reply_to_id == chat_state.get("addplayer_msg_id")):
