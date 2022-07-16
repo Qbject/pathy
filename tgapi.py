@@ -62,8 +62,12 @@ def send_message(chat_id, text="", as_html=False, file_path=None, file_id=None,
 			"file_url can be specified at the same time")
 	
 	if use_cache and any([file_path, file_url, file_bytes]):
-		key = str(Path(file_path).resolve()) if file_path else \
-			file_url or file_bytes
+		key = file_url
+		if file_path:
+			key = str(Path(file_path).resolve())
+		elif file_bytes:
+			key = str(file_bytes) # TODO: refactor
+		
 		file_id = cache.get_file_id(key)
 		if file_id:
 			file_path = file_url = file_bytes = None

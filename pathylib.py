@@ -447,7 +447,7 @@ class PathyDaemon():
 			chat_state["delplayer_initiator"] = upd.from_id
 			return
 		
-		if bot_cmd == "/crafting":
+		if bot_cmd == "/craft":
 			crafting = CraftingRotation.get_current()
 			img_bytes = crafting.get_img()
 			text = crafting.format()
