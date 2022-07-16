@@ -59,7 +59,7 @@ def send_message(chat_id, text="", as_html=False, file_path=None, file_id=None,
 	
 	if len([p for p in [file_path, file_id, file_url, file_bytes] if p]) > 1:
 		raise ValueError("Only one of file_path, file_id, "
-			"file_url can be specified at the same time")
+			"file_url, file_bytes can be specified at the same time")
 	
 	if use_cache and any([file_path, file_url, file_bytes]):
 		key = file_url
