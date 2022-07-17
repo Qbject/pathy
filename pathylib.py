@@ -699,10 +699,10 @@ class TrackedPlayer():
 		if   upd_resp["got_banned"]:   self.on_banned()
 		elif upd_resp["got_unbanned"]: self.on_unbanned()
 		
-		if ("_", "br_rank_div") in diff or ("_", "br_rank_name") in diff:
-			self.on_rank_change(diff, "br")
-		if ("_", "ar_rank_div") in diff or ("_", "ar_rank_name") in diff:
-			self.on_rank_change(diff, "ar")
+		#if ("_", "br_rank_div") in diff or ("_", "br_rank_name") in diff:
+		self.on_rank_change(diff, "br")
+		#if ("_", "ar_rank_div") in diff or ("_", "ar_rank_name") in diff:
+		self.on_rank_change(diff, "ar")
 		
 		return upd_resp
 	
@@ -787,7 +787,7 @@ class TrackedPlayer():
 		in_mode = {"br": "в БР", "ar": "на Аренах"}[mode]
 		
 		msg = f"<b>{self.name}</b> {progressed} " \
-			f"<i>{cur_rank.format()}</i> {in_mode}"
+			f"<i>{cur_rank.format(detailed=False)}</i> {in_mode}"
 		self.notify_all_chats(msg, as_html=True)
 	
 	def handle_goodnights(self):
@@ -1399,14 +1399,7 @@ class PlayerRank():
 		self.rank_name = rank_name
 		self.mode = mode
 	
-	def format(self):
-		points_name = "RP" if self.mode == "br" else "AP"
-		
-		if self.rank_name == "Apex Predator":
-			return f"{trans(self.rank_name)} #{self.top_pos}"
-		if self.rank_name == "Master":
-			return f"{trans(self.rank_name)} ({self.score}{points_name})"
-		
+	def format(self, detailed=True):
 		rank_div_scores = {
 			"br": [
 				0, 250, 500, 750,
@@ -1426,10 +1419,24 @@ class PlayerRank():
 				8000
 			]
 		}
+		points_name = "RP" if self.mode == "br" else "AP"
 		
-		next_percentage = util.calc_mid_percentage(
-			self.score, rank_div_scores[self.mode])
-		return f"{trans(self.rank_name)} {self.div} ({next_percentage}%)"
+		result = f"{trans(self.rank_name)}"
+		if self.rank_name not in ("Apex Predator", "Master", "Unranked"):
+			result += f" {self.div}"
+		if not detailed:
+			return result
+		
+		if self.rank_name == "Apex Predator":
+			result += f" #{self.top_pos}"
+		elif self.rank_name == "Master":
+			result += f" ({self.score}{points_name})"
+		else:
+			next_percentage = util.calc_mid_percentage(
+				self.score, rank_div_scores[self.mode])
+			result += f" ({next_percentage}%)"
+		
+		return result
 	
 	def get_value(self):
 		# used for comparison
