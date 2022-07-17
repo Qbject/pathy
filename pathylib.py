@@ -696,10 +696,13 @@ class TrackedPlayer():
 			else:
 				upd_resp["got_unbanned"] = True
 		
-		if upd_resp["got_banned"]:
-			self.on_banned()
-		elif upd_resp["got_unbanned"]:
-			self.on_unbanned()
+		if   upd_resp["got_banned"]:   self.on_banned()
+		elif upd_resp["got_unbanned"]: self.on_unbanned()
+		
+		if ("_", "br_rank_div") in diff or ("_", "br_rank_name") in diff:
+			self.on_rank_change(diff, "br")
+		if ("_", "ar_rank_div") in diff or ("_", "ar_rank_name") in diff:
+			self.on_rank_change(diff, "ar")
 		
 		return upd_resp
 	
@@ -771,6 +774,21 @@ class TrackedPlayer():
 	def on_unbanned(self):
 		notification = f"У <b>{self.name}</b> нарешті спав банан :)"
 		self.notify_all_chats(notification, as_html=True)
+	
+	def on_rank_change(self, diff, mode):
+		cur_stat = self.timeline.get_end_stat()
+		cur_rank  = PlayerRank.from_stat(cur_stat, mode=mode)
+		prev_rank = PlayerRank.from_stat(cur_stat, mode=mode)
+		prev_rank.read_diff(diff, mode=mode)
+		
+		progressed = "упав на"
+		if cur_rank.get_value() > prev_rank.get_value():
+			progressed = "апнув"
+		in_mode = {"br": "в БР", "ar": "на Аренах"}[mode]
+		
+		msg = f"<b>{self.name}</b> {progressed} " \
+			f"<i>{cur_rank.format()}</i> {in_mode}"
+		self.notify_all_chats(msg, as_html=True)
 	
 	def handle_goodnights(self):
 		wish_at = self.state.get("goodnight_at")
@@ -1412,6 +1430,28 @@ class PlayerRank():
 		next_percentage = util.calc_mid_percentage(
 			self.score, rank_div_scores[self.mode])
 		return f"{trans(self.rank_name)} {self.div} ({next_percentage}%)"
+	
+	def get_value(self):
+		# used for comparison
+		# TODO: < >
+		ranks = ("Unranked", "Rookie", "Bronze", "Silver", "Gold", "Platinum",
+			"Diamond", "Master", "Apex Predator")
+		return ranks.index(self.rank_name) + (4 - self.div) / 4
+	
+	def read_diff(self, diff, mode, use_after=False):
+		idx = 1 if use_after else 0
+		
+		key = ("_", f"{mode}_rank_score")
+		if diff.get(key): self.score = util.to_num(diff[key][idx])
+		
+		key = ("_", f"{mode}_rank_div")
+		if diff.get(key): self.div = util.to_num(diff[key][idx])
+		
+		key = ("_", f"{mode}_rank_top_pos")
+		if diff.get(key): self.top_pos = util.to_num(diff[key][idx])
+		
+		key = ("_", f"{mode}_rank_name")
+		if diff.get(key): self.rank_name = diff[key][idx]
 	
 	def __str__(self):
 		return self.format()
