@@ -1431,6 +1431,8 @@ class PlayerRank():
 			result += f" #{self.top_pos}"
 		elif self.rank_name == "Master":
 			result += f" ({self.score}{points_name})"
+		elif self.rank_name == "Unranked":
+			pass
 		else:
 			next_percentage = util.calc_mid_percentage(
 				self.score, rank_div_scores[self.mode])
