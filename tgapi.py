@@ -1,6 +1,7 @@
 import requests, json, re, io
 import util, cache
 from pathlib import Path
+from hashlib import md5
 from const import *
 
 class TgBotApiError(Exception):
@@ -61,45 +62,49 @@ def send_message(chat_id, text="", as_html=False, file_path=None, file_id=None,
 		raise ValueError("Only one of file_path, file_id, "
 			"file_url, file_bytes can be specified at the same time")
 	
-	if use_cache and any([file_path, file_url, file_bytes]):
-		key = file_url
-		if file_path:
-			key = str(Path(file_path).resolve())
-		elif file_bytes:
-			key = str(file_bytes) # TODO: refactor
-		
-		file_id = cache.get_file_id(key)
+	cache_key = None
+	if use_cache:
+		if file_url: cache_key = "url:" + file_url
+		elif file_path: cache_key = "path:" + str(Path(file_path).resolve())
+		elif file_bytes: cache_key = "bytes:" + md5(file_bytes).hexdigest()
+			
+	if cache_key:
+		file_id = cache.get_file_id(cache_key)
 		if file_id:
 			file_path = file_url = file_bytes = None
 	
+	sent_msg = _send_message(chat_id, text, as_html, file_path,
+		file_id, file_url, file_bytes, file_type, **params)
+	
+	if cache_key:
+		file_id = _get_msg_file_id(sent_msg)
+		if file_id:
+			cache.add_file_id(cache_key, file_id)
+	
+	return sent_msg
+
+def _send_message(chat_id, text="", as_html=False, file_path=None,
+		file_id=None, file_url=None, file_bytes=None, file_type="document",
+		**params):
+	"Sends message without using any cache"
+	
 	params["chat_id"] = int(chat_id)
-	params["parse_mode"] = "HTML" if as_html else None
+	if as_html: params["parse_mode"] = "HTML"
 	
 	if any([file_path, file_id, file_url, file_bytes]):
 		method = f"send{util.ucfirst(file_type)}"
 		params["caption"] = text
-		if file_path or file_bytes:
-			params[file_type.lower()] = "attach://file"
-		else:
-			params[file_type.lower()] = file_id or file_url
+		params[file_type.lower()] = file_id or file_url or "attach://file"
 	else:
 		method = "sendMessage"
 		params["text"] = text
 	
-	if file_path or file_bytes:
-		if file_path:
-			with open(file_path, "rb") as file:
-				sent_msg = call(method, params, files={"file": file})
-		else:
-			sent_msg = call(method, params,
-				files={"file": io.BytesIO(file_bytes)})
-	else:
-		sent_msg = call(method, params)
+	file_io = io.BytesIO()
+	if file_path: file_io = open(file_path, "rb")
+	elif file_bytes: file_io = io.BytesIO(file_bytes)
 	
-	if use_cache and any([file_path, file_url, file_bytes]):
-		file_id = _get_msg_file_id(sent_msg)
-		if file_id:
-			cache.add_file_id(key, file_id)
+	with file_io:
+		sent_msg = call(method, params, files={"file": file_io})
 	
 	return sent_msg
 
