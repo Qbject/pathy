@@ -699,10 +699,10 @@ class TrackedPlayer():
 		if   upd_resp["got_banned"]:   self.on_banned()
 		elif upd_resp["got_unbanned"]: self.on_unbanned()
 		
-		#if ("_", "br_rank_div") in diff or ("_", "br_rank_name") in diff:
-		self.on_rank_change(diff, "br")
-		#if ("_", "ar_rank_div") in diff or ("_", "ar_rank_name") in diff:
-		self.on_rank_change(diff, "ar")
+		if ("_", "br_rank_div") in diff or ("_", "br_rank_name") in diff:
+			self.on_rank_change(diff, "br")
+		if ("_", "ar_rank_div") in diff or ("_", "ar_rank_name") in diff:
+			self.on_rank_change(diff, "ar")
 		
 		return upd_resp
 	
