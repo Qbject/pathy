@@ -142,6 +142,15 @@ translations = {
 	"Diamond": "Даймонд",
 	"Master": "Мастер",
 	"Apex Predator": "Предатор",
+	"Unranked_v_rod": "Нікого",
+	"Rookie_v_rod": "Нуба",
+	"Bronze_v_rod": "Бронзу",
+	"Silver_v_rod": "Сільвер",
+	"Gold_v_rod": "Золото",
+	"Platinum_v_rod": "Платину",
+	"Diamond_v_rod": "Даймонд",
+	"Master_v_rod": "Мастера",
+	"Apex Predator_v_rod": "Предатора",
 	"teammates_lifted": "Запущені на ліфті тімейти",
 	"arenas_damage": "Дамаг на аренах",
 	"revive_shield_damage_blocked": "Заблочений дамаг ревайв щитом",
@@ -257,28 +266,28 @@ translations = {
 	"jackson_bow_out_damage_done": "Дамагу в челенджі \"Jackson bow out\"",
 	"smoke_show_damage_done": "Дамагу в челенджі \"Smoke show\"",
 	"_matches": "Матчі",
-	"on_Revenant": "Реві ☠️",
-	"on_Crypto": "암호화 짜증 💻",
-	"on_Horizon": "Космобабі 🌠",
-	"on_Gibraltar": "наГібі 🐖",
-	"on_Wattson": "Багеті 🔌",
-	"on_Fuse": "Бабах-діду 🧨",
-	"on_Bangalore": "Бангі 🚬",
-	"on_Wraith": "Вруф 🥷🏻",
-	"on_Octane": "Наркомані 🤪",
-	"on_Bloodhound": "Собаці 🦮",
-	"on_Caustic": "Газовому діду 🤢",
-	"on_Lifeline": "Лайфі 🥁",
-	"on_Pathfinder": "Паті 🦾",
-	"on_Loba": "Лобі 💋",
-	"on_Mirage": "Міражу 👯‍♂️",
-	"on_Rampart": "Рампі 🔧",
-	"on_Valkyrie": "Факінг Валькірії вжух-вжух хер попадеш 🧚‍♀️",
-	"on_Seer": "Темному шляпері 👁",
-	"on_Ash": "Аші ⚔️",
-	"on_Mad Maggie": "Огонь-бабі 🔥",
-	"on_Global": "Всіх і зразу",
-	"on_Newcastle": "НьюКазлі 🛡",
+	"Revenant_v_mis": "Реві ☠️",
+	"Crypto_v_mis": "암호화 짜증 💻",
+	"Horizon_v_mis": "Космобабі 🌠",
+	"Gibraltar_v_mis": "наГібі 🐖",
+	"Wattson_v_mis": "Багеті 🔌",
+	"Fuse_v_mis": "Бабах-діду 🧨",
+	"Bangalore_v_mis": "Бангі 🚬",
+	"Wraith_v_mis": "Вруф 🥷🏻",
+	"Octane_v_mis": "Наркомані 🤪",
+	"Bloodhound_v_mis": "Собаці 🦮",
+	"Caustic_v_mis": "Газовому діду 🤢",
+	"Lifeline_v_mis": "Лайфі 🥁",
+	"Pathfinder_v_mis": "Паті 🦾",
+	"Loba_v_mis": "Лобі 💋",
+	"Mirage_v_mis": "Міражу 👯‍♂️",
+	"Rampart_v_mis": "Рампі 🔧",
+	"Valkyrie_v_mis": "Факінг Валькірії вжух-вжух хер попадеш 🧚‍♀️",
+	"Seer_v_mis": "Темному шляпері 👁",
+	"Ash_v_mis": "Аші ⚔️",
+	"Mad Maggie_v_mis": "Огонь-бабі 🔥",
+	"Global_v_mis": "Всіх і зразу",
+	"Newcastle_v_mis": "НьюКазлі 🛡",
 	"Kings Canyon": "Коньйон",
 	"World's Edge": "Край світу",
 	"Worlds Edge": "Край світу", # for some reason this variant also happens
@@ -321,10 +330,9 @@ translations = {
 }
 
 def trans(txt, default=None):
-	if txt in translations:
-		return translations[txt]
-	else:
-		return default if default != None else txt
+	if default == None:
+		default = txt
+	return translations.get(txt, default)
 
 default_wish = "Гуд лак, хев фан, донт дай! :)"
 easter_wishes = [

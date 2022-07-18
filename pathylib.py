@@ -648,7 +648,7 @@ class TrackedPlayer():
 			return f"Живе реальним життям вже {offline_duraion}"
 		
 		state = "В матчі" if self.is_in_match else "В Лобі"
-		legend = trans("on_"+self.legend)
+		legend = trans(f"{self.legend}_v_mis", self.legend)
 		
 		state_duration = None
 		for entry in self.timeline.iter(reverse=True):
@@ -784,10 +784,10 @@ class TrackedPlayer():
 		progressed = "упав на"
 		if cur_rank.get_value() > prev_rank.get_value():
 			progressed = "апнув"
+		to_rank = cur_rank.format(detailed=False, v_rod=True)
 		in_mode = {"br": "в БР", "ar": "на Аренах"}[mode]
 		
-		msg = f"<b>{self.name}</b> {progressed} " \
-			f"<i>{cur_rank.format(detailed=False)}</i> {in_mode}"
+		msg = f"<b>{self.name}</b> {progressed} <i>{to_rank}</i> {in_mode}"
 		self.notify_all_chats(msg, as_html=True)
 	
 	def handle_goodnights(self):
@@ -1172,7 +1172,7 @@ class ConstantStateTimeline(Timeline):
 	
 	def format(self):
 		state = trans(self.get_state())
-		legend = trans("on_" + self.get_legend())
+		legend = trans(f"{self.get_legend()}_v_mis", self.get_legend())
 		duration = format_time(self.get_duration())
 		return f"{state} на {legend} ({duration})"
 	
@@ -1399,7 +1399,7 @@ class PlayerRank():
 		self.rank_name = rank_name
 		self.mode = mode
 	
-	def format(self, detailed=True):
+	def format(self, detailed=True, v_rod=False):
 		rank_div_scores = {
 			"br": [
 				0, 250, 500, 750,
@@ -1421,7 +1421,10 @@ class PlayerRank():
 		}
 		points_name = "RP" if self.mode == "br" else "AP"
 		
-		result = f"{trans(self.rank_name)}"
+		if v_rod:
+			result = trans(f"{self.rank_name}_v_rod", self.rank_name)
+		else:
+			result = trans(self.rank_name)
 		if self.rank_name not in ("Apex Predator", "Master", "Unranked"):
 			result += f" {self.div}"
 		if not detailed:
