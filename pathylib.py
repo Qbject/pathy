@@ -1109,7 +1109,8 @@ class Timeline():
 			legends[legend][stat_name[8:]] = stat_diff
 		
 		for legend, trackers in legends.items():
-			text += f"На {trans('on_'+legend)}:\n"
+			legend_name = trans(f"{legend}_v_mis", legend)
+			text += f"На {legend_name}:\n"
 			for tracker, tracker_diff in trackers.items():
 				text += f"  {trans(tracker)}: {tracker_diff}"
 				
