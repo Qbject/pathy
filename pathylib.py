@@ -776,6 +776,10 @@ class TrackedPlayer():
 		self.notify_all_chats(notification, as_html=True)
 	
 	def on_rank_change(self, diff, mode):
+		div_key = ("_", f"{mode}_rank_div")
+		if div_key in diff and div[div_key][0] == None:
+			return # suppressing notification for newly added players
+		
 		cur_stat = self.timeline.get_end_stat()
 		cur_rank  = PlayerRank.from_stat(cur_stat, mode=mode)
 		prev_rank = PlayerRank.from_stat(cur_stat, mode=mode)
