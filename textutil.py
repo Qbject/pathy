@@ -288,7 +288,7 @@ translations = {
 	"Mad Maggie_v_mis": "Огонь-бабі 🔥",
 	"Global_v_mis": "Всіх і зразу",
 	"Newcastle_v_mis": "НьюКазлі 🛡",
-	"Vantage_v_mis": "Вантажі 🦤",
+	"Vantage_v_mis": "Вантажі 🦇",
 	"Kings Canyon": "Коньйон",
 	"World's Edge": "Край світу",
 	"Worlds Edge": "Край світу", # for some reason this variant also happens
