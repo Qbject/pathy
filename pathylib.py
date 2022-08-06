@@ -1056,8 +1056,17 @@ class Timeline():
 		for state, duration in self.get_states_duration().items():
 			if not duration: continue
 			text += f"  {trans(state)}: {format_time(duration)}\n"
+		
+		match_types = {}
+		for match in matches:
+			match_type = match.get_type()
+			if match_type not in match_types:
+				match_types[match_type] = 0
+			match_types[match_type] += 1
 		if matches:
 			text += f"Матчі: {len(matches)}\n"
+			for match_type, count in match_types.items():
+				text += f"  {trans(match_type)}: {count}\n"
 		
 		lvl_diff = diff.get(("_", "level"))
 		if lvl_diff:
@@ -1078,6 +1087,7 @@ class Timeline():
 		
 		# filling matches count to display
 		for match in matches:
+			if not match.is_real(): continue
 			legend = match.get_legend()
 			if not legend:
 				continue
@@ -1241,6 +1251,16 @@ class MatchTimeline(ConstantStateTimeline):
 			if entry.stat_name == "is_online":
 				return True
 		return False
+	
+	def get_type(self):
+		if not self.is_real():
+			return "inFiringRange"
+		elif ("_", "br_rank_score") in self.get_diff():
+			return "inRankedBrMatch"
+		elif ("_", "ar_rank_score") in self.get_diff():
+			return "inRankedArMatch"
+		else:
+			return "inPublicMatch"
 	
 	def get_duration(self):
 		start = self.get_start()
