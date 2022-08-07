@@ -1149,9 +1149,9 @@ class Timeline():
 			
 			if ts.get_value("level"):
 				if isinstance(segs[-1], MatchTimeline):
-					segs[-1].result_stamp = segs[-1].result_stamp or ts
+					segs[-1].result_stamp = ts
 				if len(segs) > 1 and isinstance(segs[-2], MatchTimeline):
-					segs[-2].result_stamp = segs[-2].result_stamp or ts
+					segs[-2].result_stamp = ts
 			
 			if ts.get_value("is_online") or ts.get_value("is_in_match"):
 				_append_seg(ts.get_value("is_in_match") == "1")
