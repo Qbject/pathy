@@ -1057,14 +1057,17 @@ class Timeline():
 			if not duration: continue
 			text += f"  {trans(state)}: {format_time(duration)}\n"
 		
-		match_types = {}
-		for match in matches:
-			match_type = match.get_type()
-			if match_type not in match_types:
-				match_types[match_type] = 0
-			match_types[match_type] += 1
 		if matches:
-			text += f"Матчі: {len(matches)}\n"
+			match_types = {}
+			for match in matches:
+				if not match.is_ended():
+					continue
+				match_type = match.get_type()
+				if match_type not in match_types:
+					match_types[match_type] = 0
+				match_types[match_type] += 1
+			
+			text += f"Матчі: {sum(match_types.values())}\n"
 			for match_type, count in match_types.items():
 				text += f"  {trans(match_type)}: {count}\n"
 		
