@@ -1089,6 +1089,7 @@ class Timeline():
 		
 		# filling matches count to display
 		for match in matches:
+			if not match.is_ended(): continue
 			if not match.is_real(): continue
 			legend = match.get_legend()
 			if not legend:
