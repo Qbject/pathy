@@ -1048,7 +1048,7 @@ class Timeline():
 	
 	def format(self, easter_eggs=False):
 		diff = self.get_diff()
-		matches = [m for m in self.get_matches()]
+		matches = [m for m in self.get_matches() if m.is_ended()]
 		
 		text = ""
 		is_current = bool(int(self.get_stat("is_online")))
@@ -1059,8 +1059,6 @@ class Timeline():
 		
 		match_types = {}
 		for match in matches:
-			if not match.is_ended():
-				continue
 			match_type = match.get_type()
 			if match_type not in match_types:
 				match_types[match_type] = 0
@@ -1089,7 +1087,6 @@ class Timeline():
 		
 		# filling matches count to display
 		for match in matches:
-			if not match.is_ended(): continue
 			if not match.is_real(): continue
 			legend = match.get_legend()
 			if not legend:
