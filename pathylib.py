@@ -1072,7 +1072,7 @@ class Timeline():
 		
 		lvl_diff = diff.get(("_", "level"))
 		if lvl_diff:
-			prestige_diff = diff.get(("_", "level"))
+			prestige_diff = diff.get(("_", "level_prestige"))
 			before = f"{lvl_diff[0]} (престиж {prestige_diff[0]})"
 			after  = f"{lvl_diff[1]} (престиж {prestige_diff[1]})"
 			text += f"Левел: {before} → {after}\n"
