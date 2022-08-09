@@ -197,7 +197,7 @@ def reverse_readline(path, buf_size=8192):
 			yield _line(segment)
 
 def get_legend_file(legend):
-	default_img = ASSETS_DIR / "legend/default.jpg"
+	default_img = ASSETS_DIR / "legend/default.png"
 	legend_dir = ASSETS_DIR / f"legend/{legend}"
 	if not (legend_dir.exists() and legend_dir.is_dir()):
 		return default_img
