@@ -978,8 +978,9 @@ class Timeline():
 		_global = player_stat["global"]
 		_realtime = player_stat["realtime"]
 		
-		_add("level",  _global["level"] + \
+		_add("level", _global["level"] + \
 			_global["toNextLevelPercent"] / 100)
+		_add("level_prestige", _global["levelPrestige"])
 		
 		_add("is_online",     _realtime["isOnline"])
 		_add("is_in_match",   _realtime["isInGame"])
@@ -1070,7 +1071,10 @@ class Timeline():
 		
 		lvl_diff = diff.get(("_", "level"))
 		if lvl_diff:
-			text += f"Левел: {lvl_diff[0]} → {lvl_diff[1]}\n"
+			prestige_diff = diff.get(("_", "level"))
+			before = f"{lvl_diff[0]} (престиж {prestige_diff[0]})"
+			after  = f"{lvl_diff[1]} (престиж {prestige_diff[1]})"
+			text += f"Левел: {before} → {after}\n"
 		
 		def _format_rank_diff(mode, caption):
 			if not diff.get(("_", f"{mode}_rank_score")):
