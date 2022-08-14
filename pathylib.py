@@ -981,6 +981,7 @@ class Timeline():
 		_add("level", _global["level"] + \
 			round(_global["toNextLevelPercent"] / 100, 2))
 		_add("level_prestige", _global.get("levelPrestige", 0))
+		_add("update_count", _global.get("internalUpdateCount", 0))
 		
 		_add("is_online",     _realtime["isOnline"])
 		_add("is_in_match",   _realtime["isInGame"])
