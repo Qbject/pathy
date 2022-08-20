@@ -248,7 +248,7 @@ translations = {
 	"decoys_spawned": "Приманки",
 	"special_arenas_wins": "Віни на аренах",
 	"grandsoiree_kills": "Кіли",
-	"shield_damage": "Дамаг по щиту",
+	"shield_damage": "Дамаг від ЕМІ",
 	"passive_health_regen": "Відрегенено хп",
 	"executions": "Казні",
 	"ordnance_destroyed": "Збито рандомного дєрьма",
