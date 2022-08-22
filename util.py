@@ -212,11 +212,10 @@ def is_image(img_path):
 	return img_path.suffix in (".png", ".jpg", ".jpeg", ".webp")
 
 def get_party_img(party_count):
-	if party_count < 2:
+	if party_count < 1:
 		return None
-	dirname = str(int(party_count)) if party_count < 5 else "5"
 	
-	party_dir = ASSETS_DIR / f"party/{dirname}"
+	party_dir = ASSETS_DIR / f"party/{min(party_count, 5)}"
 	return random.choice(list(party_dir.iterdir()))
 
 _interval_data = {}

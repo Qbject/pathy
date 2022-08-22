@@ -26,6 +26,8 @@ def _get_base_moniker(v_rod=False, plur=False):
 	return (prefix + noun, tags)
 
 def get_count_moniker(count):
+	if count == 1:
+		return f"Соло {get_moniker()}"
 	adj_v_rod, adj_plur, noun_v_rod, noun_plur = get_count_props(count)
 	moniker = get_moniker(noun_v_rod, noun_plur, adj_v_rod)
 	return f"{count} {moniker}"
