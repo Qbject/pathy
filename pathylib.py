@@ -198,7 +198,10 @@ class PathyDaemon():
 			
 			players_online = len(list(self.iter_players(
 				online=True, in_chat=chat_id)))
-			pic = util.get_party_img(players_online)
+			if players_online:
+				pic = util.get_legend_file(player.legend)
+			else:
+				pic = util.get_party_img(players_online)
 			if not pic: continue
 			caption = f"<i>{get_count_moniker(players_online)}</i>!"
 			
