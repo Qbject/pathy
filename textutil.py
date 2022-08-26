@@ -85,6 +85,19 @@ def get_goodnight_wish(player_name):
 	wish += random.choice(goodnight_emoji)
 	return wish
 
+def get_hokku():
+	legends = ["Вруф", "Рейфа", "Рейф", "Рампа", "Валькірія", "Ватсон", "Лоба",
+	"Бладхаунд", "Лайфа", "Лайфлайн", "Гіба", "Гібралтар", "Октан",
+	"Патфайндер", "Хора", "Хорайзон", "Банга", "Ф'юз", "Аша", "Сір", "Міраж",
+	"Каустік", "Рева", "Ревенант", "Кріпто", "Нюкасл"]
+	
+	lines = []
+	for _ in range(3):
+		line = get_dict_rnd(DICT_HOKKU)
+		line = line.format(legend=random.choice(legends))
+		lines.append(line)
+	return "\n".join(lines)
+
 _dict_cache = {}
 
 def cache_rnd_prefetch(dict_path, size=50):

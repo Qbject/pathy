@@ -21,6 +21,7 @@ DICT_NOUN_V_ROD      = getenv("PATHY_DICT_NOUN_V_ROD")      or ROOT_DIR / "dict/
 DICT_NOUN_V_NAZ_PLUR = getenv("PATHY_DICT_NOUN_V_NAZ_PLUR") or ROOT_DIR / "dict/noun_v_naz_plur.txt"
 DICT_NOUN_V_ROD_PLUR = getenv("PATHY_DICT_NOUN_V_ROD_PLUR") or ROOT_DIR / "dict/noun_v_rod_plur.txt"
 DICT_PREFIXES        = getenv("PATHY_DICT_PREFIXES")        or ROOT_DIR / "dict/prefixes.txt"
+DICT_HOKKU           = getenv("PATHY_DICT_HOKKU")           or ROOT_DIR / "dict/hokku.txt"
 
 CACHE_DIR =      getenv("PATHY_CACHE_DIR")      or ROOT_DIR / "data/cache"
 FILE_IDS_CACHE = getenv("PATHY_FILE_IDS_CACHE") or CACHE_DIR / "file_ids.json"

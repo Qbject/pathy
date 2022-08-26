@@ -1,12 +1,12 @@
 import time, datetime, json, threading, schedule, io
-import util, textutil, alsapi, tgapi, cache
+import util, alsapi, tgapi, cache
 from pathlib import Path
 from multiprocessing.connection import Listener
 from collections import deque
 from util import log, format_time, get_err
 from const import *
 from textutil import trans, get_wish, get_moniker, fix_text_layout, \
-	get_adjectives, get_goodnight_wish, get_count_moniker
+	get_adjectives, get_goodnight_wish, get_count_moniker, get_hokku
 
 
 class PathyDaemon():
@@ -443,6 +443,10 @@ class PathyDaemon():
 			
 			chat_state["delplayer_msg_id"] = sent_msg.get("message_id")
 			chat_state["delplayer_initiator"] = upd.from_id
+			return
+		
+		if bot_cmd == "/hokku":
+			upd.reply(f"<i>{get_hokku()}</i>")
 			return
 		
 		if bot_cmd == "/crafting":
