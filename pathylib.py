@@ -446,7 +446,7 @@ class PathyDaemon():
 			return
 		
 		if bot_cmd == "/hokku":
-			upd.reply(f"<i>{get_hokku()}</i>")
+			upd.reply(f"<i>{get_hokku()}</i>", as_html=True)
 			return
 		
 		if bot_cmd == "/crafting":
