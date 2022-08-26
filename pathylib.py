@@ -198,7 +198,7 @@ class PathyDaemon():
 			
 			players_online = len(list(self.iter_players(
 				online=True, in_chat=chat_id)))
-			if players_online:
+			if players_online == 1:
 				pic = util.get_legend_file(player.legend)
 			else:
 				pic = util.get_party_img(players_online)
