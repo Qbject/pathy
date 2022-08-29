@@ -196,14 +196,15 @@ class PathyDaemon():
 				tgapi.delete_msg(chat_id, msg_to_del)
 				chat_state["last_party_msg_id"] = None
 			
-			players_online = len(list(self.iter_players(
-				online=True, in_chat=chat_id)))
-			if players_online == 1:
-				pic = util.get_legend_file(player.legend)
+			players_online = list(self.iter_players(
+				online=True, in_chat=chat_id))
+			online_count = len(players_online)
+			if online_count == 1:
+				pic = util.get_legend_file(players_online[0].legend)
 			else:
-				pic = util.get_party_img(players_online)
+				pic = util.get_party_img(online_count)
 			if not pic: continue
-			caption = f"<i>{get_count_moniker(players_online)}</i>!"
+			caption = f"<i>{get_count_moniker(online_count)}</i>!"
 			
 			pic_type = "photo" if util.is_image(pic) else "animation"
 			sent_msg = tgapi.send_message(chat_id, caption, as_html=True,
