@@ -269,6 +269,7 @@ translations = {
 	"ordnance_destroyed": "Збито рандомного дєрьма",
 	"bamboozles": "Бамбузли",
 	"marksman_kills": "Кіли з марксманів",
+	"ultimate_allies_rescued": "Приземлення ультою на тімейтів",
 	"kills_season_9": "Кіли в сезоні 9",
 	"kills_season_11": "Кіли в сезоні 11",
 	"wins_season_11": "Віни в сезоні 11",
