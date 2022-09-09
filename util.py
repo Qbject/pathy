@@ -1,5 +1,5 @@
 import time, traceback, subprocess, os, requests, json, pytz, datetime, \
-	random, re, threading, io
+	random, re, threading, io, string
 import tgapi
 from pathlib import Path
 from PIL import Image
