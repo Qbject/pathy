@@ -323,6 +323,7 @@ translations = {
 	"Global_v_mis": "Всіх і зразу",
 	"Newcastle_v_mis": "НьюКазлі 🛡",
 	"Vantage_v_mis": "Вантажі 🦇",
+	"Catalyst_v_mis": "Капіталіст 🔮",
 	"Kings Canyon": "Коньйон",
 	"World's Edge": "Край світу",
 	"Worlds Edge": "Край світу", # for some reason this variant also happens
