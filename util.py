@@ -35,7 +35,7 @@ def log(text, err=False, send_tg=False):
 		report()
 
 def git_pull():
-	out = subprocess.check_output(["git", "pull", "--depth=1", "--allow-unrelated-histories"],
+	out = subprocess.check_output(["git", "pull", "--depth=1", "--allow-unrelated-histories", "--rebase=true"],
 		stderr=subprocess.STDOUT,
 		cwd=ROOT_DIR,
 		text=True
