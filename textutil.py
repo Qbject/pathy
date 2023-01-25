@@ -18,16 +18,13 @@ def get_moniker(noun_v_rod=False, noun_plur=False,
 	return f"{adjectives} {base}"
 
 # for repeating operations encapsulation purposes only
-# returns rnd noun with prefix, postfix and tags
+# returns rnd noun with prefix and tags
 def _get_base_moniker(v_rod=False, plur=False):
 	is_prefixed = util.chance(0.15)
 	prefix = get_dict_rnd(DICT_PREFIXES) if is_prefixed else ""
 	
-	is_postfixed = util.chance(0.01)
-	postfix = get_dict_rnd(DICT_POSTFIXES) if is_postfixed else ""
-	
 	noun, tags = get_noun(v_rod, plur)
-	return (prefix + noun + postfix, tags)
+	return (prefix + noun, tags)
 
 def get_count_moniker(count):
 	if count == 1:
