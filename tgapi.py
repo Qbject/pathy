@@ -120,6 +120,23 @@ def _get_msg_file_id(msg):
 			attachment = attachment[-1] # for multiple PhotoSizes
 		return attachment.get("file_id")
 
+def get_file_type(extension=None, path=None, force_type=None):
+	# TODO: add more
+	
+	if not extension:
+		extension = path.suffix[-1:]
+	
+	applicable = ("document",)
+	if extension in ("png", "jpg", "jpeg", "webp"):
+		applicable = ("photo", "document")
+	elif extension in ("gif",):
+		applicable = ("photo", "animation", "document")
+	elif extension in ("mp4",):
+		applicable = ("video", "video_note", "animation", "document")
+	elif extension in ("mp3",):
+		applicable = ("audio", "voice", "document")
+	
+	return force_type if force_type in applicable else applicable[0]
 
 class Update():
 	def __init__(self, update_data):

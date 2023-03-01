@@ -2,8 +2,8 @@ import time, traceback, subprocess, os, requests, json, pytz, datetime, \
 	random, re, threading, io, string
 import tgapi
 from pathlib import Path
-from PIL import Image
 from const import *
+from PIL import Image
 
 _info_log_lock  = threading.Lock()
 _error_log_lock = threading.Lock()
@@ -196,28 +196,6 @@ def reverse_readline(path, buf_size=8192):
 		if segment is not None:
 			yield _line(segment)
 
-def get_legend_file(legend):
-	default_img = ASSETS_DIR / "legend/default.png"
-	legend_dir = ASSETS_DIR / f"legend/{legend}"
-	if not (legend_dir.exists() and legend_dir.is_dir()):
-		return default_img
-	
-	legend_imgs = list(legend_dir.iterdir())
-	if not legend_imgs:
-		return default_img
-	
-	return random.choice(legend_imgs)
-
-def is_image(img_path):
-	return img_path.suffix in (".png", ".jpg", ".jpeg", ".webp")
-
-def get_party_img(party_count):
-	if party_count < 1:
-		return None
-	
-	party_dir = ASSETS_DIR / f"party/{min(party_count, 5)}"
-	return random.choice(list(party_dir.iterdir()))
-
 _interval_data = {}
 def cap_freq(tag, min_interval):
 	# supports parallel threads! (probably)
@@ -302,3 +280,55 @@ def combine_imgs(imgs_bytes, margin=2):
 	img_bytesio = io.BytesIO()
 	result_img.save(img_bytesio, "jpeg")
 	return img_bytesio.getvalue()
+
+def fix_text_layout(txt):
+	replace_maps = {
+		"en": {
+			"q":"й","w":"ц","e":"у","r":"к","t":"е","y":"н","u":"г","i":"ш",
+			"o":"щ","p":"з","[":"х","]":"ї","a":"ф","s":"і","d":"в","f":"а",
+			"g":"п","h":"р","j":"о","k":"л","l":"д",";":"ж","'":"є","z":"я",
+			"x":"ч","c":"с","v":"м","b":"и","n":"т","m":"ь",",":"б",".":"ю",
+			"/":".","Q":"Й","W":"Ц","E":"У","R":"К","T":"Е","Y":"Н","U":"Г",
+			"I":"Ш","O":"Щ","P":"З","{":"Х","}":"Ї","A":"Ф","S":"І","D":"В",
+			"F":"А","G":"П","H":"Р","J":"О","K":"Л","L":"Д",":":"Ж","\"":"Є",
+			"Z":"Я","X":"Ч","C":"С","V":"М","B":"И","N":"Т","M":"Ь","<":"Б",
+			">":"Ю","?":",","~":"₴","@":"\"","#":"№","$":";","^":":","&":"?"
+		},
+		"ru": {
+			"ы":"і","э":"є","ъ":"ї","Ы":"І","Э":"Є","Ъ":"Ї"
+		}
+	}
+	
+	ru_characters = list(replace_maps["ru"].keys())
+	contains_ru = any(char in txt for char in ru_characters)
+	source_lang = "ru" if contains_ru else "en"
+	
+	return replace_char_map(txt, replace_maps[source_lang])
+
+def bytes2type(data, data_type):
+	"quick way to convert bytes to other types"
+	if data_type == bytes:
+		return data
+	if data_type == str:
+		return str(data, "utf-8")
+	if data_type == int:
+		return int(str(data, "utf-8"))
+	if data_type == float:
+		return float(str(data, "utf-8"))
+	
+	raise TypeError(f"Unsupported type: {str(data_type)}")
+
+def get_count_word_props(count):
+	"""
+	returns tuple of 4 boolean values representing
+	adj v_rod, adj plur, noun v_rod, noun plur
+	which should be applied to words multiplied by count
+	"""
+	count = abs(count)
+	
+	if count == 1:
+		return False, False, False, False
+	elif 2 <= count <= 4:
+		return True, True, False, True
+	else:
+		return True, True, True, True

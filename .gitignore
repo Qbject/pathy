@@ -1,5 +1,6 @@
 /data/*
 /deploy.py
+/gdrive_service_cred.json
 
 ### General python stuff below
 # Byte-compiled / optimized / DLL files

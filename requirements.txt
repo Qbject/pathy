@@ -3,3 +3,4 @@ requests
 pillow
 pytz
 python-dotenv
+google-api-python-client

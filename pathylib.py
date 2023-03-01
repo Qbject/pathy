@@ -1,12 +1,11 @@
 import time, datetime, json, threading, schedule, io
-import util, alsapi, tgapi, cache
+import util, alsapi, tgapi, cache, gdrive
 from pathlib import Path
 from multiprocessing.connection import Listener
 from collections import deque
-from util import log, format_time, get_err
+from util import log, format_time, get_err, fix_text_layout
 from const import *
-from textutil import trans, get_wish, get_moniker, fix_text_layout, \
-	get_adjectives, get_goodnight_wish, get_count_moniker, get_hokku
+from resourcemanager import singleton as resmgr
 
 
 class PathyDaemon():
@@ -130,7 +129,18 @@ class PathyDaemon():
 			return "Removed" if removed else "Already unwhitelisted"
 		
 		if msg == "monikers":
-			return "\n".join([get_moniker() for i in range(args.get("n", 5))])
+			return "\n".join(
+				[resmgr.get_moniker() for i in range(args.get("n", 5))])
+		
+		if msg == "debug_legend_img":
+			resmgr.get_legend_img(args.get("legend")).send_tg(
+				DEBUG_CHAT_ID, force_file_type="animation")
+			return True
+		
+		if msg == "debug_party_img":
+			resmgr.get_party_img(args.get("legends")).send_tg(
+				DEBUG_CHAT_ID, force_file_type="animation")
+			return True
 		
 		else:
 			return "UNKNOWN_MSG"
@@ -190,26 +200,30 @@ class PathyDaemon():
 	
 	def handle_party_events(self, player):
 		for chat_id in player.state["chats"]:
-			chat_state = self.get_chat_state(chat_id)
-			msg_to_del = chat_state.get("last_party_msg_id")
-			if msg_to_del:
-				tgapi.delete_msg(chat_id, msg_to_del)
-				chat_state["last_party_msg_id"] = None
+			try:
+				chat_state = self.get_chat_state(chat_id)
+				msg_to_del = chat_state.get("last_party_msg_id")
+				if msg_to_del:
+					tgapi.delete_msg(chat_id, msg_to_del)
+					chat_state["last_party_msg_id"] = None
+				
+				players_online = list(self.iter_players(
+					online=True, in_chat=chat_id))
+				if not len(players_online): continue
+				
+				party_moniker = resmgr.get_count_moniker(len(players_online))
+				caption = f"<i>{party_moniker}</i>!"
+				pic = resmgr.get_party_img(
+					[p.legend for p in players_online])
+				if not pic: raise RuntimeError("No picture found")
 			
-			players_online = list(self.iter_players(
-				online=True, in_chat=chat_id))
-			online_count = len(players_online)
-			if online_count == 1:
-				pic = util.get_legend_file(players_online[0].legend)
-			else:
-				pic = util.get_party_img(online_count)
-			if not pic: continue
-			caption = f"<i>{get_count_moniker(online_count)}</i>!"
-			
-			pic_type = "photo" if util.is_image(pic) else "animation"
-			sent_msg = tgapi.send_message(chat_id, caption, as_html=True,
-				file_path=pic, file_type=pic_type)
-			chat_state["last_party_msg_id"] = sent_msg.get("message_id")
+				sent_msg = pic.send_tg(chat_id, caption, as_html=True,
+					force_file_type="animation")
+				chat_state["last_party_msg_id"] = sent_msg.get("message_id")
+			except Exception:
+				log(f"Failed to send party image for chat {chat_id}:" \
+					f"\n{get_err()}", err=True, send_tg=True)
+				continue
 	
 	def get_chat_state(self, chat_id):
 		if not str(chat_id) in self.state["chats_data"]:
@@ -408,15 +422,13 @@ class PathyDaemon():
 			for player in self.iter_players(online=True, in_chat=upd.chat_id):
 				online_in_chat += 1
 				
-				pic = util.get_legend_file(player.legend)
-				pic_type = "photo" if util.is_image(pic) else "animation"
-				upd.reply(player.format_status(), as_html=True,
-					file_path=pic, file_type=pic_type)
+				resmgr.get_legend_img(player.legend).send_tg(
+					upd.chat_id, player.format_status(), as_html=True,
+					force_file_type="animation")
 			
 			if not online_in_chat:
-				tumbleweed_path = ASSETS_DIR / "tumbleweed.gif"
-				upd.reply("Немає грунів :(", file_path=tumbleweed_path,
-					file_type="animation")
+				resmgr.get_full_offline_img().send_tg(upd.chat_id,
+					"Немає грунів :(", force_file_type="animation")
 			return
 		
 		if bot_cmd == "/addplayer":
@@ -447,7 +459,7 @@ class PathyDaemon():
 			return
 		
 		if bot_cmd == "/hokku":
-			upd.reply(f"<i>{get_hokku()}</i>", as_html=True)
+			upd.reply(f"<i>{resmgr.get_hokku()}</i>", as_html=True)
 			return
 		
 		if bot_cmd == "/crafting":
@@ -491,10 +503,8 @@ class PathyDaemon():
 			return
 	
 	def send_hate_monday_pic(self):
-		ihatemondays_path = ASSETS_DIR / "ihatemondays.jpg"
-		
-		tgapi.send_message(ASL_CHAT_ID, as_html=True,
-			file_path=ihatemondays_path, file_type="photo")
+		resmgr.get_hate_monday_img().send_tg(
+			ASL_CHAT_ID, force_file_type="animation")
 
 class WorkerThread(threading.Thread):
 	def __init__(self, name=None, daemon=False):
@@ -656,7 +666,7 @@ class TrackedPlayer():
 			return f"Живе реальним життям вже {offline_duraion}"
 		
 		state = "В матчі" if self.is_in_match else "В Лобі"
-		legend = trans(f"{self.legend}_v_mis", self.legend)
+		legend = resmgr.trans(f"{self.legend}_v_mis", self.legend)
 		
 		state_duration = None
 		for entry in self.timeline.iter(reverse=True):
@@ -672,7 +682,7 @@ class TrackedPlayer():
 		return result
 	
 	def gen_new_moniker(self):
-		self.moniker = get_moniker()
+		self.moniker = resmgr.get_moniker()
 		moniker_entry = TimelineEntry(
 			int(time.time()), "_", "moniker", self.moniker)
 		self.timeline.add_entry(moniker_entry)
@@ -739,7 +749,7 @@ class TrackedPlayer():
 		sess_start_msg = f"🟢 <b>{self.name}</b> тепер " \
 			f"<i>{self.moniker}</i>" \
 			f" після {offline_duraion} відпочинку\n" \
-			f"<i>{get_wish()}</i>"
+			f"<i>{resmgr.get_wish()}</i>"
 		
 		for chat_id, chat_state in self.state["chats"].items():
 			msg_id = self.notify_chat(chat_id, sess_start_msg, as_html=True,
@@ -767,7 +777,7 @@ class TrackedPlayer():
 			chat_state["sess_end_msg_id"] = msg_id
 	
 	def on_banned(self):
-		adj = get_adjectives()
+		adj = resmgr.get_adjectives()
 		ban_reason = self.get_stat("ban_reason") or "🤷‍♂️"
 		sec_to_unban = util.to_num(self.get_stat("ban_time_left"))
 		unban_after = "🤷‍♂️"
@@ -809,7 +819,7 @@ class TrackedPlayer():
 		if time.time() < wish_at:
 			return
 		
-		wish = get_goodnight_wish(self.name)
+		wish = resmgr.get_goodnight_wish(self.name)
 		self.notify_all_chats(wish, as_html=True, disable_notification=True)
 		self.state["goodnight_at"] = None
 	
@@ -1065,7 +1075,7 @@ class Timeline():
 		text += f"Час: {format_time(self.get_duration(is_current))}\n"
 		for state, duration in self.get_states_duration().items():
 			if not duration: continue
-			text += f"  {trans(state)}: {format_time(duration)}\n"
+			text += f"  {resmgr.trans(state)}: {format_time(duration)}\n"
 		
 		match_types = {}
 		for match in matches:
@@ -1076,7 +1086,7 @@ class Timeline():
 		
 		text += f"Матчі: {sum(match_types.values())}\n"
 		for match_type, count in match_types.items():
-			text += f"  {trans(match_type)}: {count}\n"
+			text += f"  {resmgr.trans(match_type)}: {count}\n"
 		
 		lvl_diff = diff.get(("_", "level"))
 		if lvl_diff:
@@ -1136,10 +1146,10 @@ class Timeline():
 			legends[legend][stat_name[8:]] = stat_diff
 		
 		for legend, trackers in legends.items():
-			legend_name = trans(f"{legend}_v_mis", legend)
+			legend_name = resmgr.trans(f"{legend}_v_mis", legend)
 			text += f"На {legend_name}:\n"
 			for tracker, tracker_diff in trackers.items():
-				text += f"  {trans(tracker)}: {tracker_diff}"
+				text += f"  {resmgr.trans(tracker)}: {tracker_diff}"
 				
 				if easter_eggs and str(tracker_diff).endswith("300"):
 					text += "  </pre><span class='tg-spoiler'>" \
@@ -1203,8 +1213,8 @@ class ConstantStateTimeline(Timeline):
 			return "inLobby"
 	
 	def format(self):
-		state = trans(self.get_state())
-		legend = trans(f"{self.get_legend()}_v_mis", self.get_legend())
+		state = resmgr.trans(self.get_state())
+		legend = resmgr.trans(f"{self.get_legend()}_v_mis", self.get_legend())
 		duration = format_time(self.get_duration())
 		return f"{state} на {legend} ({duration})"
 	
@@ -1328,7 +1338,7 @@ class MatchTimeline(ConstantStateTimeline):
 			else:
 				stat_diff = val_after - val_before
 			
-			text += f"{trans(stat_name[8:])}: {stat_diff}\n"
+			text += f"{resmgr.trans(stat_name[8:])}: {stat_diff}\n"
 		
 		return text.strip()
 
@@ -1464,9 +1474,9 @@ class PlayerRank():
 		points_name = "RP" if self.mode == "br" else "AP"
 		
 		if v_rod:
-			result = trans(f"{self.rank_name}_v_rod", self.rank_name)
+			result = resmgr.trans(f"{self.rank_name}_v_rod", self.rank_name)
 		else:
-			result = trans(self.rank_name)
+			result = resmgr.trans(self.rank_name)
 		if self.rank_name not in ("Apex Predator", "Master", "Unranked"):
 			result += f" {self.div}"
 		if not detailed:
@@ -1574,7 +1584,7 @@ class CraftingRotation():
 					continue
 				
 				cost = item["cost"]
-				name = trans(item["itemType"]["name"])
+				name = resmgr.trans(item["itemType"]["name"])
 				if bundle.get("end"):
 					seconds_left = bundle["end"] - now
 					time_left = format_time(seconds_left)
@@ -1587,8 +1597,8 @@ class CraftingRotation():
 		return result.strip()
 
 def format_map(mode_name, mapinfo):
-	cur_map  = trans(mapinfo["current"]["map"])
-	next_map = trans(mapinfo["next"]["map"])
+	cur_map  = resmgr.trans(mapinfo["current"]["map"])
+	next_map = resmgr.trans(mapinfo["next"]["map"])
 	cur_map_time  = format_time(mapinfo["current"]["remainingSecs"])
 	next_map_time = format_time(mapinfo["next"]["DurationInSecs"])
 	
@@ -1623,3 +1633,4 @@ def parse_timeline_key(*args):
 		raise ValueError("Invalid arguments number")
 	
 	return key
+
