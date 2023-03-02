@@ -1,11 +1,12 @@
 import time, datetime, json, threading, schedule, io
-import util, alsapi, tgapi, cache, gdrive
+import util, alsapi, tgapi, gdrive
 from pathlib import Path
 from multiprocessing.connection import Listener
 from collections import deque
 from util import log, format_time, get_err, fix_text_layout
 from const import *
 from resourcemanager import singleton as resmgr
+from hashmapdb import singleton as hashmapdb
 
 
 class PathyDaemon():
@@ -1563,11 +1564,11 @@ class CraftingRotation():
 		if not parts:
 			return
 		
-		cache_key = "crafting:" + "+".join(part_urls)
-		img_bytes = cache.get_file(cache_key)
+		cache_key = "file:crafting:" + "+".join(part_urls)
+		img_bytes = hashmapdb.get(cache_key)
 		if not img_bytes:
 			img_bytes = util.combine_imgs(parts, margin=2)
-			cache.add_file(cache_key, img_bytes)
+			hashmapdb.add(cache_key, img_bytes)
 		
 		return img_bytes
 	

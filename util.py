@@ -306,7 +306,7 @@ def fix_text_layout(txt):
 	return replace_char_map(txt, replace_maps[source_lang])
 
 def bytes2type(data, data_type):
-	"quick way to convert bytes to other types"
+	"quick way to convert bytes to other simple data types"
 	if data_type == bytes:
 		return data
 	if data_type == str:
@@ -315,6 +315,21 @@ def bytes2type(data, data_type):
 		return int(str(data, "utf-8"))
 	if data_type == float:
 		return float(str(data, "utf-8"))
+	
+	raise TypeError(f"Unsupported type: {str(data_type)}")
+
+def type2bytes(data):
+	"quick way to convert any simple data type to bytes"
+	data_type = type(data)
+	
+	if data_type == bytes:
+		return data
+	if data_type == str:
+		return data.encode("utf-8")
+	if data_type == int:
+		return str(data).encode("utf-8")
+	if data_type == float:
+		return str(data).encode("utf-8")
 	
 	raise TypeError(f"Unsupported type: {str(data_type)}")
 

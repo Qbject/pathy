@@ -14,9 +14,7 @@ DAEMON_STATE      = Path(getenv("PATHY_DAEMON_STATE")      or ROOT_DIR / "data/s
 DAEMON_STATE_COPY = Path(getenv("PATHY_DAEMON_STATE_COPY") or ROOT_DIR / "data/state.copy.json")
 DAEMON_LOCKFILE   = Path(getenv("PATHY_DAEMON_LOCKFILE")   or ROOT_DIR / "data/parent.lock")
 
-CACHE_DIR =      Path(getenv("PATHY_CACHE_DIR")      or ROOT_DIR / "data/cache")
-FILE_IDS_CACHE = Path(getenv("PATHY_FILE_IDS_CACHE") or CACHE_DIR / "file_ids.json")
-FILE_CACHE_DIR = Path(getenv("PATHY_FILE_CACHE_DIR") or CACHE_DIR / "files")
+HASHMAPDB_DIR = Path(getenv("PATHY_HASHMAPDB_DIR") or ROOT_DIR / "data/hashmapdb")
 
 DAEMON_PORT = int(getenv("PATHY_DAEMON_PORT", 6914))
 DAEMON_ADDR = ("localhost", DAEMON_PORT)

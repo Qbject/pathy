@@ -1,8 +1,9 @@
 import requests, json, re, io
-import util, cache
+import util
 from pathlib import Path
 from hashlib import md5
 from const import *
+from hashmapdb import singleton as hashmapdb
 
 class TgBotApiError(Exception):
 	pass
@@ -34,7 +35,7 @@ def delete_msg(chat_id, msg_id):
 		return False
 
 def download_url_proxied(url, dest=None, use_cache=True):
-	file_bytes = cache.get_file(f"url:{url}")
+	file_bytes = hashmapdb.get(f"file:url:{url}")
 	if not use_cache or not file_bytes:
 		sent_msg = send_message(DL_PROXY_CHAT_ID,
 			f"Downloading {url}", file_url=url)
@@ -48,7 +49,7 @@ def download_url_proxied(url, dest=None, use_cache=True):
 		file_bytes = resp.content
 		
 		if use_cache:
-			cache.add_file(f"url:{url}", file_bytes)
+			hashmapdb.add(f"file:url:{url}", file_bytes)
 	
 	if not dest:
 		return file_bytes
@@ -64,12 +65,12 @@ def send_message(chat_id, text="", as_html=False, file_path=None, file_id=None,
 	
 	cache_key = None
 	if use_cache:
-		if file_url: cache_key = "url:" + file_url
-		elif file_path: cache_key = "path:" + str(Path(file_path).resolve())
-		elif file_bytes: cache_key = "bytes:" + md5(file_bytes).hexdigest()
+		if file_url: cache_key = "id:url:" + file_url
+		elif file_path: cache_key = "id:path:" + str(Path(file_path).resolve())
+		elif file_bytes: cache_key = "id:bytes:" + md5(file_bytes).hexdigest()
 			
 	if cache_key:
-		file_id = cache.get_file_id(cache_key)
+		file_id = hashmapdb.get(cache_key, str)
 		if file_id:
 			file_path = file_url = file_bytes = None
 	
@@ -79,7 +80,7 @@ def send_message(chat_id, text="", as_html=False, file_path=None, file_id=None,
 	if cache_key:
 		file_id = _get_msg_file_id(sent_msg)
 		if file_id:
-			cache.add_file_id(cache_key, file_id)
+			hashmapdb.add(cache_key, file_id)
 	
 	return sent_msg
 
