@@ -64,10 +64,14 @@ def send_message(chat_id, text="", as_html=False, file_path=None, file_id=None,
 			"file_url, file_bytes can be specified at the same time")
 	
 	cache_key = None
+	_key = lambda (dtype, body): f"id:{dtype}:{file_type}:{body}"
 	if use_cache:
-		if file_url: cache_key = "id:url:" + file_url
-		elif file_path: cache_key = "id:path:" + str(Path(file_path).resolve())
-		elif file_bytes: cache_key = "id:bytes:" + md5(file_bytes).hexdigest()
+		if file_url: cache_key = _key(
+			"url", file_url)
+		elif file_path: cache_key = _key(
+			"path", str(Path(file_path).resolve()))
+		elif file_bytes: cache_key = _key(
+			"bytes", md5(file_bytes).hexdigest())
 			
 	if cache_key:
 		file_id = hashmapdb.get(cache_key, str)
