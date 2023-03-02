@@ -64,7 +64,7 @@ def send_message(chat_id, text="", as_html=False, file_path=None, file_id=None,
 			"file_url, file_bytes can be specified at the same time")
 	
 	cache_key = None
-	_key = lambda (dtype, body): f"id:{dtype}:{file_type}:{body}"
+	_key = lambda dtype, body: f"id:{dtype}:{file_type}:{body}"
 	if use_cache:
 		if file_url: cache_key = _key(
 			"url", file_url)
