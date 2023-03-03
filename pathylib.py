@@ -695,7 +695,6 @@ class TrackedPlayer():
 		self.timeline.add_entry(moniker_entry)
 	
 	def update(self, stat):
-		start = time.time()
 		upd_resp = {}
 		
 		self.handle_goodnights()
@@ -727,11 +726,6 @@ class TrackedPlayer():
 		
 		if ("_", "br_rank_div") in diff or ("_", "br_rank_name") in diff:
 			self.on_rank_change(diff, "br")
-		
-		# TODO: remove
-		end = time.time()
-		duration = end - start
-		log(f"Updated {self.get_stat('name')} in {duration} seconds")
 		
 		return upd_resp
 	
