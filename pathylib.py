@@ -1616,7 +1616,7 @@ def format_map(mode_name, mapinfo):
 	else:
 		result += f"<b>{next_map}"
 		result += f"{_event_addin(mapinfo['next'])}</b>\n"
-		result += f"</b>, де буде {next_map_time}</i>"
+		result += f", де буде {next_map_time}</i>"
 	
 	return result
 
