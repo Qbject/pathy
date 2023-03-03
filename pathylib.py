@@ -203,10 +203,10 @@ class PathyDaemon():
 		for chat_id in player.state["chats"]:
 			try:
 				chat_state = self.get_chat_state(chat_id)
-				msg_to_del = chat_state.get("last_party_msg_id")
+				msg_to_del = chat_state.get("hanging_party_msg_id")
 				if msg_to_del:
 					tgapi.delete_msg(chat_id, msg_to_del)
-					chat_state["last_party_msg_id"] = None
+					chat_state["hanging_party_msg_id"] = None
 				
 				players_online = list(self.iter_players(
 					online=True, in_chat=chat_id))
@@ -220,7 +220,7 @@ class PathyDaemon():
 			
 				sent_msg = pic.send_tg(chat_id, caption, as_html=True,
 					force_file_type="animation")
-				chat_state["last_party_msg_id"] = sent_msg.get("message_id")
+				chat_state["hanging_party_msg_id"] = sent_msg.get("message_id")
 			except Exception:
 				log(f"Failed to send party image for chat {chat_id}:" \
 					f"\n{get_err()}", err=True, send_tg=True)
@@ -382,12 +382,19 @@ class PathyDaemon():
 	def handle_tg_msg(self, upd):
 		chat_state = self.get_chat_state(upd.chat_id)
 		bot_cmd, bot_cmd_args = upd.parse_bot_command()
+		reply_to_id = upd.reply_to["message_id"] if upd.reply_to else None
 		
+		# msg json dump for debug purposes
 		if (not bot_cmd) and upd.chat_id == DEBUG_CHAT_ID:
 			upd.reply(upd.format(as_html=True), as_html=True)
 		
 		chat_state["title"] = upd.get_chat_title() or chat_state["title"]
 		chat_state["type"] = upd.data["message"]["chat"]["type"]
+		
+		# if hanging party msg got a reply, it should not be removed
+		if reply_to_id and (
+			reply_to_id == chat_state.get("hanging_party_msg_id")):
+			chat_state["hanging_party_msg_id"] = None
 		
 		if bot_cmd == "/status":
 			statuses = [player.format_status() for \
@@ -470,7 +477,6 @@ class PathyDaemon():
 			upd.reply(text, file_bytes=img_bytes, file_type="photo",
 				as_html=True)
 		
-		reply_to_id = upd.reply_to["message_id"] if upd.reply_to else None
 		if reply_to_id and (reply_to_id == chat_state.get("addplayer_msg_id")):
 			if chat_state["addplayer_initiator"] != upd.from_id:
 				return
