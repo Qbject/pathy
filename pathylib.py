@@ -726,8 +726,6 @@ class TrackedPlayer():
 		
 		if ("_", "br_rank_div") in diff or ("_", "br_rank_name") in diff:
 			self.on_rank_change(diff, "br")
-		if ("_", "ar_rank_div") in diff or ("_", "ar_rank_name") in diff:
-			self.on_rank_change(diff, "ar")
 		
 		return upd_resp
 	
@@ -814,9 +812,8 @@ class TrackedPlayer():
 		if cur_rank.get_value() > prev_rank.get_value():
 			progressed = "апнув"
 		to_rank = cur_rank.format(detailed=False, v_rod=True)
-		in_mode = {"br": "в БР", "ar": "на Аренах"}[mode]
 		
-		msg = f"<b>{self.name}</b> {progressed} <i>{to_rank}</i> {in_mode}"
+		msg = f"<b>{self.name}</b> {progressed} <i>{to_rank}</i>"
 		self.notify_all_chats(msg, as_html=True)
 	
 	def handle_goodnights(self):
@@ -1020,11 +1017,6 @@ class Timeline():
 		_add("br_rank_top_pos", _global["rank"]["ladderPosPlatform"])
 		_add("br_rank_name",    _global["rank"]["rankName"])
 		
-		_add("ar_rank_score",   _global["arena"]["rankScore"])
-		_add("ar_rank_div",     _global["arena"]["rankDiv"])
-		_add("ar_rank_top_pos", _global["arena"]["ladderPosPlatform"])
-		_add("ar_rank_name",    _global["arena"]["rankName"])
-		
 		_add("name", _global["name"])
 		selected_legend = player_stat["legends"]["selected"]["LegendName"]
 		_add("legend", selected_legend)
@@ -1115,7 +1107,6 @@ class Timeline():
 				return f"{caption}: {before.format()} → {after.format()}\n"
 		
 		text += _format_rank_diff("br", "Ранг в БР") or ""
-		text += _format_rank_diff("ar", "Ранг на Аренах") or ""
 		
 		legends = {}
 		
@@ -1291,8 +1282,6 @@ class MatchTimeline(ConstantStateTimeline):
 			return "inFiringRange"
 		elif ("_", "br_rank_score") in self.get_diff():
 			return "inRankedBrMatch"
-		elif ("_", "ar_rank_score") in self.get_diff():
-			return "inRankedArMatch"
 		else:
 			return "inPublicMatch"
 	
@@ -1324,7 +1313,6 @@ class MatchTimeline(ConstantStateTimeline):
 				return f"{caption}: {before.format()} → {after.format()}\n"
 		
 		text += _format_rank_diff("br", "Ранг в БР") or ""
-		text += _format_rank_diff("ar", "Ранг на Аренах") or ""
 		
 		for legend, stat_name in diff:
 			skip_stats = [
@@ -1468,14 +1456,6 @@ class PlayerRank():
 				8200, 9000, 9800, 10600,
 				11400, 12300, 13200, 14100,
 				15000
-			],
-			"ar": [
-				0, 400, 800, 1200,
-				1600, 2000, 2400, 2800,
-				3200, 3600, 4000, 4400,
-				4800, 5200, 5600, 6000,
-				6400, 6800, 7200, 7600,
-				8000
 			]
 		}
 		points_name = "RP" if self.mode == "br" else "AP"
