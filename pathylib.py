@@ -695,6 +695,7 @@ class TrackedPlayer():
 		self.timeline.add_entry(moniker_entry)
 	
 	def update(self, stat):
+		start = time.time()
 		upd_resp = {}
 		
 		self.handle_goodnights()
@@ -726,6 +727,11 @@ class TrackedPlayer():
 		
 		if ("_", "br_rank_div") in diff or ("_", "br_rank_name") in diff:
 			self.on_rank_change(diff, "br")
+		
+		# TODO: remove
+		end = time.time()
+		duration = end - start
+		log(f"Updated {self.get_stat('name')} in {duration} seconds")
 		
 		return upd_resp
 	
@@ -995,6 +1001,13 @@ class Timeline():
 			entry = TimelineEntry(timestamp, legend, stat_name, stat_value)
 			self.add_entry(entry)
 			diff_data[(legend, stat_name)] = (prev_value, new_value)
+			
+			# TODO: remove; temporary debug logging
+			if stat_name in ["update_count", "is_in_match"]:
+				text = f"[{self.get_stat('name')}] {stat_name}: " \
+					f"{prev_value} -> {new_value}"
+				log(text, send_tg=True)
+			
 			return True
 		
 		_global = player_stat["global"]
