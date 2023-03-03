@@ -1615,7 +1615,7 @@ def format_map(mode_name, mapinfo):
 		result += f"іншу карту</i>"
 	else:
 		result += f"<b>{next_map}"
-		result += f"{_event_addin(mapinfo['next'])}</b>\n"
+		result += f"{_event_addin(mapinfo['next'])}</b>"
 		result += f", де буде {next_map_time}</i>"
 	
 	return result
