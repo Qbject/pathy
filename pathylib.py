@@ -1598,17 +1598,26 @@ class CraftingRotation():
 		return result.strip()
 
 def format_map(mode_name, mapinfo):
+	def _event_addin(rotation_info):
+		if not "eventName" in rotation_info: return ""
+		return f" ({resmgr.trans(rotation_info['eventName'])})"
+	
 	cur_map  = resmgr.trans(mapinfo["current"]["map"])
 	next_map = resmgr.trans(mapinfo["next"]["map"])
 	cur_map_time  = format_time(mapinfo["current"]["remainingSecs"])
 	next_map_time = format_time(mapinfo["next"]["DurationInSecs"])
 	
-	result = f"<b>{mode_name}</b> зараз на карті <b>{cur_map}</b>\n"
+	result = f"<b>{mode_name}</b> зараз на карті <b>{cur_map}"
+	result += f"{_event_addin(mapinfo['current'])}</b>\n"
+	
 	result += f"<i>Через {cur_map_time} перейде на "
 	if mapinfo["next"]["map"] == "Unknown":
 		result += f"іншу карту</i>"
 	else:
-		result += f"<b>{next_map}</b>, де буде {next_map_time}</i>"
+		result += f"<b>{next_map}"
+		result += f"{_event_addin(mapinfo['next'])}</b>\n"
+		result += f"</b>, де буде {next_map_time}</i>"
+	
 	return result
 
 def format_map_rotation():
@@ -1616,10 +1625,9 @@ def format_map_rotation():
 	delim = "\n--- --- ---\n"
 	
 	return delim.join((
-		format_map("БР",           maps["battle_royale"]),
-		format_map("Ранкед БР",    maps["ranked"]),
-		format_map("Арена",        maps["arenas"]),
-		format_map("Ранкед арена", maps["arenasRanked"])
+		format_map("БР",        maps["battle_royale"]),
+		format_map("Ранкед БР", maps["ranked"]),
+		format_map("Мікстейп",  maps["ltm"])
 	))
 
 def parse_timeline_key(*args):
