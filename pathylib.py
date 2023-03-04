@@ -1040,9 +1040,19 @@ class Timeline():
 			_add(stat_name, "$null", selected_legend)
 		
 		# TODO: remove; temporary debug logging
+		class TupleKeyEncoder(json.JSONEncoder):
+			def encode(self, obj):
+				def hint_tuples(item):
+					if isinstance(item, dict):
+						return {
+							str(k): hint_tuples(v) for k, v in item.items()}
+					elif isinstance(item, (list, tuple)):
+						return [hint_tuples(e) for e in item]
+					return item
+				return super().encode(hint_tuples(obj))
 		if diff_data:
 			text = f"Update #{self.update_n} for {self.get_stat('name')}:\n"
-			text += json.dumps(diff_data, indent="\t")
+			text += json.dumps(diff_data, cls=TupleKeyEncoder, indent="\t")
 			log(text, send_tg=True)
 		self.update_n += 1
 		
