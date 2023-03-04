@@ -878,6 +878,8 @@ class Timeline():
 		self._entries = []
 		self.start_stat = start_stat or {}
 		self.clear_cache()
+		#TODO: remove
+		self.update_n = 0
 	
 	def clear_cache(self):
 		self._cache = {}
@@ -996,12 +998,6 @@ class Timeline():
 			self.add_entry(entry)
 			diff_data[(legend, stat_name)] = (prev_value, new_value)
 			
-			# TODO: remove; temporary debug logging
-			if stat_name in ["update_count", "is_in_match"]:
-				text = f"[{self.get_stat('name')}] {stat_name}: " \
-					f"{prev_value} -> {new_value}"
-				log(text, send_tg=True)
-			
 			return True
 		
 		_global = player_stat["global"]
@@ -1042,6 +1038,13 @@ class Timeline():
 			if stat_name in legend_trackers: continue
 			
 			_add(stat_name, "$null", selected_legend)
+		
+		# TODO: remove; temporary debug logging
+		if diff_data:
+			text = f"Update #{self.update_n} for {self.get_stat('name')}:\n"
+			text += json.dumps(diff_data, indent="\t")
+			log(text, send_tg=True)
+		self.update_n++
 		
 		return diff_data
 	
