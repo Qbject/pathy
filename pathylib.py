@@ -1044,7 +1044,7 @@ class Timeline():
 			text = f"Update #{self.update_n} for {self.get_stat('name')}:\n"
 			text += json.dumps(diff_data, indent="\t")
 			log(text, send_tg=True)
-		self.update_n++
+		self.update_n += 1
 		
 		return diff_data
 	
