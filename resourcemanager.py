@@ -25,6 +25,9 @@ class GdriveResourceManager():
 	def get_default_legend_img(self, legend_name):
 		return self.root() / "legend" / "default.png"
 	
+	def get_hate_monday_img(self):
+		return (self.root() / "ihatemondays").random_child()
+	
 	def get_legend_img(self, legend_name):
 		legend_img = (self.root() / "legend" / legend_name).random_child()
 		return legend_img if legend_img else self.get_default_legend_img()
