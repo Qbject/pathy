@@ -12,9 +12,10 @@ creds = service_account.Credentials.from_service_account_file(
 service = build('drive', 'v3', credentials=creds)
 
 class GoogleDriveFile():
-	def __init__(self, data, fields="*"):
+	def __init__(self, data, fields="*", attempts=3):
 		self.data = data
 		self.fields = fields
+		self.attempts = attempts
 		self.cached_children = {}
 	
 	@classmethod
@@ -41,7 +42,15 @@ class GoogleDriveFile():
 		list_params = dict(q=f"'{self.data['id']}' in parents",
 			fields=f"nextPageToken, files({fields})")
 		
-		results = service.files().list(**list_params).execute()
+		results = None
+		last_err = None
+		for attempt in range(self.attempts):
+			try:
+				results = service.files().list(**list_params).execute()
+				break
+			except Exception as e:
+				last_err = e
+		if results is None: raise last_err
 		files = results.get("files", [])
 		
 		while results.get("nextPageToken"):
