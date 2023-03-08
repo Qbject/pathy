@@ -477,6 +477,11 @@ class PathyDaemon():
 			upd.reply(text, file_bytes=img_bytes, file_type="photo",
 				as_html=True)
 		
+		if bot_cmd == "/online":
+			resmgr.get_suatmm_img().send_tg(upd.chat_id,
+				force_file_type="animation")
+			return
+		
 		if reply_to_id and (reply_to_id == chat_state.get("addplayer_msg_id")):
 			if chat_state["addplayer_initiator"] != upd.from_id:
 				return

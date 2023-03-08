@@ -40,6 +40,9 @@ class GdriveResourceManager():
 	def get_full_offline_img(self):
 		return (self.root() / "full_offline").random_child()
 	
+	def get_suatmm_img(self):
+		return (self.root() / "shutupandtakemymoney").random_child()
+	
 	def translations(self):
 		if not self._translations:
 			translations_path = self.root() / "translations.json"
