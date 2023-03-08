@@ -477,7 +477,7 @@ class PathyDaemon():
 			upd.reply(text, file_bytes=img_bytes, file_type="photo",
 				as_html=True)
 		
-		if bot_cmd == "/online":
+		if bot_cmd == "/shutupandtakemymoney":
 			resmgr.get_suatmm_img().send_tg(upd.chat_id,
 				force_file_type="animation")
 			return
