@@ -102,6 +102,7 @@ class PathyDaemon():
 			return True
 		
 		if msg == "tgupd":
+			log("Got TG upd")
 			self.main_worker.task(self.handle_tg_upd).run(args.get("upd_body"))
 			return "DONE"
 		
