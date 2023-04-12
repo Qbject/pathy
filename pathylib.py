@@ -102,7 +102,6 @@ class PathyDaemon():
 			return True
 		
 		if msg == "tgupd":
-			log("Got TG upd")
 			self.main_worker.task(self.handle_tg_upd).run(args.get("upd_body"))
 			return "DONE"
 		
@@ -248,9 +247,9 @@ class PathyDaemon():
 	def lock(self):
 		try:
 			DAEMON_LOCKFILE.unlink(missing_ok=True)
-		except Exception as e:
+		except Exception:
 			log("Failed to lock daemon, raising error")
-			raise e
+			raise
 		
 		self.lock_handle = DAEMON_LOCKFILE.open("w+")
 	
