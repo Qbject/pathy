@@ -35,7 +35,7 @@ def entry(action, args={}, body_raw=b"", from_web=False):
 		elif action == "stop":
 			return stop()
 		
-		elif action == "tgupdate":
+		elif action == "tgupd":
 			return handle_tg_upd(body_raw)
 		
 		else:
