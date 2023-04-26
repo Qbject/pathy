@@ -19,7 +19,7 @@ class GdriveResourceManager():
 	def root(self):
 		if not self._root:
 			self._root = gdrive.GoogleDriveFile.from_id(self.dir_id)
-			self._root.reload(fields="id, fileExtension, webContentLink, name")
+			self._root.reload(fields="id, mimeType, webContentLink, name")
 		return self._root
 	
 	def get_default_legend_img(self, legend_name):

@@ -79,7 +79,7 @@ class GoogleDriveFile():
 	
 	def send_tg(self, *args, force_file_type=None, **kwargs):
 		file_type = tgapi.get_file_type(
-			self.data["fileExtension"], force_type=force_file_type)
+			self.data["mimeType"], force_type=force_file_type)
 		return tgapi.send_message(*args, **kwargs,
 			file_url=self.data["webContentLink"], file_type=file_type)
 	

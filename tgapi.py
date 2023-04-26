@@ -125,20 +125,15 @@ def _get_msg_file_id(msg):
 			attachment = attachment[-1] # for multiple PhotoSizes
 		return attachment.get("file_id")
 
-def get_file_type(extension=None, path=None, force_type=None):
-	# TODO: add more
-	
-	if not extension:
-		extension = path.suffix[-1:]
-	
+def get_file_type(mime_type, force_type=None):
 	applicable = ("document",)
-	if extension in ("png", "jpg", "jpeg", "webp"):
+	if mime_type in ("image/png", "image/jpeg", "image/webp"):
 		applicable = ("photo", "document")
-	elif extension in ("gif",):
+	elif mime_type in ("image/gif",):
 		applicable = ("photo", "animation", "document")
-	elif extension in ("mp4",):
+	elif mime_type in ("video/mp4", "video/mpeg", "video/ogg", "video/webm"):
 		applicable = ("video", "video_note", "animation", "document")
-	elif extension in ("mp3",):
+	elif mime_type in ("audio/mpeg",):
 		applicable = ("audio", "voice", "document")
 	
 	return force_type if force_type in applicable else applicable[0]
