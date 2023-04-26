@@ -221,9 +221,13 @@ class PathyDaemon():
 				sent_msg = pic.send_tg(chat_id, caption, as_html=True,
 					force_file_type="animation")
 				chat_state["hanging_party_msg_id"] = sent_msg.get("message_id")
-			except Exception:
+			except Exception as err:
 				log(f"Failed to send party image for chat {chat_id}:" \
 					f"\n{get_err()}", err=True, send_tg=True)
+				if isinstance(err, tgapi.TgBotApiError):
+					log(f"Caption:\n{caption}", err=True, send_tg=True)
+					log(f"URL: {pic.data['webContentLink']}", err=True,
+						send_tg=True)
 				continue
 	
 	def get_chat_state(self, chat_id):
