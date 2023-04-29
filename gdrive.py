@@ -39,23 +39,31 @@ class GoogleDriveFile():
 		if use_cache and fields in self.cached_children:
 			return self.cached_children[fields]
 		
-		list_params = dict(q=f"'{self.data['id']}' in parents",
-			fields=f"nextPageToken, files({fields})")
+		def _list(page_token):
+			params = {
+				"q": f"'{self.data['id']}' in parents",
+				"fields": f"nextPageToken, files({fields})"
+			}
+			if page_token:
+				params["pageToken"] = page_token
+			
+			results = None
+			last_err = None
+			for attempt in range(self.attempts):
+				try:
+					results = service.files().list(**params).execute()
+					break
+				except Exception as e:
+					last_err = e
+			if results is None: raise last_err
+			return (results.get("files", []), results.get("nextPageToken"))
 		
-		results = None
-		last_err = None
-		for attempt in range(self.attempts):
-			try:
-				results = service.files().list(**list_params).execute()
-				break
-			except Exception as e:
-				last_err = e
-		if results is None: raise last_err
-		files = results.get("files", [])
-		
-		while results.get("nextPageToken"):
-			results = service.files().list(**list_params).execute()
-			files.extend(results.get("files", []))
+		files = []
+		page_token = None
+		while True:
+			(page_files, page_token) = _list(page_token)
+			files.extend(page_files)
+			if not page_token: break
 		
 		children = [GoogleDriveFile(file, fields=fields) for file in files]
 		if use_cache: self.cached_children[fields] = children
