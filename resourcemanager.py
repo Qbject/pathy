@@ -120,12 +120,12 @@ class GdriveResourceManager():
 	def get_adjectives(self, ending=None, max_count=3):
 		# randomly calculating the number of adjectives
 		adj_count = 1
-		for i in range(max_count-1):
+		for i in range(max_count - 1):
 			if util.chance(0.1):
 				adj_count += 1
 		
 		# sort of easter egg. 1/500 or 0.002 is a heirloom chance
-		if chance(0.002):
+		if util.chance(0.002):
 			adj_count = 10
 		
 		result = []
