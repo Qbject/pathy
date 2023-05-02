@@ -124,6 +124,10 @@ class GdriveResourceManager():
 			if util.chance(0.1):
 				adj_count += 1
 		
+		# sort of easter egg. 1/500 or 0.002 is a heirloom chance
+		if chance(0.002):
+			adj_count = 10
+		
 		result = []
 		for _ in range(adj_count):
 			adj = self.get_dict_rnd("adj")
