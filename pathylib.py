@@ -1,5 +1,5 @@
 import time, datetime, json, threading, schedule, io
-import util, alsapi, tgapi, gdrive
+import util, alsapi, tgapi, gdrive, youtube
 from pathlib import Path
 from multiprocessing.connection import Listener
 from collections import deque
@@ -269,6 +269,12 @@ class PathyDaemon():
 			self.main_worker.task(self.send_hate_monday_pic).run()
 		schedule.every().monday.at(f"{_hour(8)}:00").do(send_monday_pic)
 		
+		def check_yt_updates():
+			if not self.is_running: return
+			self.main_worker.task(self.check_yt_updates).run()
+		schedule.every().hour.at(":05").do(check_yt_updates)
+		schedule.every().hour.at(":35").do(check_yt_updates)
+		
 		def upd_player():
 			if not self.is_running: return
 			self.do_player_upd()
@@ -298,6 +304,16 @@ class PathyDaemon():
 			self.state["chats_data"] = {}
 		if not "whitelisted_chats" in self.state:
 			self.state["whitelisted_chats"] = []
+		
+		if "yt_observer" not in self.state:
+			self.state["yt_observer"] = {}
+		
+		for channel_id in OBSERVED_YT_CHANNELS:
+			if channel_id in self.state["yt_observer"]:
+				continue
+			self.state["yt_observer"][channel_id] = {
+				"last_vid_id": None
+			}
 		
 		for i, player_state in enumerate(self.state["tracked_players"]):
 			self.state["tracked_players"][i] = TrackedPlayer(player_state)
@@ -521,6 +537,26 @@ class PathyDaemon():
 	def send_hate_monday_pic(self):
 		resmgr.get_hate_monday_img().send_tg(
 			ASL_CHAT_ID, force_file_type="animation")
+	
+	def check_yt_updates(self):
+		for channel_id in OBSERVED_YT_CHANNELS:
+			last_posted_vids = youtube.get_channel_videos(channel_id)
+			if not last_posted_vids: continue
+			
+			# swapping stored last video id with actual one
+			channel_state = self.state["yt_observer"][channel_id]
+			last_notified_id = channel_state["last_vid_id"]
+			channel_state["last_vid_id"] = last_posted_vids[0]
+			
+			# preventing spam on first run
+			if not last_notified_id: continue
+			
+			for posted_video_id in last_posted_vids:
+				if posted_video_id == last_notified_id: break
+				
+				# notifying
+				url = f"https://youtu.be/{posted_video_id}"
+				tgapi.send_message(ASL_CHAT_ID, url)
 
 class WorkerThread(threading.Thread):
 	def __init__(self, name=None, daemon=False):

@@ -6,10 +6,10 @@ from const import *
 from util import bytes2type
 
 
-cred_scopes = ['https://www.googleapis.com/auth/drive.readonly']
+cred_scopes = ["https://www.googleapis.com/auth/drive.readonly"]
 creds = service_account.Credentials.from_service_account_file(
 	str(GDRIVE_SERVICE_CRED), scopes=cred_scopes)
-service = build('drive', 'v3', credentials=creds)
+service = build("drive", "v3", credentials=creds)
 
 class GoogleDriveFile():
 	def __init__(self, data, fields="*", attempts=3):
