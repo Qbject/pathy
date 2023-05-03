@@ -273,7 +273,6 @@ class PathyDaemon():
 			if not self.is_running: return
 			self.main_worker.task(self.check_yt_updates).run(secondary)
 		schedule.every().hour.at(":05").do(check_yt_updates, False)
-		schedule.every().hour.at(":35").do(check_yt_updates, False)
 		schedule.every().day.at(f"{_hour(20)}:00").do(check_yt_updates, True)
 		
 		def upd_player():
