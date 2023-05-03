@@ -269,11 +269,12 @@ class PathyDaemon():
 			self.main_worker.task(self.send_hate_monday_pic).run()
 		schedule.every().monday.at(f"{_hour(8)}:00").do(send_monday_pic)
 		
-		def check_yt_updates():
+		def check_yt_updates(secondary=False):
 			if not self.is_running: return
-			self.main_worker.task(self.check_yt_updates).run()
-		schedule.every().hour.at(":05").do(check_yt_updates)
-		schedule.every().hour.at(":35").do(check_yt_updates)
+			self.main_worker.task(self.check_yt_updates).run(secondary)
+		schedule.every().hour.at(":05").do(check_yt_updates, False)
+		schedule.every().hour.at(":35").do(check_yt_updates, False)
+		schedule.every().day.at(f"{_hour(20)}:00").do(check_yt_updates, True)
 		
 		def upd_player():
 			if not self.is_running: return
@@ -308,7 +309,10 @@ class PathyDaemon():
 		if "yt_observer" not in self.state:
 			self.state["yt_observer"] = {}
 		
-		for channel_id in OBSERVED_YT_CHANNELS:
+		all_channels = OBSERVED_YT_CHANNELS_PRIMARY + \
+			OBSERVED_YT_CHANNELS_SECONDARY
+		
+		for channel_id in all_channels:
 			if channel_id in self.state["yt_observer"]:
 				continue
 			self.state["yt_observer"][channel_id] = {
@@ -538,8 +542,12 @@ class PathyDaemon():
 		resmgr.get_hate_monday_img().send_tg(
 			ASL_CHAT_ID, force_file_type="animation")
 	
-	def check_yt_updates(self):
-		for channel_id in OBSERVED_YT_CHANNELS:
+	def check_yt_updates(self, secondary=False):
+		channels = OBSERVED_YT_CHANNELS_PRIMARY
+		if secondary:
+			channels = OBSERVED_YT_CHANNELS_SECONDARY
+		
+		for channel_id in channels:
 			last_posted_vids = youtube.get_channel_videos(channel_id)
 			if not last_posted_vids: continue
 			

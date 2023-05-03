@@ -4,6 +4,11 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+def _parse_list(env_value):
+	if env_value:
+		return env_value.split(",")
+	return []
+
 ROOT_DIR     = Path(getenv("PATHY_ROOT_DIR")     or Path(__file__).parent)
 TIMELINE_DIR = Path(getenv("PATHY_TIMELINE_DIR") or ROOT_DIR / "data/timeline")
 LOGS_DIR     = Path(getenv("PATHY_LOGS_DIR")     or ROOT_DIR / "data/logs")
@@ -36,6 +41,5 @@ MAINTAINANCE_MODE = bool(int(getenv("PATHY_MAINTAINANCE_MODE", 0)))
 GDRIVE_ASSETS_ID = environ["PATHY_GDRIVE_ASSETS_ID"]
 GDRIVE_SERVICE_CRED = Path(getenv("PATHY_GDRIVE_SERVICE_CRED") or ROOT_DIR / "gdrive_service_cred.json")
 
-OBSERVED_YT_CHANNELS = getenv("OBSERVED_YT_CHANNELS")
-if OBSERVED_YT_CHANNELS:
-	OBSERVED_YT_CHANNELS = OBSERVED_YT_CHANNELS.split(",")
+OBSERVED_YT_CHANNELS_PRIMARY = _parse_list(getenv("OBSERVED_YT_CHANNELS_PRIMARY"))
+OBSERVED_YT_CHANNELS_SECONDARY = _parse_list(getenv("OBSERVED_YT_CHANNELS_SECONDARY"))
