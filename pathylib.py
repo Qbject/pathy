@@ -311,10 +311,10 @@ class PathyDaemon():
 		all_channels = OBSERVED_YT_CHANNELS_PRIMARY + \
 			OBSERVED_YT_CHANNELS_SECONDARY
 		
-		for channel_id in all_channels:
-			if channel_id in self.state["yt_observer"]:
+		for channel in all_channels:
+			if channel["id"] in self.state["yt_observer"]:
 				continue
-			self.state["yt_observer"][channel_id] = {
+			self.state["yt_observer"][channel["id"]] = {
 				"last_vid_id": None
 			}
 		
@@ -546,24 +546,29 @@ class PathyDaemon():
 		if secondary:
 			channels = OBSERVED_YT_CHANNELS_SECONDARY
 		
-		for channel_id in channels:
-			last_posted_vids = youtube.get_channel_videos(channel_id)
-			if not last_posted_vids: continue
-			
-			# swapping stored last video id with actual one
-			channel_state = self.state["yt_observer"][channel_id]
-			last_notified_id = channel_state["last_vid_id"]
-			channel_state["last_vid_id"] = last_posted_vids[0]
-			
-			# preventing spam on first run
-			if not last_notified_id: continue
-			
-			for posted_video_id in last_posted_vids:
-				if posted_video_id == last_notified_id: break
+		for channel in channels:
+			try:
+				last_posted_vids = youtube.get_channel_videos(channel["id"])
+				if not last_posted_vids: continue
 				
-				# notifying
-				url = f"https://youtu.be/{posted_video_id}"
-				tgapi.send_message(ASL_CHAT_ID, url)
+				# swapping stored last video id with actual one
+				channel_state = self.state["yt_observer"][channel["id"]]
+				last_notified_id = channel_state["last_vid_id"]
+				channel_state["last_vid_id"] = last_posted_vids[0]
+				
+				# preventing spam on first run
+				if not last_notified_id: continue
+				
+				for posted_video_id in last_posted_vids:
+					if posted_video_id == last_notified_id: break
+					
+					# notifying
+					url = f"https://youtu.be/{posted_video_id}"
+					msg = f"<b>{channel['name']}</b> - {url}"
+					tgapi.send_message(ASL_CHAT_ID, msg, as_html=True)
+			except Exception:
+				log(f"Failed to notify about {channel['name']} " \
+					"videos:\n{get_err()}", err=True, send_tg=True)
 
 class WorkerThread(threading.Thread):
 	def __init__(self, name=None, daemon=False):
