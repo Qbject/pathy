@@ -74,7 +74,7 @@ class GdriveResourceManager():
 	# for repeating operations encapsulation purposes only
 	# returns rnd noun with prefix and tags
 	def _get_base_moniker(self, v_rod=False, plur=False):
-		is_prefixed = util.chance(0.15)
+		is_prefixed = util.chance(0.05)
 		prefix = self.get_dict_rnd("prefixes") if is_prefixed else ""
 		
 		noun, tags = self.get_noun(v_rod, plur)
