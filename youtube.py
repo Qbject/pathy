@@ -7,23 +7,27 @@ creds = service_account.Credentials.from_service_account_file(
 	str(GDRIVE_SERVICE_CRED), scopes=cred_scopes)
 service = build("youtube", "v3", credentials=creds)
 
-def get_channel_videos(channel_id, max_results=5):
+def get_channel_videos(channel_id, published_after=None, max_results=5):
 	videos = []
 	next_page_token = None
 
 	while True:
 		request = service.search().list(
-			part="id",
+			part="snippet",
 			channelId=channel_id,
 			type="video",
 			maxResults=min(max_results, 50),
 			order="date",
-			pageToken=next_page_token
+			pageToken=next_page_token,
+			publishedAfter=published_after
 		)
 		response = request.execute()
 		
 		for item in response["items"]:
-			videos.append(item["id"]["videoId"])
+			videos.append(item)
+			
+			if len(videos) >= max_results:
+				break
 		
 		if len(videos) >= max_results:
 			break

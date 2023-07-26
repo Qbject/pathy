@@ -1,4 +1,4 @@
-import time, datetime, json, threading, schedule, io
+import time, json, threading, schedule, io
 import util, alsapi, tgapi, gdrive, youtube
 from pathlib import Path
 from multiprocessing.connection import Listener
@@ -7,6 +7,7 @@ from util import log, format_time, get_err, fix_text_layout
 from const import *
 from resourcemanager import singleton as resmgr
 from hashmapdb import singleton as hashmapdb
+from datetime import datetime, timedelta
 
 
 class PathyDaemon():
@@ -311,12 +312,15 @@ class PathyDaemon():
 		all_channels = OBSERVED_YT_CHANNELS_PRIMARY + \
 			OBSERVED_YT_CHANNELS_SECONDARY
 		
+		now = datetime.utcnow()
 		for channel in all_channels:
-			if channel["id"] in self.state["yt_observer"]:
-				continue
-			self.state["yt_observer"][channel["id"]] = {
-				"last_vid_id": None
-			}
+			if channel["id"] not in self.state["yt_observer"]:
+				self.state["yt_observer"][channel["id"]] = {}
+			
+			channel_state = self.state["yt_observer"][channel["id"]]
+			if "last_vid_time" not in channel_state:
+				channel_state["last_vid_time"] = \
+					now.strftime("%Y-%m-%dT%H:%M:%SZ")
 		
 		for i, player_state in enumerate(self.state["tracked_players"]):
 			self.state["tracked_players"][i] = TrackedPlayer(player_state)
@@ -548,27 +552,30 @@ class PathyDaemon():
 		
 		for channel in channels:
 			try:
-				last_posted_vids = youtube.get_channel_videos(channel["id"])
-				if not last_posted_vids: continue
-				
-				# swapping stored last video id with actual one
 				channel_state = self.state["yt_observer"][channel["id"]]
-				last_notified_id = channel_state["last_vid_id"]
-				channel_state["last_vid_id"] = last_posted_vids[0]
 				
-				# preventing spam on first run
-				if not last_notified_id: continue
+				# calculating publishedAfter filter by adding 1 secong to
+				# the last publication time
+				last_vid_time = datetime.strptime(
+					channel_state["last_vid_time"], "%Y-%m-%dT%H:%M:%SZ")
+				published_after = (last_vid_time + timedelta(seconds=1)) \
+					.strftime("%Y-%m-%dT%H:%M:%SZ")
 				
-				for posted_video_id in last_posted_vids:
-					if posted_video_id == last_notified_id: break
-					
-					# notifying
-					url = f"https://youtu.be/{posted_video_id}"
+				new_videos = youtube.get_channel_videos(
+					channel["id"], published_after)
+				
+				if new_videos:
+					channel_state["last_vid_time"] = new_videos[0][
+						"snippet"]["publishedAt"]
+				
+				for video in new_videos:
+					video_id = video['id']['videoId']
+					url = f"https://youtu.be/{video_id}"
 					msg = f"<b>{channel['name']}</b> - {url}"
 					tgapi.send_message(ASL_CHAT_ID, msg, as_html=True)
 			except Exception:
 				log(f"Failed to notify about {channel['name']} " \
-					"videos:\n{get_err()}", err=True, send_tg=True)
+					f"videos:\n{get_err()}", err=True, send_tg=True)
 
 class WorkerThread(threading.Thread):
 	def __init__(self, name=None, daemon=False):
