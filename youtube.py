@@ -7,7 +7,7 @@ creds = service_account.Credentials.from_service_account_file(
 	str(GDRIVE_SERVICE_CRED), scopes=cred_scopes)
 service = build("youtube", "v3", credentials=creds)
 
-def get_channel_videos(channel_id, published_after=None, max_results=5):
+def get_channel_videos(channel_id, published_after=None, max_results=50):
 	videos = []
 	next_page_token = None
 
