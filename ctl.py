@@ -38,6 +38,9 @@ def entry(action, args={}, body_raw=b"", from_web=False):
 		elif action == "tgupd":
 			return handle_tg_upd(body_raw)
 		
+		elif action == "run_id":
+			return send("run_id")
+		
 		else:
 			ensure_running()
 			resp = send(action, **args)
