@@ -51,7 +51,7 @@ class PathyDaemon():
 		self.run_listener()
 	
 	def is_single_instance(self):
-		run_id_url = get_action_url()
+		run_id_url = get_action_url("run_id")
 		try:
 			run_id_resp = requests.get(run_id_url)
 			run_id_resp.raise_for_status()
