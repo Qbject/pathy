@@ -981,8 +981,6 @@ class Timeline():
 		self._entries = []
 		self.start_stat = start_stat or {}
 		self.clear_cache()
-		#TODO: remove
-		self.update_n = 0
 	
 	def clear_cache(self):
 		self._cache = {}
@@ -1147,23 +1145,6 @@ class Timeline():
 			if stat_name in legend_trackers: continue
 			
 			_add(stat_name, "$null", selected_legend)
-		
-		# TODO: remove; temporary debug logging
-		class TupleKeyEncoder(json.JSONEncoder):
-			def encode(self, obj):
-				def hint_tuples(item):
-					if isinstance(item, dict):
-						return {
-							str(k): hint_tuples(v) for k, v in item.items()}
-					elif isinstance(item, (list, tuple)):
-						return [hint_tuples(e) for e in item]
-					return item
-				return super().encode(hint_tuples(obj))
-		if diff_data:
-			text = f"Update #{self.update_n} for {self.get_stat('name')}:\n"
-			text += json.dumps(diff_data, cls=TupleKeyEncoder, indent="\t")
-			log(text, send_tg=True)
-		self.update_n += 1
 		
 		return diff_data
 	
