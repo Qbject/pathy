@@ -23,8 +23,8 @@ def entry(action, args={}, body_raw=b"", from_web=False):
 		elif action == "keepalive":
 			return ensure_running()
 		
-		elif action == "get_web_endpoint":
-			return get_web_endpoint(args.get("action", ""))
+		elif action == "get_action_url":
+			return get_action_url(args.get("action", ""))
 		
 		elif action == "processes":
 			return util.ps_aux()
@@ -37,6 +37,9 @@ def entry(action, args={}, body_raw=b"", from_web=False):
 		
 		elif action == "tgupd":
 			return handle_tg_upd(body_raw)
+		
+		elif action == "run_id":
+			return send("run_id")
 		
 		else:
 			ensure_running()
@@ -81,9 +84,9 @@ def send(msg, _timeout=5, **args):
 	conn.close()
 	return resp
 
-def get_web_endpoint(action):
+def get_action_url(action):
 	key = md5((WEBAPI_SECRET + action).encode("utf-8")).hexdigest()
-	return f"{key}/{action}"
+	return f"https://{EXTERNAL_HOST}/{key}/{action}"
 
 def ensure_running():
 	if is_alive():
