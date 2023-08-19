@@ -39,7 +39,10 @@ def entry(action, args={}, body_raw=b"", from_web=False):
 			return handle_tg_upd(body_raw)
 		
 		elif action == "run_id":
-			return send("run_id")
+			try:
+				return send("run_id")
+			except ConnectionRefusedError:
+				return "NOT_RUNNING"
 		
 		else:
 			ensure_running()
