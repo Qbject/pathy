@@ -8,7 +8,7 @@ from const import *
 from resourcemanager import singleton as resmgr
 from hashmapdb import singleton as hashmapdb
 from datetime import datetime, timedelta
-from ctl import get_action_url
+import ctl
 import requests
 
 
@@ -51,7 +51,7 @@ class PathyDaemon():
 		self.run_listener()
 	
 	def is_single_instance(self):
-		run_id_url = get_action_url("run_id")
+		run_id_url = ctl.get_action_url("run_id")
 		try:
 			run_id_resp = requests.get(run_id_url)
 			run_id_resp.raise_for_status()
