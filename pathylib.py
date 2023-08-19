@@ -61,6 +61,7 @@ class PathyDaemon():
 		try:
 			log("Stopping daemon")
 			
+			self.is_running = False
 			try:
 				self.main_worker.stop(timeout=10)
 				log("Main worker stopped gracefully")
@@ -99,7 +100,6 @@ class PathyDaemon():
 						"Daemon: accepted connection but got no msg")
 				
 				msg, args = conn.recv()
-				if msg == "stop": self.is_running = False
 				conn.send(self.handle_cmd(msg, args))
 				conn.close()
 			except Exception:
