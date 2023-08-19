@@ -93,4 +93,5 @@ class GoogleDriveFile():
 	
 	def read(self, data_type=bytes):
 		resp = requests.get(self.data["webContentLink"])
+		resp.raise_for_status()
 		return bytes2type(resp.content, data_type)
