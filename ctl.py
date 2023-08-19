@@ -83,7 +83,7 @@ def send(msg, _timeout=5, **args):
 
 def get_action_url(action):
 	key = md5((WEBAPI_SECRET + action).encode("utf-8")).hexdigest()
-	return f"https://{EXTERNAL_HOST}/{key}/{action}"
+	return f"https://{EXTERNAL_HOST}/pathy/{key}/{action}"
 
 def ensure_running():
 	if is_alive():
