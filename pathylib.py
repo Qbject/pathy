@@ -288,12 +288,10 @@ class PathyDaemon():
 			return str(hour - util.get_hours_offset()).zfill(2)
 		
 		def send_monday_pic():
-			if not self.is_running: return
 			self.main_worker.task(self.send_hate_monday_pic).run()
 		schedule.every().monday.at(f"{_hour(8)}:00").do(send_monday_pic)
 		
 		def check_yt_updates(secondary=False):
-			if not self.is_running: return
 			self.main_worker.task(self.check_yt_updates).run(secondary)
 		schedule.every().hour.at(":05").do(check_yt_updates, False)
 		schedule.every().day.at(f"{_hour(20)}:00").do(check_yt_updates, True)
@@ -305,12 +303,10 @@ class PathyDaemon():
 		schedule.every(updater_interval).seconds.do(upd_player)
 		
 		def save_state():
-			if not self.is_running: return
 			self.main_worker.task(self.save_state).run()
 		schedule.every(5).seconds.do(save_state)
 		
 		def ensure_single_instance():
-			if not self.is_running: return
 			self.main_worker.task(self.ensure_single_instance).run()
 		schedule.every(60).seconds.do(ensure_single_instance)
 		
