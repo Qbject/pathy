@@ -52,12 +52,16 @@ class PathyDaemon():
 	
 	def is_single_instance(self):
 		run_id_url = ctl.get_action_url("run_id")
+		
 		try:
 			run_id_resp = requests.get(run_id_url)
 			run_id_resp.raise_for_status()
 		except Exception:
 			log(f"Got error while run_id check, assuming no other instances "
 				f"are running:\n{get_err()}", send_tg=True)
+			return True
+		
+		if run_id_resp.text.strip() == "NOT_RUNNING":
 			return True
 		return run_id_resp.text.strip() == self.run_id
 	
