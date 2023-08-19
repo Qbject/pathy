@@ -35,6 +35,10 @@ class PathyDaemon():
 		
 		log("Starting daemon")
 		self.run_id = get_rnd_str()
+		if not self.is_single_instance():
+			raise RuntimeError("Daemon can only be run in a single instance "
+				"(run_id mismatch)")
+		
 		self.lock()
 		self.load_state()
 		
