@@ -55,7 +55,7 @@ class PathyDaemon():
 			log(f"Got error while run_id check, assuming no other instances "
 				f"are running:\n{get_err()}", send_tg=True)
 			return True
-		return run_id_resp.text.strip() != self.run_id
+		return run_id_resp.text.strip() == self.run_id
 	
 	def stop(self):
 		try:
