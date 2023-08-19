@@ -1111,8 +1111,14 @@ class Timeline():
 		_add("level_prestige", _global.get("levelPrestige", 0))
 		_add("update_count", _global.get("internalUpdateCount", 0))
 		
+		# tricky API logic area!
+		# currentState = isInMatch only works for open party settings
+		# isInGame = 1 only RELIABLY works for invite party settings
+		is_in_match = _realtime["currentState"] == "inMatch" or \
+			_realtime["isInGame"] == 1
+		_add("is_in_match", is_in_match)
+		
 		_add("is_online",     _realtime["isOnline"])
-		_add("is_in_match",   _realtime["isInGame"])
 		_add("is_party_full", _realtime["partyFull"])
 		_add("is_banned", int(_global["bans"]["isActive"]))
 		_add("ban_reason",    _global["bans"]["last_banReason"])
