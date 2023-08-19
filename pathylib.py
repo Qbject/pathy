@@ -1114,7 +1114,7 @@ class Timeline():
 		# isInGame = 1 only RELIABLY works for invite party settings
 		is_in_match = _realtime["currentState"] == "inMatch" or \
 			_realtime["isInGame"] == 1
-		_add("is_in_match", is_in_match)
+		_add("is_in_match", int(is_in_match))
 		
 		_add("is_online",     _realtime["isOnline"])
 		_add("is_party_full", _realtime["partyFull"])
