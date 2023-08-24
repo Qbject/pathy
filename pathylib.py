@@ -65,6 +65,9 @@ class PathyDaemon():
 			return True
 		return run_id_resp.text.strip() == self.run_id
 	
+	def request_stop(self):
+		ctl.send("stop")
+	
 	def stop(self):
 		try:
 			log("Stopping daemon")
@@ -373,7 +376,7 @@ class PathyDaemon():
 		
 		log(f"Detected another daemon instance, stopping",
 			err=True, send_tg=True)
-		self.stop()
+		self.request_stop()
 	
 	def iter_players(self, online=False, in_chat=None):
 		for player in self.state["tracked_players"]:
