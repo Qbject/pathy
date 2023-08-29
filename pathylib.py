@@ -1107,8 +1107,8 @@ class Timeline():
 		_global = player_stat["global"]
 		_realtime = player_stat["realtime"]
 		
-		_add("level", _global["level"] + \
-			round(_global["toNextLevelPercent"] / 100, 2))
+		_add("level", round(
+			_global["level"] + _global["toNextLevelPercent"] / 100, 2))
 		_add("level_prestige", _global.get("levelPrestige", 0))
 		_add("update_count", _global.get("internalUpdateCount", 0))
 		
