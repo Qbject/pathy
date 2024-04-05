@@ -35,7 +35,7 @@ class GdriveResourceManager():
 	def get_party_img(self, legends):
 		if len(legends) < 1: return None
 		if len(legends) == 1: return self.get_legend_img(legends[0])
-		return (self.root() / "party" / min(len(legends), 5)).random_child()
+		return (self.root() / "party" / min(len(legends), 3)).random_child()
 	
 	def get_full_offline_img(self):
 		return (self.root() / "full_offline").random_child()
