@@ -1136,8 +1136,8 @@ class Timeline():
 		
 		legend_trackers = set()
 		for tracker in player_stat["legends"]["selected"]["data"]:
-			_add("tracker_" + tracker["key"],
-				tracker["value"], selected_legend)
+			_add("tracker_" + tracker["key"], tracker["value"],
+				"_" if tracker["global"] else selected_legend)
 			legend_trackers.add("tracker_" + tracker["key"])
 		
 		# nullifying unavailable trackers (probably unequipped)
@@ -1235,15 +1235,7 @@ class Timeline():
 		
 		# filling all the trackers to display
 		for legend, stat_name in diff:
-			skip_stats = [
-				"tracker_scout_of_action_targets_hit",
-				"tracker_jackson_bow_out_damage_done",
-				"tracker_smoke_show_damage_done"
-			]
-			if stat_name in skip_stats:
-				continue
-			
-			if legend == "_" or not stat_name.startswith("tracker_"):
+			if not stat_name.startswith("tracker_"):
 				continue
 			if not legend in legends:
 				legends[legend] = {}
@@ -1257,8 +1249,11 @@ class Timeline():
 			legends[legend][stat_name[8:]] = stat_diff
 		
 		for legend, trackers in legends.items():
-			legend_name = resmgr.trans(f"{legend}_v_mis", legend)
-			text += f"На {legend_name}:\n"
+			if legend == "_":
+				text += "На всіх і зразу:\n"
+			else:
+				text += f"На {resmgr.trans(f'{legend}_v_mis', legend)}:\n"
+			
 			for tracker, tracker_diff in trackers.items():
 				text += f"  {resmgr.trans(tracker)}: {tracker_diff}"
 				
@@ -1428,14 +1423,7 @@ class MatchTimeline(ConstantStateTimeline):
 		text += _format_rank_diff("br", "Ранг в БР") or ""
 		
 		for legend, stat_name in diff:
-			skip_stats = [
-				"tracker_scout_of_action_targets_hit",
-				"tracker_jackson_bow_out_damage_done",
-				"tracker_smoke_show_damage_done"
-			]
-			
-			if stat_name in skip_stats or \
-			not legend == self.get_legend() or \
+			if legend not in [self.get_legend(), "_"] or \
 			not stat_name.startswith("tracker_"):
 				continue
 			
