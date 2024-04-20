@@ -1250,7 +1250,7 @@ class Timeline():
 		
 		for legend, trackers in legends.items():
 			if legend == "_":
-				text += "На всіх і зразу:\n"
+				text += "На всіх і зразу 🌍:\n"
 			else:
 				text += f"На {resmgr.trans(f'{legend}_v_mis', legend)}:\n"
 			
