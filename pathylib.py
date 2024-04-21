@@ -1712,9 +1712,9 @@ def format_map_rotation():
 	delim = "\n--- --- ---\n"
 	
 	return delim.join((
-		format_map("БР",        maps["battle_royale"]),
-		format_map("Ранкед БР", maps["ranked"]),
-		format_map("Мікстейп",  maps["ltm"])
+		format_map("БР",        maps["br_pubs"]),
+		format_map("Ранкед БР", maps["br_ranked"]),
+		format_map("Мікстейп",  maps["mixtape"])
 	))
 
 def parse_timeline_key(*args):

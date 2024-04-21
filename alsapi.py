@@ -27,7 +27,7 @@ def get_player_stat(player_uid):
 	return _send_request(url, lambda r: "global" in r and "realtime" in r)
 
 def get_map_rotation():
-	url = f"https://api.mozambiquehe.re/maprotation?version=5"
+	url = f"https://api.mozambiquehe.re/maprotation?version=3"
 	return _send_request(url)
 
 def get_craft_rotation():
