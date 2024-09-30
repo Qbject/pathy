@@ -62,14 +62,22 @@ class GdriveResourceManager():
 		adj_v_rod=False):
 		base, tags = self._get_base_moniker(noun_v_rod, noun_plur)
 		adj_ending = self.get_adj_ending(tags, v_rod=adj_v_rod)
-		adjectives = self.get_adjectives(ending=adj_ending)
+		adjectives = self.get_adjectives(ending=adj_ending, min_count=0)
+
+		if \
+			not noun_v_rod and \
+			not noun_plur and \
+			not adjectives and \
+			util.chance(0.3) \
+		:
+			adjectives = "просто"
 		
 		is_doubled = util.chance(0.05)
 		if is_doubled:
 			suffix, _ = self._get_base_moniker(noun_v_rod, noun_plur)
 			base = f"{base}-{suffix}"
 		
-		return f"{adjectives} {base}"
+		return f"{adjectives} {base}".strip()
 	
 	# for repeating operations encapsulation purposes only
 	# returns rnd noun with prefix and tags
@@ -117,11 +125,11 @@ class GdriveResourceManager():
 			return "ого" if v_rod else "е"
 		return "ого" if v_rod else "ий"
 
-	def get_adjectives(self, ending=None, max_count=3):
+	def get_adjectives(self, ending=None, min_count=1, max_count=3):
 		# randomly calculating the number of adjectives
-		adj_count = 1
-		for i in range(max_count - 1):
-			if util.chance(0.1):
+		adj_count = min_count
+		for i in range(max_count - min_count):
+			if util.chance(0.25):
 				adj_count += 1
 		
 		# sort of easter egg. 1/500 or 0.002 is a heirloom chance
