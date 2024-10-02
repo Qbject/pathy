@@ -129,7 +129,7 @@ class GdriveResourceManager():
 		# randomly calculating the number of adjectives
 		adj_count = min_count
 		for i in range(max_count - min_count):
-			if util.chance(0.25):
+			if util.chance(0.4):
 				adj_count += 1
 		
 		# sort of easter egg. 1/500 or 0.002 is a heirloom chance
