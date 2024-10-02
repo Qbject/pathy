@@ -68,7 +68,7 @@ class GdriveResourceManager():
 			not noun_v_rod and \
 			not noun_plur and \
 			not adjectives and \
-			util.chance(0.3) \
+			util.chance(0.1) \
 		:
 			adjectives = "просто"
 		
