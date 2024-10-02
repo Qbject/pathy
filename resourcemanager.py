@@ -147,7 +147,7 @@ class GdriveResourceManager():
 
 	def get_goodnight_wish(self, player_name):
 		wish = f"Гуд найт, <b>{player_name}</b>\n"
-		wish += f"<b>{self.get_adjectives(ending='их')} снів</b> "
+		wish += f"<i>{self.get_adjectives(ending='их')} снів</i> "
 		goodnight_emoji = ["🥱", "🛌", "😴", "💤"]
 		wish += random.choice(goodnight_emoji)
 		return wish
