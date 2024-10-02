@@ -762,7 +762,7 @@ class TrackedPlayer():
 	def format_status(self):
 		result = f"<b>{self.name}</b>"
 		if self.is_online:
-			result += f" <i>{self.moniker}</i>"
+			result += f" <b>{self.moniker}</b>"
 		result += f"\n<i>{self.format_state()}</i>"
 		
 		if self.is_online:
@@ -858,7 +858,7 @@ class TrackedPlayer():
 			offline_duraion = "довгого"
 		
 		sess_start_msg = f"🟢 <b>{self.name}</b> тепер " \
-			f"<i>{self.moniker}</i>" \
+			f"<b>{self.moniker}</b>" \
 			f" після {offline_duraion} відпочинку\n" \
 			f"<i>{resmgr.get_wish()}</i>"
 		
@@ -879,7 +879,7 @@ class TrackedPlayer():
 		
 		sess_end_msg = ""
 		sess_end_msg += f"🔴 <b>{self.name}</b> більше не " \
-			f"<i>{self.moniker}</i> :(\n"
+			f"<b>{self.moniker}</b> :(\n"
 		sess_end_msg += f"<pre>{sess.format(easter_eggs=True)}</pre>"
 		
 		for chat_id, chat_state in self.state["chats"].items():
@@ -895,7 +895,7 @@ class TrackedPlayer():
 		if sec_to_unban != None:
 			unban_after = format_time(sec_to_unban)
 		
-		notification = f"<b>{self.name}</b> отримав <i>{adj}</i> банан :/\n" \
+		notification = f"<b>{self.name}</b> отримав <b>{adj}</b> банан :/\n" \
 			f"<i>Причина: {ban_reason}</i>\n" \
 			f"<i>Закінчиться через: {unban_after}</i>"
 		self.notify_all_chats(notification, as_html=True)
