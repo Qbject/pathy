@@ -857,7 +857,7 @@ class TrackedPlayer():
 		else:
 			offline_duraion = "довгого"
 		
-		sess_start_msg = f"🟢 <b>{self.name}</b> тепер " \
+		sess_start_msg = f"🍏 <b>{self.name}</b> тепер " \
 			f"<b>{self.moniker}</b>" \
 			f" після {offline_duraion} відпочинку\n" \
 			f"<i>{resmgr.get_wish()}</i>"
@@ -878,7 +878,7 @@ class TrackedPlayer():
 			return
 		
 		sess_end_msg = ""
-		sess_end_msg += f"🔴 <b>{self.name}</b> більше не " \
+		sess_end_msg += f"🍎 <b>{self.name}</b> більше не " \
 			f"<b>{self.moniker}</b> :(\n"
 		sess_end_msg += f"<pre>{sess.format(easter_eggs=True)}</pre>"
 		
