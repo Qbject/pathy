@@ -64,9 +64,6 @@ class GdriveResourceManager():
 		adj_ending = self.get_adj_ending(tags, v_rod=adj_v_rod)
 		adjectives = self.get_adjectives(ending=adj_ending, min_count=0)
 
-		if util.chance(0.02):
-			base += ".exe"
-
 		if \
 			not noun_v_rod and \
 			not noun_plur and \
@@ -79,6 +76,9 @@ class GdriveResourceManager():
 		if is_doubled:
 			suffix, _ = self._get_base_moniker(noun_v_rod, noun_plur)
 			base = f"{base}-{suffix}"
+		
+		if util.chance(0.02):
+			base += ".exe"
 		
 		return f"{adjectives} {base}".strip()
 	
