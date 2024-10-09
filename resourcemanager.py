@@ -135,9 +135,9 @@ class GdriveResourceManager():
 			if util.chance(0.3):
 				adj_count += 1
 		
-		# sort of easter egg. 1/500 or 0.002 is a heirloom chance
-		if util.chance(0.002):
-			adj_count = 10
+		# sort of easter egg. 0.045% or 0.00045 is a heirloom chance
+		if util.chance(0.00045):
+			adj_count = 20
 		
 		result = []
 		for _ in range(adj_count):
