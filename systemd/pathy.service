@@ -1,0 +1,14 @@
+[Unit]
+Description=Pathy Telegram Bot Daemon
+After=network.target
+
+[Service]
+Type=simple
+User=youruser
+WorkingDirectory=/path/to/pathy
+ExecStart=/path/to/pathy/.venv/bin/python daemon.py
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
