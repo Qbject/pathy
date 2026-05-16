@@ -40,12 +40,12 @@ class PathyDaemon():
 		self.lock()
 		self.load_state()
 		
+		self.is_running = True
 		self.main_worker.start()
 		self.fetch_worker.start()
 		self.scheduler.start()
 		if self.long_polling_thread:
 			self.long_polling_thread.start()
-		self.is_running = True
 		
 		log("Started daemon instance", send_tg=True)
 		self.run_listener()
