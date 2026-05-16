@@ -624,7 +624,7 @@ class WorkerThread(threading.Thread):
 		super().__init__(daemon=daemon)
 		self.name = name
 		self._tasks = deque()
-		self._idle = threading.Lock()
+		self._wake = threading.Event()
 	
 	def run(self):
 		while True:
@@ -647,9 +647,8 @@ class WorkerThread(threading.Thread):
 					if task.lock:
 						task.lock.release()
 			else:
-				self._idle.acquire()
-				self._idle.acquire()
-				self._idle.release()
+				self._wake.wait()
+				self._wake.clear()
 	
 	def task(self, func, *args, **kwargs):
 		return WorkerTask(self, func, *args, **kwargs)
@@ -670,8 +669,7 @@ class WorkerThread(threading.Thread):
 				send_tg=True)
 		
 		self._tasks.append(task)
-		if self._idle.locked():
-			self._idle.release()
+		self._wake.set()
 		
 		if task.sync:
 			if not task.lock.acquire(timeout=task.timeout):
