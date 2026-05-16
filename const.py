@@ -49,6 +49,7 @@ DL_PROXY_CHAT_ID = int(environ["PATHY_DL_PROXY_CHAT_ID"])
 
 SESS_MAX_BREAK = int(getenv("PATHY_SESS_MAX_BREAK", 30 * 60)) # default 30 min
 MAINTAINANCE_MODE = bool(int(getenv("PATHY_MAINTAINANCE_MODE", 0)))
+USE_TG_LONG_POLLING = bool(int(getenv("PATHY_USE_TG_LONG_POLLING", 0)))
 
 GDRIVE_ASSETS_ID = environ["PATHY_GDRIVE_ASSETS_ID"]
 GDRIVE_SERVICE_CRED = Path(getenv("PATHY_GDRIVE_SERVICE_CRED") or ROOT_DIR / "gdrive_service_cred.json")

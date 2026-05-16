@@ -25,6 +25,9 @@ class PathyDaemon():
 		self.fetch_worker = WorkerThread("fetch", daemon=True)
 		self.scheduler = threading.Thread(
 			target=self.run_scheduler, daemon=True)
+		self.long_polling_thread = threading.Thread(
+			target=self.run_long_polling, daemon=True) if USE_TG_LONG_POLLING \
+				else None
 	
 	def start(self):
 		if MAINTAINANCE_MODE:
@@ -45,6 +48,8 @@ class PathyDaemon():
 		self.main_worker.start()
 		self.fetch_worker.start()
 		self.scheduler.start()
+		if self.long_polling_thread:
+			self.long_polling_thread.start()
 		self.is_running = True
 		
 		log("Started daemon instance with run_id " + self.run_id, send_tg=True)
@@ -279,7 +284,10 @@ class PathyDaemon():
 		result += f"{'Живий' if self.fetch_worker.is_alive() else '😵'}\n"
 		result += f"Потік планувальника: "
 		result += f"{'Живий' if self.scheduler.is_alive() else '😵'}\n"
-		
+		if self.long_polling_thread:
+			result += f"Потік довгого опитування: "
+			result += f"{'Живий' if self.long_polling_thread.is_alive() else '😵'}\n"
+
 		return result.strip()
 	
 	def lock(self):
@@ -329,7 +337,20 @@ class PathyDaemon():
 					f"\n{get_err()}",
 					err=True, send_tg=True)
 			time.sleep(1)
-	
+
+	def run_long_polling(self):
+		offset = 0
+		while self.is_running:
+			try:
+				updates = tgapi.get_updates(offset=offset, timeout=30)
+				for upd_data in updates:
+					offset = upd_data["update_id"] + 1
+					upd_body = json.dumps(upd_data).encode()
+					self.main_worker.task(self.handle_tg_upd).run(upd_body)
+			except Exception:
+				log(f"Long polling error:\n{get_err()}", err=True, send_tg=True)
+				time.sleep(5)
+
 	def load_state(self):
 		self.state = util.get_state()
 		

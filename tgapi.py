@@ -22,6 +22,9 @@ def call(method, params={}, files={}):
 	
 	return tg_reply["result"]
 
+def get_updates(offset=0, timeout=30):
+	return call("getUpdates", {"offset": offset, "timeout": timeout})
+
 def delete_msg(chat_id, msg_id):
 	try:
 		deleted_resp = call("deleteMessage", {
