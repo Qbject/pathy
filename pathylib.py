@@ -19,7 +19,6 @@ class PathyDaemon():
 		self.last_updated_player = None
 		self.last_als_err_time = 0
 		self.is_running = False
-		self.run_id = None
 		
 		self.main_worker  = WorkerThread("main",  daemon=True)
 		self.fetch_worker = WorkerThread("fetch", daemon=True)
@@ -37,10 +36,6 @@ class PathyDaemon():
 		self.started = True
 		
 		log("Starting daemon")
-		self.run_id = get_rnd_str()
-		if not self.is_single_instance():
-			raise RuntimeError("Daemon can only be run in a single instance "
-				"(run_id mismatch)")
 		
 		self.lock()
 		self.load_state()
@@ -52,26 +47,8 @@ class PathyDaemon():
 			self.long_polling_thread.start()
 		self.is_running = True
 		
-		log("Started daemon instance with run_id " + self.run_id, send_tg=True)
+		log("Started daemon instance", send_tg=True)
 		self.run_listener()
-	
-	def is_single_instance(self):
-		run_id_url = ctl.get_action_url("run_id")
-		
-		try:
-			run_id_resp = requests.get(run_id_url)
-			run_id_resp.raise_for_status()
-		except Exception:
-			log(f"Got error while run_id check, assuming no other instances "
-				f"are running:\n{get_err()}", send_tg=True)
-			return True
-		
-		if run_id_resp.text.strip() == "NOT_RUNNING":
-			return True
-		return run_id_resp.text.strip() == self.run_id
-	
-	def request_stop(self):
-		ctl.send("stop")
 	
 	def stop(self):
 		try:
@@ -91,8 +68,7 @@ class PathyDaemon():
 			
 			self.save_state()
 			self.unlock()
-			log("Gracefully stopped daemon instance with run_id "
-       			+ self.run_id, send_tg=True)
+			log("Gracefully stopped daemon instance", send_tg=True)
 			
 			return True
 		except Exception:
@@ -178,9 +154,6 @@ class PathyDaemon():
 			resmgr.get_party_img(args.get("legends")).send_tg(
 				DEBUG_CHAT_ID, force_file_type="animation")
 			return True
-		
-		if msg == "run_id":
-			return self.run_id
 		
 		else:
 			return "UNKNOWN_MSG"
@@ -325,10 +298,6 @@ class PathyDaemon():
 			self.main_worker.task(self.save_state).run()
 		schedule.every(5).seconds.do(save_state)
 		
-		def ensure_single_instance():
-			self.main_worker.task(self.ensure_single_instance).run()
-		schedule.every(60).seconds.do(ensure_single_instance)
-		
 		while True:
 			try:
 				schedule.run_pending()
@@ -390,14 +359,6 @@ class PathyDaemon():
 		state_raw = json.dumps(self.state, indent="\t", default=_serialize)
 		util.write_file_with_retries(DAEMON_STATE,      state_raw)
 		util.write_file_with_retries(DAEMON_STATE_COPY, state_raw)
-	
-	def ensure_single_instance(self):
-		if self.is_single_instance():
-			return
-		
-		log(f"Detected another daemon instance, stopping",
-			err=True, send_tg=True)
-		self.request_stop()
 	
 	def iter_players(self, online=False, in_chat=None):
 		for player in self.state["tracked_players"]:
