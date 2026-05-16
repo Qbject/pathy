@@ -77,12 +77,16 @@ class PathyDaemon():
 	
 	def run_listener(self):
 		listener = Listener(DAEMON_ADDR, authkey=DAEMON_AUTHKEY)
-		
+		listener._listener._socket.settimeout(1.0)
+
 		while self.is_running:
 			try:
-				# strictly 1 request and 1 response per each connection
 				conn = listener.accept()
-				
+			except TimeoutError:
+				continue
+
+			try:
+				# strictly 1 request and 1 response per each connection
 				if not conn.poll(5):
 					try:
 						conn.send("timeout, closing")
@@ -90,7 +94,7 @@ class PathyDaemon():
 						pass
 					raise TimeoutError(
 						"Daemon: accepted connection but got no msg")
-				
+
 				msg, args = conn.recv()
 				conn.send(self.handle_cmd(msg, args))
 				conn.close()
