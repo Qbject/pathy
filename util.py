@@ -69,9 +69,7 @@ def sanitize_html(text):
 
 def get_hours_offset():
 	tz = pytz.timezone("Europe/Kiev")
-	offset_seconds = tz.utcoffset(datetime.datetime.utcnow()).seconds
-	offset_hours = offset_seconds / 60 / 60
-	return int(offset_hours)
+	return int(datetime.datetime.now(tz).utcoffset().total_seconds() / 3600)
 
 def to_num(str_num):
 	result = None
