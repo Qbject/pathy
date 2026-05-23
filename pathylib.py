@@ -1,4 +1,4 @@
-import time, json, threading, schedule, io
+import time, json, threading, schedule, io, pytz
 import util, alsapi, tgapi, gdrive, youtube
 from pathlib import Path
 from multiprocessing.connection import Listener
@@ -280,17 +280,16 @@ class PathyDaemon():
 		self.lock_handle.close()
 	
 	def run_scheduler(self):
-		def _hour(hour):
-			return str(hour - util.get_hours_offset()).zfill(2)
-		
+		_kyiv = pytz.timezone("Europe/Kiev")
+
 		def send_monday_pic():
 			self.main_worker.task(self.send_hate_monday_pic).run()
-		schedule.every().monday.at(f"{_hour(8)}:00").do(send_monday_pic)
-		
+		schedule.every().monday.at("08:00", _kyiv).do(send_monday_pic)
+
 		def check_yt_updates(secondary=False):
 			self.main_worker.task(self.check_yt_updates).run(secondary)
 		schedule.every().hour.at(":05").do(check_yt_updates, False)
-		schedule.every().day.at(f"{_hour(20)}:00").do(check_yt_updates, True)
+		schedule.every().day.at("20:00", _kyiv).do(check_yt_updates, True)
 		
 		def upd_player():
 			if not self.is_running: return
