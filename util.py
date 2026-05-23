@@ -8,7 +8,7 @@ from PIL import Image
 _info_log_lock  = threading.Lock()
 _error_log_lock = threading.Lock()
 def log(text, err=False, send_tg=False):
-	log_entry = f"{time.asctime()}: " + text.replace("\n", "\n\t")
+	log_entry = f"{time.asctime(time.gmtime())}: " + text.replace("\n", "\n\t")
 	
 	LOGS_DIR.mkdir(exist_ok=True)
 	log_path = ERROR_LOG if err else INFO_LOG
