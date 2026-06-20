@@ -8,11 +8,12 @@ from hashmapdb import singleton as hashmapdb
 class TgBotApiError(Exception):
 	pass
 
-def call(method, params={}, files={}):
+def call(method, params={}, files={}, req_timeout=None):
 	resp = requests.post(
 		f"https://api.telegram.org/bot{BOT_TOKEN}/{method}",
 		data=params,
-		files=files
+		files=files,
+		timeout=req_timeout
 	)
 	tg_reply = json.loads(resp.text)
 	
@@ -23,7 +24,8 @@ def call(method, params={}, files={}):
 	return tg_reply["result"]
 
 def get_updates(offset=0, timeout=30):
-	return call("getUpdates", {"offset": offset, "timeout": timeout})
+	return call("getUpdates", {"offset": offset, "timeout": timeout},
+		req_timeout=timeout + 5)
 
 def delete_msg(chat_id, msg_id):
 	try:
