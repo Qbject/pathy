@@ -592,13 +592,10 @@ class PathyDaemon():
 					channel["id"], published_after)
 				
 				if new_videos:
-					channel_state["last_vid_time"] = new_videos[0][
-						"snippet"]["publishedAt"]
+					channel_state["last_vid_time"] = new_videos[0]["published_at"]
 				
 				for video in new_videos:
-					video_id = video['id']['videoId']
-					url = f"https://youtu.be/{video_id}"
-					msg = f"<b>{channel['name']}</b> - {url}"
+					msg = f"<b>{channel['name']}</b> - {video['url']}"
 					tgapi.send_message(ASL_CHAT_ID, msg, as_html=True)
 			except Exception:
 				log(f"Failed to notify about {channel['name']} " \
